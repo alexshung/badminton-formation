@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Badminton Formation Diagram Tool</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div class="mode-toggle">
+      <button class="mode-btn active" data-mode="overlay" onclick="setMode('overlay')">Overlay</button>
+      <button class="mode-btn" data-mode="panel" onclick="setMode('panel')">Panel</button>
+    </div>
+    <input class="title-input" id="titleInput" placeholder="Diagram title..." value="Doubles Formation">
+    <div class="export-group">
+      <input id="expW" type="number" value="1200" min="400" max="4000">
+      <span>×</span>
+      <input id="expH" type="number" value="630" min="300" max="4000">
+      <button class="btn btn-primary btn-sm" onclick="exportImage()">📷 Export PNG</button>
+    </div>
+    <div style="display:flex;gap:4px;align-items:center;margin-left:4px;">
+      <button class="btn btn-sm" id="playBtn" onclick="toggleAnimation()" style="background:var(--accent);color:#fff;font-weight:700;min-width:36px;">▶</button>
+      <label style="font-size:11px;color:var(--muted);white-space:nowrap;">Speed:</label>
+      <input id="animSpeed" type="range" min="0.5" max="3" step="0.25" value="1" style="width:60px;">
+    </div>
+  </div>
+
+  <!-- Main Area -->
+  <div class="main-area">
+    <div class="court-container" id="courtContainer"></div>
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-section">
+        <h3>🏸 Tool</h3>
+        <div class="tool-selector">
+          <button class="tool-btn active" data-tool="player" onclick="setTool('player')">👆 Place / Move Player</button>
+          <button class="tool-btn" data-tool="shot" onclick="setTool('shot')">🏸 Draw Shot</button>
+          <button class="tool-btn" data-tool="movement" onclick="setTool('movement')">🏃 Draw Movement</button>
+        </div>
+      </div>
+      <div class="sidebar-section" id="playerSection">
+        <h3>Players</h3>
+        <div class="player-palette">
+          <div class="player-token" data-player="A1" onclick="selectPlayer('A1')">
+            <div class="dot teamA-dot"></div>A1 <span style="font-size:11px;color:var(--muted)">[1]</span></div>
+          <div class="player-token" data-player="A2" onclick="selectPlayer('A2')">
+            <div class="dot teamA-dot"></div>A2 <span style="font-size:11px;color:var(--muted)">[2]</span></div>
+          <div class="player-token" data-player="B1" onclick="selectPlayer('B1')">
+            <div class="dot teamB-dot"></div>B1 <span style="font-size:11px;color:var(--muted)">[3]</span></div>
+          <div class="player-token" data-player="B2" onclick="selectPlayer('B2')">
+            <div class="dot teamB-dot"></div>B2 <span style="font-size:11px;color:var(--muted)">[4]</span></div>
+        </div>
+      </div>
+      <div class="sidebar-section" id="shotSection" style="display:none">
+        <h3>Shot Type</h3>
+        <div class="shot-selector">
+          <button class="shot-btn active" data-shot="drop" onclick="setShotType('drop')">
+            <div class="shot-line" style="background:var(--drop);border-top:2px dashed var(--drop);height:0"></div>Drop</button>
+          <button class="shot-btn" data-shot="drive" onclick="setShotType('drive')">
+            <div class="shot-line" style="background:var(--drive)"></div>Drive</button>
+          <button class="shot-btn" data-shot="smash" onclick="setShotType('smash')">
+            <div class="shot-line" style="background:var(--smash);height:4px"></div>Smash</button>
+          <button class="shot-btn" data-shot="clear" onclick="setShotType('clear')">
+            <div class="shot-line" style="background:var(--clear)"></div>Clear</button>
+        </div>
+        <p style="font-size:11px;color:var(--muted);margin-top:4px">Click and drag on court to draw shot</p>
+      </div>
+      <div class="sidebar-section" id="moveSection" style="display:none">
+        <h3>Movement</h3>
+        <p style="font-size:12px;color:var(--muted)">Drag a player on the court to their destination. A movement arrow will be created from their starting position.</p>
+      </div>
+      <div class="sidebar-section" style="margin-top:auto;">
+        <button class="btn btn-sm" style="background:var(--bg);border:1px solid var(--border);color:var(--text);width:100%;" onclick="clearFrame()">🗑️ Clear Frame</button>
+        <button class="btn btn-sm" style="background:var(--bg);border:1px solid var(--border);color:var(--text);width:100%;" onclick="resetAll()">♻️ Reset All</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Timeline -->
+  <div class="timeline" id="timeline"></div>
+
+  <!-- Status bar -->
+  <div class="status-bar">
+    <span id="statusText">Click a player token, then click the court to place</span>
+    <span id="frameInfo">Frame 1/3</span>
+  </div>
+</div>
+
+<button class="sidebar-toggle" onclick="toggleSidebar()">⚙️</button>
+<div class="delete-hint" id="deleteHint">Right-click to delete</div>
+<canvas id="exportCanvas"></canvas>
+
+<!-- Scripts loaded in dependency order -->
+<script src="state.js"></script>
+<script src="court.js"></script>
+<script src="interactions.js"></script>
+<script src="animation.js"></script>
+<script src="export.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
