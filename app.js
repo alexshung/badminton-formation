@@ -1,59 +1,51 @@
 // ===== RENDER =====
 
 function render() {
+  if (animRunning) return;
   const container = document.getElementById('courtContainer');
-  if (state.mode === 'overlay') {
-    renderOverlay(container, true);
-  } else {
-    renderPanel(container, true);
-  }
+  if (state.mode === 'overlay') renderOverlay(container, true);
+  else renderPanel(container, true);
   renderTimeline();
+  renderFrameNote();
   updateStatus();
+  updateCursor();
+  updatePlayerPalette();
   saveState();
 }
 
 function renderOverlay(container, interactive) {
-  let svg = `<svg class="court-svg" viewBox="0 0 ${SW} ${SH}" xmlns="http://www.w3.org/2000/svg"`;
-  if (interactive) {
-    svg += ` onclick="courtClick(event)" oncontextmenu="courtRightClick(event)"`;
-  }
-  svg += `><defs><filter id="shadow"><feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-opacity="0.3"/></filter></defs>`;
-  svg += courtSVG(0, interactive);
+  let svg = `<svg class="court-svg tool-${tool}" viewBox="0 0 ${SW} ${SH}" xmlns="http://www.w3.org/2000/svg"`;
+  if (interactive) svg += ` onclick="courtClick(event)" oncontextmenu="courtRightClick(event)"`;
+  svg += `>` + courtGradientDefs() + courtLines();
 
-  const totalFrames = state.frames.length;
-  for (let i = 0; i < totalFrames; i++) {
+  const total = state.frames.length;
+  for (let i = 0; i < total; i++) {
     const f = state.frames[i];
-    const isActive = (i === state.currentFrame);
-    const baseOpacity = isActive ? 1 : 0.3 + (i / totalFrames) * 0.4;
+    const isActive = i === state.currentFrame;
+    const baseOp = isActive ? 1 : 0.3 + (i / total) * 0.4;
 
     for (const pid in f.movements) {
-      if (f.players[pid]) {
-        const from = f.players[pid];
-        const to = f.movements[pid];
-        svg += movementSVG(pid, from.x, from.y, to.x, to.y, baseOpacity);
-      }
+      if (f.players[pid]) svg += movementSVG(pid, f.players[pid].x, f.players[pid].y, f.movements[pid].x, f.movements[pid].y, baseOp);
     }
     if (f.shot) {
-      svg += shotSVG(f.shot, baseOpacity);
-      if (f.shot.x1 !== undefined) {
-        svg += frameNumberBadge(i, f.shot.x1, f.shot.y1 - 20);
-      }
+      svg += shotSVG(f.shot, baseOp);
+      svg += frameNumberBadge(i, f.shot.x1, f.shot.y1 - 22);
     }
-    // Shot preview line (only on active frame while dragging)
     if (isActive && shotPreviewLine && !f.shot) {
-      svg += shotSVG({ type: shotType, x1: shotPreviewLine.x1, y1: shotPreviewLine.y1, x2: shotPreviewLine.x2, y2: shotPreviewLine.y2 }, 0.6);
+      svg += shotSVG({ type: shotType, x1: shotPreviewLine.x1, y1: shotPreviewLine.y1, x2: shotPreviewLine.x2, y2: shotPreviewLine.y2 }, 0.45);
     }
     for (const pid in f.players) {
       const p = f.players[pid];
-      svg += playerSVG(pid, p.x, p.y, baseOpacity, interactive && isActive, i);
+      svg += playerSVG(pid, p.x, p.y, baseOp, interactive && isActive, i);
       if (f.movements[pid]) {
         const d = f.movements[pid];
-        svg += `<circle cx="${d.x}" cy="${d.y}" r="${PR - 4}" fill="none" stroke="${TEAM_COLORS[pid[0]]}" stroke-width="2" stroke-dasharray="4,3" opacity="${baseOpacity * 0.5}"/>`;
+        svg += `<circle cx="${d.x}" cy="${d.y}" r="${PR - 5}" fill="none" stroke="${TEAM_COLORS[pid[0]]}" stroke-width="2" stroke-dasharray="4,3" opacity="${baseOp * 0.4}"/>`;
+        const lbl = getPlayerLabel(pid);
+        svg += `<text x="${d.x}" y="${d.y}" fill="${TEAM_COLORS[pid[0]]}" font-size="9" font-weight="600" font-family="system-ui" text-anchor="middle" dominant-baseline="central" opacity="${baseOp * 0.4}">${escapeXML(lbl)}</text>`;
       }
     }
     if (!f.shot && Object.keys(f.players).length > 0) {
-      const firstP = Object.values(f.players)[0];
-      if (firstP) svg += frameNumberBadge(i, PAD + 24, PAD + 24 + i * 24);
+      svg += frameNumberBadge(i, PAD + 22, PAD + 22 + i * 28);
     }
   }
   svg += '</svg>';
@@ -64,29 +56,20 @@ function renderPanel(container, interactive) {
   const n = state.frames.length;
   const gap = 20;
   const totalW = n * SW + (n - 1) * gap;
-  let svg = `<svg class="court-svg" viewBox="0 0 ${totalW} ${SH + 30}" xmlns="http://www.w3.org/2000/svg"`;
-  if (interactive) {
-    svg += ` onclick="courtClickPanel(event)" oncontextmenu="courtRightClickPanel(event)"`;
-  }
-  svg += `><defs><filter id="shadow"><feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-opacity="0.3"/></filter></defs>`;
+  let svg = `<svg class="court-svg tool-${tool}" viewBox="0 0 ${totalW} ${SH + 30}" xmlns="http://www.w3.org/2000/svg"`;
+  if (interactive) svg += ` onclick="courtClickPanel(event)" oncontextmenu="courtRightClickPanel(event)"`;
+  svg += `>` + courtGradientDefs();
 
   for (let i = 0; i < n; i++) {
-    const offsetX = i * (SW + gap);
+    const ox = i * (SW + gap);
     const f = state.frames[i];
-    const isActive = (i === state.currentFrame);
-    const borderColor = isActive ? '#3B82F6' : '#666';
-
-    svg += `<g transform="translate(${offsetX}, 30)">`;
-    svg += `<text x="${SW / 2}" y="-8" fill="${isActive ? '#3B82F6' : '#999'}" font-size="14" font-weight="700" font-family="system-ui" text-anchor="middle">Frame ${i + 1}</text>`;
-    svg += `<rect x="0" y="0" width="${SW}" height="${SH}" fill="none" stroke="${borderColor}" stroke-width="${isActive ? 2 : 1}" rx="4"/>`;
-    svg += courtSVG(i, interactive && isActive);
-
+    const isActive = i === state.currentFrame;
+    svg += `<g transform="translate(${ox}, 30)">`;
+    svg += `<text x="${SW/2}" y="-8" fill="${isActive ? '#4a9eff' : '#8b919a'}" font-size="13" font-weight="700" font-family="system-ui" text-anchor="middle">Frame ${i + 1}</text>`;
+    svg += `<rect x="0" y="0" width="${SW}" height="${SH}" fill="none" stroke="${isActive ? '#4a9eff' : '#383d47'}" stroke-width="${isActive ? 2 : 1}" rx="4"/>`;
+    svg += courtLines();
     for (const pid in f.movements) {
-      if (f.players[pid]) {
-        const from = f.players[pid];
-        const to = f.movements[pid];
-        svg += movementSVG(pid, from.x, from.y, to.x, to.y, 1);
-      }
+      if (f.players[pid]) svg += movementSVG(pid, f.players[pid].x, f.players[pid].y, f.movements[pid].x, f.movements[pid].y, 1);
     }
     svg += shotSVG(f.shot, 1);
     for (const pid in f.players) {
@@ -94,7 +77,7 @@ function renderPanel(container, interactive) {
       svg += playerSVG(pid, p.x, p.y, 1, interactive && isActive);
       if (f.movements[pid]) {
         const d = f.movements[pid];
-        svg += `<circle cx="${d.x}" cy="${d.y}" r="${PR - 4}" fill="none" stroke="${TEAM_COLORS[pid[0]]}" stroke-width="2" stroke-dasharray="4,3" opacity="0.5"/>`;
+        svg += `<circle cx="${d.x}" cy="${d.y}" r="${PR - 5}" fill="none" stroke="${TEAM_COLORS[pid[0]]}" stroke-width="2" stroke-dasharray="4,3" opacity="0.4"/>`;
       }
     }
     svg += '</g>';
@@ -108,41 +91,66 @@ function renderTimeline() {
   let h = '';
   state.frames.forEach((f, i) => {
     const active = i === state.currentFrame ? ' active' : '';
-    const playerCount = Object.keys(f.players).length;
-    const hasShot = f.shot ? ' 🏸' : '';
-    h += `<button class="frame-btn${active}" onclick="switchFrame(${i})" oncontextmenu="removeFrame(event,${i})">Frame ${i + 1} <span style="font-size:10px;opacity:.6">(${playerCount}P${hasShot})</span></button>`;
+    const pc = Object.keys(f.players).length;
+    const hasShot = f.shot;
+    const hasMoves = Object.keys(f.movements).length > 0;
+    let dots = '';
+    if (pc > 0) dots += `<span class="frame-dot" style="background:var(--accent)"></span>`;
+    if (hasShot) dots += `<span class="frame-dot" style="background:${SHOT_COLORS[f.shot.type]}"></span>`;
+    if (hasMoves) dots += `<span class="frame-dot" style="background:var(--muted)"></span>`;
+    h += `<button class="frame-btn${active}" onclick="switchFrame(${i})" oncontextmenu="removeFrame(event,${i})">${dots}F${i + 1}<span class="frame-meta">${pc}P</span></button>`;
   });
   if (state.frames.length < 6) {
-    h += `<button class="frame-add" onclick="addFrame()">+</button>`;
+    h += `<button class="timeline-action" onclick="duplicateFrame()" title="Duplicate current frame">⧉</button>`;
+    h += `<button class="timeline-action" onclick="addFrame()" title="Add new frame">+</button>`;
   }
   tl.innerHTML = h;
   document.getElementById('frameInfo').textContent = `Frame ${state.currentFrame + 1}/${state.frames.length}`;
 }
 
+function renderFrameNote() {
+  const el = document.getElementById('frameNote');
+  if (el) el.value = currentFrameData().note || '';
+}
+
+function updatePlayerPalette() {
+  document.querySelectorAll('.player-token').forEach(tok => {
+    const pid = tok.dataset.player;
+    const nameEl = tok.querySelector('.player-name');
+    if (nameEl) nameEl.textContent = getPlayerLabel(pid);
+    tok.classList.toggle('active', pid === selectedPlayer);
+  });
+}
+
 function updateStatus() {
   const el = document.getElementById('statusText');
-  if (tool === 'player') {
-    el.textContent = `Place/Move: selected ${selectedPlayer}. Click court to place, drag to reposition.`;
-  } else if (tool === 'shot') {
-    el.textContent = `Shot (${shotType}): Click and drag on court to draw the shot trajectory`;
-  } else if (tool === 'movement') {
-    el.textContent = 'Movement: Drag a player to their destination to create a movement arrow';
-  }
+  if (tool === 'player') el.textContent = `Place/Move: ${getPlayerLabel(selectedPlayer)} — click to place, drag to reposition`;
+  else if (tool === 'shot') el.textContent = `Shot (${SHOT_LABELS[shotType]}): click near a player and drag to the landing spot`;
+  else if (tool === 'movement') el.textContent = `Movement: drag ${getPlayerLabel(selectedPlayer)} to set movement path`;
 }
 
 // ===== INIT =====
 loadState();
 render();
 initShotDrag();
+
 document.getElementById('titleInput').addEventListener('input', () => {
   state.title = document.getElementById('titleInput').value;
   saveState();
 });
 
-// Handle window resize
-window.addEventListener('resize', () => { if (state) render(); });
-
-// Wire up animation speed slider
-document.getElementById('animSpeed').addEventListener('change', function () {
-  animSpeed = parseFloat(this.value);
+// Frame note input
+document.getElementById('frameNote').addEventListener('input', function() {
+  currentFrameData().note = this.value;
+  saveState();
 });
+
+window.addEventListener('resize', () => { if (state && !animRunning) render(); });
+document.getElementById('courtContainer').addEventListener('contextmenu', e => e.preventDefault());
+document.getElementById('courtContainer').addEventListener('touchmove', function(e) {
+  if (dragPlayer || moveDragPlayer || shotStart) e.preventDefault();
+}, { passive: false });
+
+// Export bg toggle
+const expBgEl = document.getElementById('exportBg');
+if (expBgEl) expBgEl.addEventListener('change', function() { state.exportBg = this.value; saveState(); });

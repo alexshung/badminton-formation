@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Badminton Formation Diagram Tool</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Badminton Formation Tool — Pro Coach</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -15,44 +15,63 @@
       <button class="mode-btn" data-mode="panel" onclick="setMode('panel')">Panel</button>
     </div>
     <input class="title-input" id="titleInput" placeholder="Diagram title..." value="Doubles Formation">
+    <div class="topbar-divider"></div>
     <div class="export-group">
       <input id="expW" type="number" value="1200" min="400" max="4000">
-      <span>×</span>
+      <span class="sep">&times;</span>
       <input id="expH" type="number" value="630" min="300" max="4000">
-      <button class="btn btn-primary btn-sm" onclick="exportImage()">📷 Export PNG</button>
+      <select id="exportBg" class="export-select" title="Export background">
+        <option value="dark">Dark BG</option>
+        <option value="light">Light BG</option>
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="exportImage()">Export PNG</button>
     </div>
-    <div style="display:flex;gap:4px;align-items:center;margin-left:4px;">
-      <button class="btn btn-sm" id="playBtn" onclick="toggleAnimation()" style="background:var(--accent);color:#fff;font-weight:700;min-width:36px;">▶</button>
-      <label style="font-size:11px;color:var(--muted);white-space:nowrap;">Speed:</label>
-      <input id="animSpeed" type="range" min="0.5" max="3" step="0.25" value="1" style="width:60px;">
+    <div class="topbar-divider"></div>
+    <div class="playback-group">
+      <button class="btn-icon" id="playBtn" onclick="toggleAnimation()" title="Play / Stop (Space)">
+        <svg width="14" height="14" viewBox="0 0 14 14"><polygon points="2,1 13,7 2,13" fill="currentColor"/></svg>
+      </button>
+      <span class="speed-label">Speed</span>
+      <input class="speed-slider" id="animSpeed" type="range" min="0.5" max="3" step="0.25" value="1">
     </div>
+    <div class="topbar-divider"></div>
+    <button class="btn btn-ghost btn-sm undo-btn" id="undoBtn" onclick="undo()" title="Undo last action (Ctrl+Z)" disabled>
+      <svg width="14" height="14" viewBox="0 0 16 16"><path d="M4 7h8a4 4 0 010 8H8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M7 4L4 7l3 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Undo <span class="undo-count" id="undoCount"></span>
+    </button>
   </div>
 
   <!-- Main Area -->
   <div class="main-area">
     <div class="court-container" id="courtContainer"></div>
     <div class="sidebar" id="sidebar">
+
       <div class="sidebar-section">
-        <h3>🏸 Tool</h3>
+        <h3>Tool</h3>
         <div class="tool-selector">
-          <button class="tool-btn active" data-tool="player" onclick="setTool('player')">👆 Place / Move Player</button>
-          <button class="tool-btn" data-tool="shot" onclick="setTool('shot')">🏸 Draw Shot</button>
-          <button class="tool-btn" data-tool="movement" onclick="setTool('movement')">🏃 Draw Movement</button>
+          <button class="tool-btn active" data-tool="player" onclick="setTool('player')">
+            <span class="tool-icon">◎</span> Place / Move</button>
+          <button class="tool-btn" data-tool="shot" onclick="setTool('shot')">
+            <span class="tool-icon">⟶</span> Draw Shot</button>
+          <button class="tool-btn" data-tool="movement" onclick="setTool('movement')">
+            <span class="tool-icon">⤳</span> Movement</button>
         </div>
       </div>
+
       <div class="sidebar-section" id="playerSection">
         <h3>Players</h3>
         <div class="player-palette">
-          <div class="player-token" data-player="A1" onclick="selectPlayer('A1')">
-            <div class="dot teamA-dot"></div>A1 <span style="font-size:11px;color:var(--muted)">[1]</span></div>
-          <div class="player-token" data-player="A2" onclick="selectPlayer('A2')">
-            <div class="dot teamA-dot"></div>A2 <span style="font-size:11px;color:var(--muted)">[2]</span></div>
-          <div class="player-token" data-player="B1" onclick="selectPlayer('B1')">
-            <div class="dot teamB-dot"></div>B1 <span style="font-size:11px;color:var(--muted)">[3]</span></div>
-          <div class="player-token" data-player="B2" onclick="selectPlayer('B2')">
-            <div class="dot teamB-dot"></div>B2 <span style="font-size:11px;color:var(--muted)">[4]</span></div>
+          <div class="player-token active" data-player="A1" onclick="selectPlayer('A1')" ondblclick="renamePlayer('A1')">
+            <div class="dot teamA-dot"></div><span class="player-name">A1</span><span class="key-hint">1</span></div>
+          <div class="player-token" data-player="A2" onclick="selectPlayer('A2')" ondblclick="renamePlayer('A2')">
+            <div class="dot teamA-dot"></div><span class="player-name">A2</span><span class="key-hint">2</span></div>
+          <div class="player-token" data-player="B1" onclick="selectPlayer('B1')" ondblclick="renamePlayer('B1')">
+            <div class="dot teamB-dot"></div><span class="player-name">B1</span><span class="key-hint">3</span></div>
+          <div class="player-token" data-player="B2" onclick="selectPlayer('B2')" ondblclick="renamePlayer('B2')">
+            <div class="dot teamB-dot"></div><span class="player-name">B2</span><span class="key-hint">4</span></div>
         </div>
       </div>
+
       <div class="sidebar-section" id="shotSection" style="display:none">
         <h3>Shot Type</h3>
         <div class="shot-selector">
@@ -65,15 +84,34 @@
           <button class="shot-btn" data-shot="clear" onclick="setShotType('clear')">
             <div class="shot-line" style="background:var(--clear)"></div>Clear</button>
         </div>
-        <p style="font-size:11px;color:var(--muted);margin-top:4px">Click and drag on court to draw shot</p>
+        <p style="font-size:11px;color:var(--muted);margin-top:6px">Click near a player, drag to landing spot</p>
       </div>
+
       <div class="sidebar-section" id="moveSection" style="display:none">
         <h3>Movement</h3>
-        <p style="font-size:12px;color:var(--muted)">Drag a player on the court to their destination. A movement arrow will be created from their starting position.</p>
+        <p style="font-size:11px;color:var(--muted)">Select a player, then drag them on the court to set their post-shot position.</p>
       </div>
-      <div class="sidebar-section" style="margin-top:auto;">
-        <button class="btn btn-sm" style="background:var(--bg);border:1px solid var(--border);color:var(--text);width:100%;" onclick="clearFrame()">🗑️ Clear Frame</button>
-        <button class="btn btn-sm" style="background:var(--bg);border:1px solid var(--border);color:var(--text);width:100%;" onclick="resetAll()">♻️ Reset All</button>
+
+      <div class="sidebar-section">
+        <h3>Presets</h3>
+        <div class="preset-list">
+          <button class="preset-btn" onclick="applyPreset('front-back-attack')">Front-Back Attack</button>
+          <button class="preset-btn" onclick="applyPreset('side-by-side-defense')">Side-by-Side Defense</button>
+          <button class="preset-btn" onclick="applyPreset('rotation-ready')">Rotation Ready</button>
+          <button class="preset-btn" onclick="applyPreset('service-even')">Service (Even Court)</button>
+          <button class="preset-btn" onclick="applyPreset('service-odd')">Service (Odd Court)</button>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>Frame Note</h3>
+        <textarea class="frame-note-input" id="frameNote" placeholder="Add a note for this frame..." rows="2" maxlength="120"></textarea>
+      </div>
+
+      <div class="sidebar-section">
+        <p style="font-size:10px;color:var(--muted);margin-bottom:6px;">Right-click or long-press to delete. Double-click player to rename.</p>
+        <button class="btn btn-ghost btn-sm" style="width:100%;margin-bottom:4px;" onclick="clearFrame()">Clear Frame</button>
+        <button class="btn btn-danger btn-sm" style="width:100%;" onclick="resetAll()">Reset All</button>
       </div>
     </div>
   </div>
@@ -83,16 +121,49 @@
 
   <!-- Status bar -->
   <div class="status-bar">
-    <span id="statusText">Click a player token, then click the court to place</span>
+    <span id="statusText">Select a player and click the court to place</span>
     <span id="frameInfo">Frame 1/3</span>
+    <span class="help-hint" onclick="toggleHelp()" title="Keyboard shortcuts">? Shortcuts</span>
   </div>
 </div>
 
-<button class="sidebar-toggle" onclick="toggleSidebar()">⚙️</button>
-<div class="delete-hint" id="deleteHint">Right-click to delete</div>
+<button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+<div class="toast" id="toast"></div>
 <canvas id="exportCanvas"></canvas>
 
-<!-- Scripts loaded in dependency order -->
+<!-- Help Modal -->
+<div class="modal-overlay" id="helpModal" onclick="if(event.target===this)toggleHelp()">
+  <div class="modal">
+    <h2>Keyboard Shortcuts</h2>
+    <div class="shortcut-list">
+      <div class="shortcut-row"><span class="key">1</span><span class="desc">Select Player A1</span></div>
+      <div class="shortcut-row"><span class="key">2</span><span class="desc">Select Player A2</span></div>
+      <div class="shortcut-row"><span class="key">3</span><span class="desc">Select Player B1</span></div>
+      <div class="shortcut-row"><span class="key">4</span><span class="desc">Select Player B2</span></div>
+      <div class="shortcut-row"><span class="key">Space</span><span class="desc">Play / Stop animation</span></div>
+      <div class="shortcut-row"><span class="key">D</span><span class="desc">Duplicate current frame</span></div>
+      <div class="shortcut-row"><span class="key">Ctrl+Z</span><span class="desc">Undo last action</span></div>
+      <div class="shortcut-row"><span class="key">Esc</span><span class="desc">Cancel / Close</span></div>
+      <div class="shortcut-row"><span class="key">?</span><span class="desc">Toggle this help</span></div>
+    </div>
+    <div class="modal-section">
+      <h3>Mouse &amp; Touch</h3>
+      <div class="shortcut-list">
+        <div class="shortcut-row"><span class="desc">Click court → place selected player</span></div>
+        <div class="shortcut-row"><span class="desc">Drag player → reposition (Place mode) or set movement (Movement mode)</span></div>
+        <div class="shortcut-row"><span class="desc">Click near player & drag → draw shot from that player to landing spot</span></div>
+        <div class="shortcut-row"><span class="desc">Right-click → delete element</span></div>
+        <div class="shortcut-row"><span class="desc">Long-press (mobile) → delete element</span></div>
+        <div class="shortcut-row"><span class="desc">Double-click player token → rename player</span></div>
+        <div class="shortcut-row"><span class="desc">Right-click frame → remove frame</span></div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:18px;">
+      <button class="btn btn-ghost btn-sm" onclick="toggleHelp()">Close</button>
+    </div>
+  </div>
+</div>
+
 <script src="state.js"></script>
 <script src="court.js"></script>
 <script src="interactions.js"></script>

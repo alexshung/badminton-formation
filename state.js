@@ -1,85 +1,167 @@
 // ===== CONSTANTS =====
-const CW = 610, CH = 1340; // court dims in "units" (6.1m x 13.4m scaled by 100)
-const PAD = 40; // padding around court in SVG
-const SW = CW + PAD * 2, SH = CH + PAD * 2; // SVG viewBox size
-const PR = 26; // player circle radius
-const SHOT_COLORS = { drop: '#F97316', drive: '#EAB308', smash: '#DC2626', clear: '#22C55E' };
+const CW = 610, CH = 1340;
+const PAD = 40;
+const SW = CW + PAD * 2, SH = CH + PAD * 2;
+const PR = 28;
+const HIT_R = 42;
+const SHOT_COLORS = { drop: '#ff9f43', drive: '#feca57', smash: '#ee5a24', clear: '#2ed573' };
 const SHOT_LABELS = { drop: 'Drop', drive: 'Drive', smash: 'Smash', clear: 'Clear' };
-const TEAM_COLORS = { A: '#3B82F6', B: '#EF4444' };
+const TEAM_COLORS = { A: '#4a9eff', B: '#ff6b6b' };
+const TEAM_COLORS_DIM = { A: 'rgba(74,158,255,.35)', B: 'rgba(255,107,107,.35)' };
+const MAX_UNDO = 20;
+
+// ===== PRESET FORMATIONS =====
+const PRESETS = {
+  'front-back-attack': {
+    label: 'Front-Back Attack',
+    players: {
+      A1: { x: PAD + CW/2, y: PAD + CH*0.82 },
+      A2: { x: PAD + CW/2, y: PAD + CH*0.62 },
+      B1: { x: PAD + CW*0.35, y: PAD + CH*0.28 },
+      B2: { x: PAD + CW*0.65, y: PAD + CH*0.28 }
+    }
+  },
+  'side-by-side-defense': {
+    label: 'Side-by-Side Defense',
+    players: {
+      A1: { x: PAD + CW*0.3, y: PAD + CH*0.75 },
+      A2: { x: PAD + CW*0.7, y: PAD + CH*0.75 },
+      B1: { x: PAD + CW/2, y: PAD + CH*0.18 },
+      B2: { x: PAD + CW/2, y: PAD + CH*0.35 }
+    }
+  },
+  'rotation-ready': {
+    label: 'Rotation Ready',
+    players: {
+      A1: { x: PAD + CW*0.35, y: PAD + CH*0.72 },
+      A2: { x: PAD + CW*0.65, y: PAD + CH*0.82 },
+      B1: { x: PAD + CW*0.65, y: PAD + CH*0.18 },
+      B2: { x: PAD + CW*0.35, y: PAD + CH*0.28 }
+    }
+  },
+  'service-even': {
+    label: 'Service (Even Court)',
+    players: {
+      A1: { x: PAD + CW*0.35, y: PAD + CH*0.6 },
+      A2: { x: PAD + CW*0.55, y: PAD + CH*0.8 },
+      B1: { x: PAD + CW*0.35, y: PAD + CH*0.4 },
+      B2: { x: PAD + CW*0.55, y: PAD + CH*0.2 }
+    }
+  },
+  'service-odd': {
+    label: 'Service (Odd Court)',
+    players: {
+      A1: { x: PAD + CW*0.65, y: PAD + CH*0.6 },
+      A2: { x: PAD + CW*0.45, y: PAD + CH*0.8 },
+      B1: { x: PAD + CW*0.65, y: PAD + CH*0.4 },
+      B2: { x: PAD + CW*0.45, y: PAD + CH*0.2 }
+    }
+  }
+};
 
 // ===== STATE =====
 let state = {
   mode: 'overlay',
   currentFrame: 0,
   frames: [createEmptyFrame(), createEmptyFrame(), createEmptyFrame()],
-  title: 'Doubles Formation'
+  title: 'Doubles Formation',
+  playerNames: {},
+  exportBg: 'dark'
 };
 
-let tool = 'player'; // player | shot | movement
+let tool = 'player';
 let selectedPlayer = 'A1';
 let shotType = 'drop';
-let shotStart = null; // temp: first click for shot
-let movePlayer = null; // temp: player selected for movement
-
-// Shot preview line and Movement drag state
-let shotPreviewLine = null; // {x1,y1,x2,y2} while dragging shot
-let moveDragPlayer = null; // player being dragged for movement
-let moveDragStart = null; // original position of player being moved
-
-// Drag state
+let shotStart = null;
+let movePlayer = null;
+let shotPreviewLine = null;
+let moveDragPlayer = null;
+let moveDragStart = null;
 let dragPlayer = null, dragOffset = { x: 0, y: 0 };
+let isDragging = false;
+let longPressTimer = null;
+let longPressTarget = null;
+let undoStack = [];
 
 function createEmptyFrame() {
-  return { players: {}, shot: null, movements: {} };
-  // players: { A1: {x,y}, A2: {x,y}, B1: {x,y}, B2: {x,y} }
-  // shot: { type, x1, y1, x2, y2 } or null
-  // movements: { A1: {x,y}, ... } destination positions
+  return { players: {}, shot: null, movements: {}, note: '' };
 }
 
 function currentFrameData() { return state.frames[state.currentFrame]; }
 
+function getPlayerLabel(id) {
+  return state.playerNames[id] || id;
+}
+
+// ===== UNDO =====
+function pushUndo() {
+  undoStack.push(JSON.stringify(state));
+  if (undoStack.length > MAX_UNDO) undoStack.shift();
+  updateUndoBtn();
+}
+
+function undo() {
+  if (undoStack.length === 0) { showToast('Nothing to undo'); return; }
+  const prev = JSON.parse(undoStack.pop());
+  state = prev;
+  document.getElementById('titleInput').value = state.title || 'Doubles Formation';
+  render();
+  updateUndoBtn();
+  showToast('Undone (' + undoStack.length + ' left)');
+}
+
+function updateUndoBtn() {
+  const btn = document.getElementById('undoBtn');
+  const count = document.getElementById('undoCount');
+  if (!btn) return;
+  btn.disabled = undoStack.length === 0;
+  if (count) {
+    count.textContent = undoStack.length;
+    count.style.display = undoStack.length > 0 ? 'inline-block' : 'none';
+  }
+}
+
 // ===== PERSISTENCE =====
 function saveState() {
-  state.title = document.getElementById('titleInput').value;
+  const titleEl = document.getElementById('titleInput');
+  if (titleEl) state.title = titleEl.value;
   const json = JSON.stringify(state);
-  try { localStorage.setItem('artifact-badminton-formations', json); } catch (e) { }
-  try { sessionStorage.setItem('artifact-badminton-formations', json); } catch (e) { }
-  try { window.name = 'BF:' + json; } catch (e) { } // survives same-tab navigation
+  try { localStorage.setItem('bf-pro-state', json); } catch(e){}
+  try { sessionStorage.setItem('bf-pro-state', json); } catch(e){}
+  try { window.name = 'BF:' + json; } catch(e){}
 }
 
 function loadState() {
   try {
-    let raw = localStorage.getItem('artifact-badminton-formations');
-    if (!raw) raw = sessionStorage.getItem('artifact-badminton-formations');
+    let raw = localStorage.getItem('bf-pro-state');
+    if (!raw) raw = sessionStorage.getItem('bf-pro-state');
     if (!raw && window.name && window.name.startsWith('BF:')) raw = window.name.slice(3);
     const s = JSON.parse(raw);
-    if (s && s.frames) { state = s; }
-  } catch (e) { }
-  document.getElementById('titleInput').value = state.title || 'Doubles Formation';
+    if (s && s.frames) {
+      state = s;
+      if (!state.playerNames) state.playerNames = {};
+      if (!state.exportBg) state.exportBg = 'dark';
+      state.frames.forEach(f => { if (!f.note) f.note = ''; });
+    }
+  } catch(e){}
+  const titleEl = document.getElementById('titleInput');
+  if (titleEl) titleEl.value = state.title || 'Doubles Formation';
 }
 
-// Save before navigating away
 window.addEventListener('beforeunload', saveState);
 window.addEventListener('pagehide', saveState);
 
 // ===== FRAME MANAGEMENT =====
 function switchFrame(i) {
+  pushUndo();
   state.currentFrame = i;
-  shotStart = null;
-  movePlayer = null;
-  shotPreviewLine = null;
-  moveDragPlayer = null;
-  // Inherit player positions from previous frame's end state if this frame has no players
+  shotStart = null; movePlayer = null; shotPreviewLine = null; moveDragPlayer = null;
   if (i > 0) {
     const prev = state.frames[i - 1];
     const curr = state.frames[i];
     if (Object.keys(curr.players).length === 0 && Object.keys(prev.players).length > 0) {
       for (const pid in prev.players) {
-        if (prev.movements[pid]) {
-          curr.players[pid] = { ...prev.movements[pid] };
-        } else {
-          curr.players[pid] = { ...prev.players[pid] };
-        }
+        curr.players[pid] = prev.movements[pid] ? { ...prev.movements[pid] } : { ...prev.players[pid] };
       }
     }
   }
@@ -88,41 +170,102 @@ function switchFrame(i) {
 
 function addFrame() {
   if (state.frames.length >= 6) return;
-  // New frame inherits player positions from end of previous frame
+  pushUndo();
   const prev = state.frames[state.frames.length - 1];
   const nf = createEmptyFrame();
   for (const pid in prev.players) {
-    if (prev.movements[pid]) {
-      nf.players[pid] = { ...prev.movements[pid] };
-    } else {
-      nf.players[pid] = { ...prev.players[pid] };
-    }
+    nf.players[pid] = prev.movements[pid] ? { ...prev.movements[pid] } : { ...prev.players[pid] };
   }
   state.frames.push(nf);
   state.currentFrame = state.frames.length - 1;
   render();
 }
 
+function duplicateFrame() {
+  if (state.frames.length >= 6) { showToast('Max 6 frames'); return; }
+  pushUndo();
+  const src = state.frames[state.currentFrame];
+  const dup = JSON.parse(JSON.stringify(src));
+  state.frames.splice(state.currentFrame + 1, 0, dup);
+  state.currentFrame++;
+  render();
+  showToast('Frame duplicated');
+}
+
 function removeFrame(evt, i) {
   evt.preventDefault();
+  evt.stopPropagation();
   if (state.frames.length <= 1) return;
+  pushUndo();
   state.frames.splice(i, 1);
   if (state.currentFrame >= state.frames.length) state.currentFrame = state.frames.length - 1;
   render();
 }
 
 function clearFrame() {
+  pushUndo();
   state.frames[state.currentFrame] = createEmptyFrame();
   render();
 }
 
 function resetAll() {
-  if (!confirm('Reset everything?')) return;
+  if (!confirm('Reset all frames and players?')) return;
+  pushUndo();
   state = {
     mode: state.mode, currentFrame: 0,
     frames: [createEmptyFrame(), createEmptyFrame(), createEmptyFrame()],
-    title: 'Doubles Formation'
+    title: 'Doubles Formation', playerNames: {}, exportBg: state.exportBg
   };
   document.getElementById('titleInput').value = state.title;
+  undoStack = [];
   render();
+  updateUndoBtn();
+}
+
+// ===== PRESETS =====
+function applyPreset(key) {
+  const p = PRESETS[key];
+  if (!p) return;
+  pushUndo();
+  const f = currentFrameData();
+  for (const pid in p.players) {
+    f.players[pid] = { x: Math.round(p.players[pid].x), y: Math.round(p.players[pid].y) };
+  }
+  render();
+  showToast(p.label + ' applied');
+}
+
+// ===== PLAYER RENAME =====
+function renamePlayer(id) {
+  const current = state.playerNames[id] || id;
+  const name = prompt('Rename player ' + id + ':', current);
+  if (name === null) return;
+  pushUndo();
+  if (name.trim() === '' || name.trim() === id) {
+    delete state.playerNames[id];
+  } else {
+    state.playerNames[id] = name.trim().substring(0, 8);
+  }
+  render();
+}
+
+// ===== UTILITY =====
+function findPlayerAt(x, y, frame) {
+  const f = frame || currentFrameData();
+  let closest = null, minD = Infinity;
+  for (const pid in f.players) {
+    const pl = f.players[pid];
+    const d = Math.hypot(pl.x - x, pl.y - y);
+    if (d < HIT_R && d < minD) { minD = d; closest = pid; }
+  }
+  return closest;
+}
+
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => el.classList.remove('show'), 1400);
 }
