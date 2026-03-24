@@ -158,3 +158,139 @@ function frameNumberBadge(num, x, y) {
 function escapeXML(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
+
+// ===== COVERAGE REGION RENDERING =====
+
+function regionDefs() {
+  // Hatching pattern for overlap areas
+  return `<defs>
+    <pattern id="hatch-overlap" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="8" stroke="rgba(255,255,255,.5)" stroke-width="2"/>
+    </pattern>
+  </defs>`;
+}
+
+function regionSVG(regions, opacity) {
+  if (!regions || Object.keys(regions).length === 0) return '';
+  const op = opacity || 1;
+  let svg = regionDefs();
+
+  // Draw each player's region
+  const playerIds = Object.keys(regions);
+  for (const pid of playerIds) {
+    const pts = regions[pid];
+    if (!pts || pts.length < 3) continue;
+    const team = pid[0];
+    const color = TEAM_COLORS[team];
+    const pointsStr = pts.map(p => `${p.x},${p.y}`).join(' ');
+
+    // Semi-transparent fill
+    svg += `<polygon points="${pointsStr}" fill="${color}" fill-opacity="${0.15 * op}" stroke="${color}" stroke-width="2" stroke-opacity="${0.5 * op}" stroke-dasharray="6,4"/>`;
+
+    // Player label inside region
+    const cx = pts.reduce((s, p) => s + p.x, 0) / pts.length;
+    const cy = pts.reduce((s, p) => s + p.y, 0) / pts.length;
+    const label = getPlayerLabel(pid);
+    svg += `<text x="${cx}" y="${cy}" fill="${color}" font-size="11" font-weight="700" font-family="system-ui" text-anchor="middle" dominant-baseline="central" opacity="${0.5 * op}">${escapeXML(label)}</text>`;
+  }
+
+  // Detect and render overlaps with hatching
+  for (let i = 0; i < playerIds.length; i++) {
+    for (let j = i + 1; j < playerIds.length; j++) {
+      const ptsA = regions[playerIds[i]];
+      const ptsB = regions[playerIds[j]];
+      if (!ptsA || ptsA.length < 3 || !ptsB || ptsB.length < 3) continue;
+      const overlap = computePolygonOverlap(ptsA, ptsB);
+      if (overlap && overlap.length >= 3) {
+        const overlapStr = overlap.map(p => `${p.x},${p.y}`).join(' ');
+        svg += `<polygon points="${overlapStr}" fill="url(#hatch-overlap)" fill-opacity="${0.6 * op}" stroke="rgba(255,255,255,.4)" stroke-width="1.5" stroke-opacity="${op}"/>`;
+      }
+    }
+  }
+
+  return svg;
+}
+
+function coveragePreviewSVG(points, preview, playerId) {
+  if (!points || points.length === 0) return '';
+  const team = playerId[0];
+  const color = TEAM_COLORS[team];
+  let svg = '';
+
+  // Draw existing points
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i];
+    svg += `<circle cx="${p.x}" cy="${p.y}" r="5" fill="${color}" stroke="#fff" stroke-width="1.5" opacity="0.8"/>`;
+    if (i > 0) {
+      svg += `<line x1="${points[i-1].x}" y1="${points[i-1].y}" x2="${p.x}" y2="${p.y}" stroke="${color}" stroke-width="2" opacity="0.6"/>`;
+    }
+  }
+
+  // Preview line to cursor
+  if (preview && points.length > 0) {
+    const last = points[points.length - 1];
+    svg += `<line x1="${last.x}" y1="${last.y}" x2="${preview.x}" y2="${preview.y}" stroke="${color}" stroke-width="2" stroke-dasharray="4,3" opacity="0.5"/>`;
+    // Close preview back to first point
+    svg += `<line x1="${preview.x}" y1="${preview.y}" x2="${points[0].x}" y2="${points[0].y}" stroke="${color}" stroke-width="1.5" stroke-dasharray="3,3" opacity="0.25"/>`;
+  }
+
+  // Highlight first point (close target)
+  if (points.length >= 3) {
+    svg += `<circle cx="${points[0].x}" cy="${points[0].y}" r="9" fill="none" stroke="${color}" stroke-width="2" stroke-dasharray="3,2" opacity="0.5">`;
+    svg += `<animate attributeName="r" values="9;12;9" dur="1.5s" repeatCount="indefinite"/></circle>`;
+  }
+
+  // Preview filled polygon
+  if (points.length >= 3 && preview) {
+    const allPts = [...points, preview];
+    const pointsStr = allPts.map(p => `${p.x},${p.y}`).join(' ');
+    svg += `<polygon points="${pointsStr}" fill="${color}" fill-opacity="0.08" stroke="none"/>`;
+  }
+
+  return svg;
+}
+
+// Sutherland-Hodgman polygon clipping for overlap detection
+function computePolygonOverlap(subjectPoly, clipPoly) {
+  let output = [...subjectPoly];
+  if (output.length === 0) return [];
+
+  for (let i = 0; i < clipPoly.length; i++) {
+    if (output.length === 0) return [];
+    const input = [...output];
+    output = [];
+    const edgeStart = clipPoly[i];
+    const edgeEnd = clipPoly[(i + 1) % clipPoly.length];
+
+    for (let j = 0; j < input.length; j++) {
+      const current = input[j];
+      const prev = input[(j + input.length - 1) % input.length];
+      const currInside = isInsideEdge(current, edgeStart, edgeEnd);
+      const prevInside = isInsideEdge(prev, edgeStart, edgeEnd);
+
+      if (currInside) {
+        if (!prevInside) {
+          const inter = lineIntersection(prev, current, edgeStart, edgeEnd);
+          if (inter) output.push(inter);
+        }
+        output.push(current);
+      } else if (prevInside) {
+        const inter = lineIntersection(prev, current, edgeStart, edgeEnd);
+        if (inter) output.push(inter);
+      }
+    }
+  }
+  return output;
+}
+
+function isInsideEdge(point, edgeStart, edgeEnd) {
+  return (edgeEnd.x - edgeStart.x) * (point.y - edgeStart.y) -
+         (edgeEnd.y - edgeStart.y) * (point.x - edgeStart.x) >= 0;
+}
+
+function lineIntersection(p1, p2, p3, p4) {
+  const d = (p1.x - p2.x) * (p3.y - p4.y) - (p1.y - p2.y) * (p3.x - p4.x);
+  if (Math.abs(d) < 0.001) return null;
+  const t = ((p1.x - p3.x) * (p3.y - p4.y) - (p1.y - p3.y) * (p3.x - p4.x)) / d;
+  return { x: p1.x + t * (p2.x - p1.x), y: p1.y + t * (p2.y - p1.y) };
+}

@@ -24,6 +24,9 @@ function renderOverlay(container, interactive) {
     const isActive = i === state.currentFrame;
     const baseOp = isActive ? 1 : 0.3 + (i / total) * 0.4;
 
+    // Coverage regions (rendered behind players and shots)
+    if (f.regions) svg += regionSVG(f.regions, baseOp);
+
     for (const pid in f.movements) {
       if (f.players[pid]) svg += movementSVG(pid, f.players[pid].x, f.players[pid].y, f.movements[pid].x, f.movements[pid].y, baseOp);
     }
@@ -33,6 +36,10 @@ function renderOverlay(container, interactive) {
     }
     if (isActive && shotPreviewLine && !f.shot) {
       svg += shotSVG({ type: shotType, x1: shotPreviewLine.x1, y1: shotPreviewLine.y1, x2: shotPreviewLine.x2, y2: shotPreviewLine.y2 }, 0.45);
+    }
+    // Coverage drawing preview
+    if (isActive && tool === 'coverage' && coveragePoints.length > 0) {
+      svg += coveragePreviewSVG(coveragePoints, coveragePreview, selectedPlayer);
     }
     for (const pid in f.players) {
       const p = f.players[pid];
@@ -68,6 +75,8 @@ function renderPanel(container, interactive) {
     svg += `<text x="${SW/2}" y="-8" fill="${isActive ? '#4a9eff' : '#8b919a'}" font-size="13" font-weight="700" font-family="system-ui" text-anchor="middle">Frame ${i + 1}</text>`;
     svg += `<rect x="0" y="0" width="${SW}" height="${SH}" fill="none" stroke="${isActive ? '#4a9eff' : '#383d47'}" stroke-width="${isActive ? 2 : 1}" rx="4"/>`;
     svg += courtLines();
+    // Coverage regions
+    if (f.regions) svg += regionSVG(f.regions, 1);
     for (const pid in f.movements) {
       if (f.players[pid]) svg += movementSVG(pid, f.players[pid].x, f.players[pid].y, f.movements[pid].x, f.movements[pid].y, 1);
     }
@@ -127,12 +136,18 @@ function updateStatus() {
   if (tool === 'player') el.textContent = `Place/Move: ${getPlayerLabel(selectedPlayer)} — click to place, drag to reposition`;
   else if (tool === 'shot') el.textContent = `Shot (${SHOT_LABELS[shotType]}): click near a player and drag to the landing spot`;
   else if (tool === 'movement') el.textContent = `Movement: drag ${getPlayerLabel(selectedPlayer)} to set movement path`;
+  else if (tool === 'coverage') {
+    if (coveragePoints.length === 0) el.textContent = `Coverage: click to start drawing ${getPlayerLabel(selectedPlayer)}'s zone`;
+    else if (coveragePoints.length < 3) el.textContent = `Coverage: click to add points (${coveragePoints.length} placed, need at least 3)`;
+    else el.textContent = `Coverage: click to add points, or click near first point / double-click to close (${coveragePoints.length} points)`;
+  }
 }
 
 // ===== INIT =====
 loadState();
 render();
 initShotDrag();
+initCoverageTracking();
 
 document.getElementById('titleInput').addEventListener('input', () => {
   state.title = document.getElementById('titleInput').value;

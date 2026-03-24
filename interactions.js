@@ -9,10 +9,13 @@ function setMode(m) {
 function setTool(t) {
   tool = t;
   shotStart = null; movePlayer = null;
+  coveragePoints = []; coveragePreview = null;
   document.querySelectorAll('.tool-btn').forEach(b => b.classList.toggle('active', b.dataset.tool === t));
-  document.getElementById('playerSection').style.display = (t === 'player' || t === 'movement') ? '' : 'none';
+  document.getElementById('playerSection').style.display = (t === 'player' || t === 'movement' || t === 'coverage') ? '' : 'none';
   document.getElementById('shotSection').style.display = t === 'shot' ? '' : 'none';
   document.getElementById('moveSection').style.display = t === 'movement' ? '' : 'none';
+  document.getElementById('coverageSection').style.display = t === 'coverage' ? '' : 'none';
+  updateCoverageInfo();
   updateCursor();
   updateStatus();
 }
@@ -32,6 +35,7 @@ document.addEventListener('keydown', function(e) {
   if (e.key === ' ') { e.preventDefault(); toggleAnimation(); }
   if (e.key === 'Escape') {
     shotStart = null; shotPreviewLine = null; moveDragPlayer = null;
+    coveragePoints = []; coveragePreview = null;
     const modal = document.getElementById('helpModal');
     if (modal) modal.classList.remove('show');
     render();
@@ -51,7 +55,7 @@ function setShotType(t) {
 function updateCursor() {
   const svg = document.querySelector('.court-svg');
   if (!svg) return;
-  svg.classList.remove('tool-player', 'tool-shot', 'tool-movement');
+  svg.classList.remove('tool-player', 'tool-shot', 'tool-movement', 'tool-coverage');
   svg.classList.add('tool-' + tool);
 }
 
@@ -89,6 +93,8 @@ function courtClick(evt) {
   } else if (tool === 'movement') {
     const nearby = findPlayerAt(p.x, p.y, f);
     if (nearby) selectPlayer(nearby);
+  } else if (tool === 'coverage') {
+    handleCoverageClick(p.x, p.y);
   }
 }
 
@@ -135,7 +141,28 @@ function deleteAt(x, y) {
     const m = f.movements[pid];
     if (Math.hypot(m.x - x, m.y - y) < HIT_R) { pushUndo(); delete f.movements[pid]; render(); showToast('Movement removed'); return true; }
   }
+  // Check if click is inside a coverage region
+  if (f.regions) {
+    for (const pid in f.regions) {
+      const pts = f.regions[pid];
+      if (pts && pts.length >= 3 && isPointInPolygon(x, y, pts)) {
+        pushUndo(); delete f.regions[pid]; render(); updateCoverageInfo(); showToast('Coverage removed'); return true;
+      }
+    }
+  }
   return false;
+}
+
+function isPointInPolygon(x, y, polygon) {
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const xi = polygon[i].x, yi = polygon[i].y;
+    const xj = polygon[j].x, yj = polygon[j].y;
+    if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+      inside = !inside;
+    }
+  }
+  return inside;
 }
 
 function startLongPress(evt, x, y) {
@@ -304,4 +331,109 @@ function toggleSidebar() { document.getElementById('sidebar').classList.toggle('
 function toggleHelp() {
   const modal = document.getElementById('helpModal');
   if (modal) modal.classList.toggle('show');
+}
+
+// ===== COVERAGE REGION DRAWING =====
+
+function handleCoverageClick(x, y) {
+  // If already have 3+ points and click near first point, close the polygon
+  if (coveragePoints.length >= 3) {
+    const first = coveragePoints[0];
+    if (Math.hypot(x - first.x, y - first.y) < 20) {
+      finishCoverage();
+      return;
+    }
+  }
+
+  // Check if player already has a region — clicking starts a new one (replaces)
+  const f = currentFrameData();
+  if (coveragePoints.length === 0 && f.regions && f.regions[selectedPlayer]) {
+    pushUndo();
+    delete f.regions[selectedPlayer];
+  }
+
+  coveragePoints.push({ x, y });
+  render();
+}
+
+function finishCoverage() {
+  if (coveragePoints.length < 3) {
+    coveragePoints = [];
+    coveragePreview = null;
+    render();
+    return;
+  }
+  pushUndo();
+  const f = currentFrameData();
+  if (!f.regions) f.regions = {};
+  f.regions[selectedPlayer] = [...coveragePoints];
+  coveragePoints = [];
+  coveragePreview = null;
+  render();
+  updateCoverageInfo();
+  showToast(getPlayerLabel(selectedPlayer) + ' coverage region set');
+}
+
+function clearCoverage(pid) {
+  const f = currentFrameData();
+  if (f.regions && f.regions[pid]) {
+    pushUndo();
+    delete f.regions[pid];
+    render();
+    updateCoverageInfo();
+    showToast(getPlayerLabel(pid) + ' coverage cleared');
+  }
+}
+
+function clearAllCoverage() {
+  const f = currentFrameData();
+  if (f.regions && Object.keys(f.regions).length > 0) {
+    pushUndo();
+    f.regions = {};
+    render();
+    updateCoverageInfo();
+    showToast('All coverage cleared');
+  }
+}
+
+function updateCoverageInfo() {
+  const el = document.getElementById('coverageInfo');
+  if (!el) return;
+  const f = currentFrameData();
+  const regions = f.regions || {};
+  let html = '';
+  const pids = ['A1', 'A2', 'B1', 'B2'];
+  for (const pid of pids) {
+    const has = regions[pid] && regions[pid].length >= 3;
+    const team = pid[0];
+    const color = TEAM_COLORS[team];
+    const label = getPlayerLabel(pid);
+    const selected = pid === selectedPlayer ? ' coverage-active' : '';
+    html += `<div class="coverage-player${selected}" onclick="selectPlayer('${pid}')">`;
+    html += `<span class="coverage-dot" style="background:${color}"></span>`;
+    html += `<span class="coverage-name">${escapeXML(label)}</span>`;
+    if (has) {
+      html += `<span class="coverage-status">✓</span>`;
+      html += `<button class="coverage-clear" onclick="event.stopPropagation();clearCoverage('${pid}')" title="Clear region">✕</button>`;
+    } else {
+      html += `<span class="coverage-status empty">—</span>`;
+    }
+    html += `</div>`;
+  }
+  el.innerHTML = html;
+}
+
+// Coverage mousemove for live preview
+function initCoverageTracking() {
+  const c = document.getElementById('courtContainer');
+  c.addEventListener('mousemove', function(evt) {
+    if (tool !== 'coverage' || coveragePoints.length === 0) return;
+    const p = getSVGPoint(evt);
+    if (p) { coveragePreview = { x: p.x, y: p.y }; render(); }
+  });
+  c.addEventListener('dblclick', function(evt) {
+    if (tool !== 'coverage' || coveragePoints.length < 3) return;
+    evt.preventDefault();
+    finishCoverage();
+  });
 }

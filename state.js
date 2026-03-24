@@ -77,6 +77,8 @@ let movePlayer = null;
 let shotPreviewLine = null;
 let moveDragPlayer = null;
 let moveDragStart = null;
+let coveragePoints = [];       // points being drawn for current polygon
+let coveragePreview = null;    // {x,y} of mouse for live preview line
 let dragPlayer = null, dragOffset = { x: 0, y: 0 };
 let isDragging = false;
 let longPressTimer = null;
@@ -84,7 +86,7 @@ let longPressTarget = null;
 let undoStack = [];
 
 function createEmptyFrame() {
-  return { players: {}, shot: null, movements: {}, note: '' };
+  return { players: {}, shot: null, movements: {}, regions: {}, note: '' };
 }
 
 function currentFrameData() { return state.frames[state.currentFrame]; }
@@ -141,7 +143,7 @@ function loadState() {
       state = s;
       if (!state.playerNames) state.playerNames = {};
       if (!state.exportBg) state.exportBg = 'dark';
-      state.frames.forEach(f => { if (!f.note) f.note = ''; });
+      state.frames.forEach(f => { if (!f.note) f.note = ''; if (!f.regions) f.regions = {}; });
     }
   } catch(e){}
   const titleEl = document.getElementById('titleInput');
@@ -156,6 +158,7 @@ function switchFrame(i) {
   pushUndo();
   state.currentFrame = i;
   shotStart = null; movePlayer = null; shotPreviewLine = null; moveDragPlayer = null;
+  coveragePoints = []; coveragePreview = null;
   if (i > 0) {
     const prev = state.frames[i - 1];
     const curr = state.frames[i];
@@ -163,6 +166,10 @@ function switchFrame(i) {
       for (const pid in prev.players) {
         curr.players[pid] = prev.movements[pid] ? { ...prev.movements[pid] } : { ...prev.players[pid] };
       }
+    }
+    // Inherit regions from previous frame if current has none
+    if (Object.keys(curr.regions || {}).length === 0 && Object.keys(prev.regions || {}).length > 0) {
+      curr.regions = JSON.parse(JSON.stringify(prev.regions));
     }
   }
   render();
@@ -175,6 +182,10 @@ function addFrame() {
   const nf = createEmptyFrame();
   for (const pid in prev.players) {
     nf.players[pid] = prev.movements[pid] ? { ...prev.movements[pid] } : { ...prev.players[pid] };
+  }
+  // Inherit regions
+  if (prev.regions && Object.keys(prev.regions).length > 0) {
+    nf.regions = JSON.parse(JSON.stringify(prev.regions));
   }
   state.frames.push(nf);
   state.currentFrame = state.frames.length - 1;

@@ -55,6 +55,8 @@
             <span class="tool-icon">⟶</span> Draw Shot</button>
           <button class="tool-btn" data-tool="movement" onclick="setTool('movement')">
             <span class="tool-icon">⤳</span> Movement</button>
+          <button class="tool-btn" data-tool="coverage" onclick="setTool('coverage')">
+            <span class="tool-icon">◻</span> Coverage</button>
         </div>
       </div>
 
@@ -90,6 +92,13 @@
       <div class="sidebar-section" id="moveSection" style="display:none">
         <h3>Movement</h3>
         <p style="font-size:11px;color:var(--muted)">Select a player, then drag them on the court to set their post-shot position.</p>
+      </div>
+
+      <div class="sidebar-section" id="coverageSection" style="display:none">
+        <h3>Coverage Regions</h3>
+        <p style="font-size:11px;color:var(--muted);margin-bottom:8px">Click points on the court to draw a coverage zone. Click near the first point or double-click to close.</p>
+        <div class="coverage-info" id="coverageInfo"></div>
+        <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px;" onclick="clearAllCoverage()">Clear All Regions</button>
       </div>
 
       <div class="sidebar-section">
@@ -152,6 +161,8 @@
         <div class="shortcut-row"><span class="desc">Click court → place selected player</span></div>
         <div class="shortcut-row"><span class="desc">Drag player → reposition (Place mode) or set movement (Movement mode)</span></div>
         <div class="shortcut-row"><span class="desc">Click near player & drag → draw shot from that player to landing spot</span></div>
+        <div class="shortcut-row"><span class="desc">Coverage mode: click to add points, click first point or double-click to close polygon</span></div>
+        <div class="shortcut-row"><span class="desc">Right-click coverage region → delete it</span></div>
         <div class="shortcut-row"><span class="desc">Right-click → delete element</span></div>
         <div class="shortcut-row"><span class="desc">Long-press (mobile) → delete element</span></div>
         <div class="shortcut-row"><span class="desc">Double-click player token → rename player</span></div>

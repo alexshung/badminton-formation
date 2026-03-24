@@ -91,6 +91,9 @@ function renderAnimFrame() {
   const t = easeInOut(Math.min(animState.progress, 1));
   let svg = courtGradientDefs() + courtLines();
 
+  // Coverage regions
+  if (fr.regions) svg += regionSVG(fr.regions, 0.6);
+
   // Players
   const pids = new Set([...Object.keys(animState.playerPositions), ...Object.keys(fr.players)]);
   for (const pid of pids) {
