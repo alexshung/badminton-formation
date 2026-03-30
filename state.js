@@ -42,19 +42,19 @@ const PRESETS = {
   'service-even': {
     label: 'Service (Even Court)',
     players: {
-      A1: { x: PAD + CW*0.35, y: PAD + CH*0.6 },
-      A2: { x: PAD + CW*0.55, y: PAD + CH*0.8 },
-      B1: { x: PAD + CW*0.35, y: PAD + CH*0.4 },
-      B2: { x: PAD + CW*0.55, y: PAD + CH*0.2 }
+      A1: { x: PAD + CW*0.6, y: PAD + CH*0.648 },
+      A2: { x: PAD + CW*0.35, y: PAD + CH*0.55 },
+      B1: { x: PAD + CW*0.6, y: PAD + CH*0.352 },
+      B2: { x: PAD + CW*0.35, y: PAD + CH*0.15 }
     }
   },
   'service-odd': {
     label: 'Service (Odd Court)',
     players: {
-      A1: { x: PAD + CW*0.65, y: PAD + CH*0.6 },
-      A2: { x: PAD + CW*0.45, y: PAD + CH*0.8 },
-      B1: { x: PAD + CW*0.65, y: PAD + CH*0.4 },
-      B2: { x: PAD + CW*0.45, y: PAD + CH*0.2 }
+      A1: { x: PAD + CW*0.4, y: PAD + CH*0.648 },
+      A2: { x: PAD + CW*0.65, y: PAD + CH*0.55 },
+      B1: { x: PAD + CW*0.4, y: PAD + CH*0.352 },
+      B2: { x: PAD + CW*0.65, y: PAD + CH*0.15 }
     }
   }
 };
