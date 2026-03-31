@@ -42,10 +42,10 @@ const PRESETS = {
   'service-even': {
     label: 'Service (Even Court)',
     players: {
-      A1: { x: PAD + CW*0.6, y: PAD + CH*0.648 },
-      A2: { x: PAD + CW*0.4, y: PAD + CH*0.82 },
-      B1: { x: PAD + CW*0.5, y: PAD + CH*0.18 },
-      B2: { x: PAD + CW*0.5, y: PAD + CH*0.352 }
+      A1: { x: PAD + CW*0.5, y: PAD + CH*0.648 },
+      A2: { x: PAD + CW*0.45, y: PAD + CH*0.88 },
+      B1: { x: PAD + CW*0.5, y: PAD + CH*0.15 },
+      B2: { x: PAD + CW*0.4, y: PAD + CH*0.352 }
     }
   },
   'service-odd': {
