@@ -53,8 +53,8 @@ const PRESETS = {
     players: {
       A1: { x: PAD + CW*0.4, y: PAD + CH*0.648 },
       A2: { x: PAD + CW*0.6, y: PAD + CH*0.82 },
-      B1: { x: PAD + CW*0.4, y: PAD + CH*0.352 },
-      B2: { x: PAD + CW*0.6, y: PAD + CH*0.18 }
+      B1: { x: PAD + CW*0.6, y: PAD + CH*0.18 },
+      B2: { x: PAD + CW*0.4, y: PAD + CH*0.352 }
     }
   }
 };
