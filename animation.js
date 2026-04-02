@@ -121,17 +121,17 @@ function renderAnimFrame() {
     const shot = fr.shot;
     const c = SHOT_COLORS[shot.type];
     const dp = t;
-    if (shot.type === 'drop' || shot.type === 'clear') {
-      const ch = shot.type === 'clear' ? -80 : -40;
+    if (shot.type === 'drop' || shot.type === 'clear' || shot.type === 'lift') {
+      const ch = shot.type === 'clear' ? -80 : shot.type === 'lift' ? -100 : -40;
       const mx = (shot.x1 + shot.x2) / 2, my = (shot.y1 + shot.y2) / 2 + ch;
-      svg += `<path d="M${shot.x1},${shot.y1} Q${mx},${my} ${shot.x2},${shot.y2}" fill="none" stroke="${c}" stroke-width="2.5" opacity=".2" ${shot.type === 'drop' ? 'stroke-dasharray="8,5"' : ''}/>`;
+      svg += `<path d="M${shot.x1},${shot.y1} Q${mx},${my} ${shot.x2},${shot.y2}" fill="none" stroke="${c}" stroke-width="2.5" opacity=".2" ${shot.type === 'drop' ? 'stroke-dasharray="8,5"' : shot.type === 'lift' ? 'stroke-dasharray="12,4"' : ''}/>`;
       const sx = (1 - dp) * (1 - dp) * shot.x1 + 2 * (1 - dp) * dp * mx + dp * dp * shot.x2;
       const sy = (1 - dp) * (1 - dp) * shot.y1 + 2 * (1 - dp) * dp * my + dp * dp * shot.y2;
       svg += `<circle cx="${sx}" cy="${sy}" r="9" fill="${c}" stroke="#fff" stroke-width="2" style="filter:drop-shadow(0 2px 6px rgba(0,0,0,.4))"/>`;
     } else {
       const ex = lerp(shot.x1, shot.x2, dp), ey = lerp(shot.y1, shot.y2, dp);
-      svg += `<line x1="${shot.x1}" y1="${shot.y1}" x2="${shot.x2}" y2="${shot.y2}" stroke="${c}" stroke-width="2.5" opacity=".2"/>`;
-      svg += `<line x1="${shot.x1}" y1="${shot.y1}" x2="${ex}" y2="${ey}" stroke="${c}" stroke-width="${shot.type === 'smash' ? 6 : 4.5}" opacity=".85"/>`;
+      svg += `<line x1="${shot.x1}" y1="${shot.y1}" x2="${shot.x2}" y2="${shot.y2}" stroke="${c}" stroke-width="2.5" opacity=".2" ${shot.type === 'serve' ? 'stroke-dasharray="3,3"' : ''}/>`;
+      svg += `<line x1="${shot.x1}" y1="${shot.y1}" x2="${ex}" y2="${ey}" stroke="${c}" stroke-width="${shot.type === 'smash' ? 6 : shot.type === 'serve' ? 3.5 : 4.5}" opacity=".85" ${shot.type === 'serve' ? 'stroke-dasharray="3,3"' : ''}/>`;
       svg += `<circle cx="${ex}" cy="${ey}" r="9" fill="${c}" stroke="#fff" stroke-width="2" style="filter:drop-shadow(0 2px 6px rgba(0,0,0,.4))"/>`;
       if (shot.type === 'smash' && dp > 0.85) {
         const is = (dp - 0.85) / 0.15;

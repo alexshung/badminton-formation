@@ -7,7 +7,7 @@
   --border:#2d3139;--border-light:#383d47;--radius:8px;
   --font:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
   --teamA:#4a9eff;--teamB:#ff6b6b;
-  --drop:#ff9f43;--drive:#feca57;--smash:#ee5a24;--clear:#2ed573;
+  --drop:#ff9f43;--drive:#feca57;--smash:#ee5a24;--clear:#2ed573;--lift:#a29bfe;--serve:#fd79a8;
   --court-dark:#1a5c2e;--court-light:#237a3c;--court-line:rgba(255,255,255,.85);
   --court-line-dim:rgba(255,255,255,.45);--net-glow:rgba(255,255,255,.6);
   --success:#2ed573;--danger:#ee5a24;
@@ -139,6 +139,8 @@ input,button,select,textarea{font-family:var(--font);}
 .shot-btn[data-shot=drive].active{border-color:var(--drive);background:rgba(254,202,87,.1);}
 .shot-btn[data-shot=smash].active{border-color:var(--smash);background:rgba(238,90,36,.1);}
 .shot-btn[data-shot=clear].active{border-color:var(--clear);background:rgba(46,213,115,.1);}
+.shot-btn[data-shot=lift].active{border-color:var(--lift);background:rgba(162,155,254,.1);}
+.shot-btn[data-shot=serve].active{border-color:var(--serve);background:rgba(253,121,168,.1);}
 .shot-line{height:3px;width:22px;border-radius:2px;flex-shrink:0;}
 
 /* Presets */

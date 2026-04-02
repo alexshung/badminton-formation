@@ -129,6 +129,12 @@ function shotSVG(shot, opacity) {
   } else if (shot.type === 'clear') {
     const mx = (shot.x1 + shot.x2) / 2, my = (shot.y1 + shot.y2) / 2 - 80;
     svg += `<path d="M${shot.x1},${shot.y1} Q${mx},${my} ${shot.x2},${shot.y2}" fill="none" stroke="${c}" stroke-width="4" opacity="${op}" marker-end="url(#${arrowId})"/>`;
+  } else if (shot.type === 'lift') {
+    const mx = (shot.x1 + shot.x2) / 2, my = (shot.y1 + shot.y2) / 2 - 100;
+    svg += `<path d="M${shot.x1},${shot.y1} Q${mx},${my} ${shot.x2},${shot.y2}" fill="none" stroke="${c}" stroke-width="4" stroke-dasharray="12,4" opacity="${op}" marker-end="url(#${arrowId})"/>`;
+  } else if (shot.type === 'serve') {
+    svg += `<line x1="${shot.x1}" y1="${shot.y1}" x2="${shot.x2}" y2="${shot.y2}" stroke="${c}" stroke-width="3.5" stroke-dasharray="3,3" opacity="${op}" marker-end="url(#${arrowId})"/>`;
+    svg += `<circle cx="${shot.x1}" cy="${shot.y1}" r="8" fill="none" stroke="${c}" stroke-width="2" opacity="${op * 0.6}"/>`;
   }
 
   // Label with dark pill
