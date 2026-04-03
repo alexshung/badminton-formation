@@ -21,7 +21,7 @@ function startAnimation() {
   const f0 = state.frames[0];
   for (const pid in f0.players) initPositions[pid] = { ...f0.players[pid] };
 
-  animState = { frameIdx: 0, phase: 'shot', progress: 0, playerPositions: initPositions };
+  animState = { frameIdx: 0, phase: 'action', progress: 0, playerPositions: initPositions };
   lastAnimTime = 0;
   animTick(performance.now());
 }
@@ -48,18 +48,14 @@ function animTick(timestamp) {
   const fr = state.frames[animState.frameIdx];
   if (!fr) { stopAnimation(); return; }
 
-  const SHOT_DUR = 0.8, MOVE_DUR = 0.6, PAUSE_DUR = 0.4;
+  const ACTION_DUR = 1.0, PAUSE_DUR = 0.4;
 
-  if (animState.phase === 'shot') {
-    if (!fr.shot) { animState.phase = 'move'; animState.progress = 0; }
+  if (animState.phase === 'action') {
+    const hasShot = !!fr.shot;
+    const hasMove = Object.keys(fr.movements).length > 0;
+    if (!hasShot && !hasMove) { animState.phase = 'pause'; animState.progress = 0; }
     else {
-      animState.progress += dt / SHOT_DUR;
-      if (animState.progress >= 1) { animState.progress = 1; animState.phase = 'move'; animState.progress = 0; }
-    }
-  } else if (animState.phase === 'move') {
-    if (!Object.keys(fr.movements).length) { animState.phase = 'pause'; animState.progress = 0; }
-    else {
-      animState.progress += dt / MOVE_DUR;
+      animState.progress += dt / ACTION_DUR;
       if (animState.progress >= 1) {
         animState.progress = 1;
         for (const pid in fr.movements) animState.playerPositions[pid] = { ...fr.movements[pid] };
@@ -76,7 +72,7 @@ function animTick(timestamp) {
       for (const pid in animState.playerPositions) np[pid] = { ...animState.playerPositions[pid] };
       for (const pid in nextFr.players) np[pid] = { ...nextFr.players[pid] };
       animState.playerPositions = np;
-      animState.phase = 'shot'; animState.progress = 0;
+      animState.phase = 'action'; animState.progress = 0;
     }
   }
 
@@ -100,7 +96,7 @@ function renderAnimFrame() {
     let pos = animState.playerPositions[pid] || fr.players[pid];
     if (!pos) continue;
     let dx = pos.x, dy = pos.y;
-    if (animState.phase === 'move' && fr.movements[pid]) {
+    if (animState.phase === 'action' && fr.movements[pid]) {
       const dest = fr.movements[pid];
       dx = lerp(pos.x, dest.x, t); dy = lerp(pos.y, dest.y, t);
     }
@@ -111,13 +107,13 @@ function renderAnimFrame() {
     svg += `<circle cx="${dx}" cy="${dy}" r="${PR}" fill="${color}" stroke="rgba(255,255,255,.3)" stroke-width="2" style="filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))"/>`;
     svg += `<circle cx="${dx}" cy="${dy - 3}" r="${PR - 6}" fill="rgba(255,255,255,.15)"/>`;
     svg += `<text x="${dx}" y="${dy + 1}" fill="#fff" font-size="${fs}" font-weight="700" font-family="system-ui" text-anchor="middle" dominant-baseline="central">${escapeXML(label)}</text>`;
-    if (animState.phase === 'move' && fr.movements[pid]) {
+    if (animState.phase === 'action' && fr.movements[pid]) {
       svg += `<line x1="${pos.x}" y1="${pos.y}" x2="${dx}" y2="${dy}" stroke="${color}" stroke-width="2.5" stroke-dasharray="5,4" opacity=".35"/>`;
     }
   }
 
   // Shot animation
-  if (fr.shot && animState.phase === 'shot') {
+  if (fr.shot && animState.phase === 'action') {
     const shot = fr.shot;
     const c = SHOT_COLORS[shot.type];
     const dp = t;
@@ -145,7 +141,7 @@ function renderAnimFrame() {
   // Frame HUD
   svg += `<rect x="${PAD + 8}" y="${PAD + 8}" width="110" height="26" rx="5" fill="rgba(0,0,0,.65)"/>`;
   svg += `<text x="${PAD + 63}" y="${PAD + 22}" fill="#fff" font-size="13" font-weight="600" font-family="system-ui" text-anchor="middle" dominant-baseline="central">Frame ${animState.frameIdx + 1} / ${state.frames.length}</text>`;
-  if (fr.shot && animState.phase === 'shot') {
+  if (fr.shot && animState.phase === 'action') {
     svg += `<rect x="${PAD + CW - 72}" y="${PAD + 8}" width="64" height="22" rx="5" fill="rgba(0,0,0,.55)"/>`;
     svg += `<text x="${PAD + CW - 40}" y="${PAD + 20}" fill="${SHOT_COLORS[fr.shot.type]}" font-size="12" font-weight="700" font-family="system-ui" text-anchor="middle" dominant-baseline="central">${SHOT_LABELS[fr.shot.type]}</text>`;
   }
