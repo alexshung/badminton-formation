@@ -24,7 +24,13 @@
         <option value="dark">Dark BG</option>
         <option value="light">Light BG</option>
       </select>
-      <button class="btn btn-primary btn-sm" onclick="exportImage()">Export PNG</button>
+      <div class="export-dropdown" style="position:relative;display:inline-block;">
+        <button class="btn btn-primary btn-sm" id="exportBtn" onclick="toggleExportMenu()">Export ▾</button>
+        <div class="export-menu" id="exportMenu" style="display:none;position:absolute;top:100%;right:0;margin-top:4px;background:#1e2128;border:1px solid #383d47;border-radius:6px;min-width:140px;z-index:999;box-shadow:0 4px 12px rgba(0,0,0,.4);">
+          <button class="export-menu-item" onclick="exportImage();hideExportMenu()">📷 Export PNG</button>
+          <button class="export-menu-item" onclick="exportVideo();hideExportMenu()">🎬 Export Video</button>
+        </div>
+      </div>
     </div>
     <div class="topbar-divider"></div>
     <div class="playback-group">

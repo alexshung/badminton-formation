@@ -69,7 +69,29 @@ function getSVGPoint(evt) {
   pt.y = touch.clientY;
   const ctm = svg.getScreenCTM();
   if (!ctm) return null;
-  return { x: Math.round(pt.matrixTransform(ctm.inverse()).x), y: Math.round(pt.matrixTransform(ctm.inverse()).y) };
+  const svgP = pt.matrixTransform(ctm.inverse());
+  // In panel mode, adjust coordinates relative to current frame's panel
+  if (state.mode === 'panel') {
+    const gap = 20;
+    const ox = state.currentFrame * (SW + gap);
+    return { x: Math.round(svgP.x - ox), y: Math.round(svgP.y - 30) };
+  }
+  return { x: Math.round(svgP.x), y: Math.round(svgP.y) };
+}
+
+// Helper to get raw SVG point without panel adjustment (for frame detection)
+function getRawSVGPoint(evt) {
+  const svg = document.querySelector('.court-svg');
+  if (!svg) return null;
+  const pt = svg.createSVGPoint();
+  const touch = evt.touches ? evt.touches[0] : (evt.changedTouches ? evt.changedTouches[0] : evt);
+  if (!touch) return null;
+  pt.x = touch.clientX;
+  pt.y = touch.clientY;
+  const ctm = svg.getScreenCTM();
+  if (!ctm) return null;
+  const svgP = pt.matrixTransform(ctm.inverse());
+  return { x: Math.round(svgP.x), y: Math.round(svgP.y) };
 }
 
 function isOnCourt(x, y) {
@@ -86,9 +108,15 @@ function courtClick(evt) {
 
   if (tool === 'player') {
     const nearby = findPlayerAt(p.x, p.y, f);
-    if (nearby) { selectPlayer(nearby); return; }
+    if (nearby) {
+      // Auto-switch to movement mode for this player
+      selectPlayer(nearby);
+      setTool('movement');
+      return;
+    }
     pushUndo();
     f.players[selectedPlayer] = { x: p.x, y: p.y };
+    propagatePositions(state.currentFrame);
     render();
   } else if (tool === 'movement') {
     const nearby = findPlayerAt(p.x, p.y, f);
@@ -102,27 +130,20 @@ function courtClickPanel(evt) {
   evt.preventDefault();
   if (evt.button === 2) return;
   if (isDragging) { isDragging = false; return; }
-  const p = getSVGPoint(evt);
-  if (!p) return;
+  // Detect which frame panel was clicked using raw coordinates
+  const rawP = getRawSVGPoint(evt);
+  if (!rawP) return;
   const n = state.frames.length;
   const gap = 20;
   for (let i = 0; i < n; i++) {
     const ox = i * (SW + gap);
-    if (p.x >= ox && p.x < ox + SW) {
+    if (rawP.x >= ox && rawP.x < ox + SW) {
       if (i !== state.currentFrame) { state.currentFrame = i; render(); return; }
-      const localP = { x: p.x - ox, y: p.y - 30 };
-      if (!isOnCourt(localP.x, localP.y)) return;
-      const f = currentFrameData();
-      if (tool === 'player') {
-        const nearby = findPlayerAt(localP.x, localP.y, f);
-        if (nearby) { selectPlayer(nearby); return; }
-        pushUndo();
-        f.players[selectedPlayer] = { x: localP.x, y: localP.y };
-        render();
-      }
-      return;
+      break;
     }
   }
+  // Delegate to courtClick — getSVGPoint already adjusts for panel offset
+  courtClick(evt);
 }
 
 // ===== RIGHT-CLICK / LONG-PRESS DELETE =====
@@ -229,6 +250,7 @@ function onDrag(evt) {
 
 function endDrag() {
   clearLongPress();
+  if (dragPlayer) propagatePositions(state.currentFrame);
   dragPlayer = null;
   document.removeEventListener('mousemove', onDrag);
   document.removeEventListener('mouseup', endDrag);
@@ -260,6 +282,7 @@ function endMoveDrag() {
     render(); saveState();
   }
   moveDragPlayer = null; moveDragStart = null;
+  propagatePositions(state.currentFrame);
   document.removeEventListener('mousemove', onMoveDrag);
   document.removeEventListener('mouseup', endMoveDrag);
   document.removeEventListener('touchmove', onMoveDrag);
@@ -279,23 +302,35 @@ function onShotMouseDown(evt) {
   if (!p || !isOnCourt(p.x, p.y)) return;
   evt.preventDefault();
 
-  // Snap shot start to nearest player
+  // Check for shuttle position first, then snap to nearest player
   const f = currentFrameData();
-  let closest = null, minD = Infinity;
-  for (const pid in f.players) {
-    const pl = f.players[pid];
-    const d = Math.hypot(pl.x - p.x, pl.y - p.y);
-    if (d < minD) { minD = d; closest = pid; }
-  }
-  if (!closest || minD > 120) {
-    showToast('Click near a player to start the shot');
-    return;
+  const shuttle = getShuttlePosition(state.currentFrame);
+  let originX, originY;
+
+  if (shuttle) {
+    // Shots start from shuttle position
+    originX = shuttle.x;
+    originY = shuttle.y;
+  } else {
+    // No shuttle yet — snap to nearest player
+    let closest = null, minD = Infinity;
+    for (const pid in f.players) {
+      const pl = f.players[pid];
+      const d = Math.hypot(pl.x - p.x, pl.y - p.y);
+      if (d < minD) { minD = d; closest = pid; }
+    }
+    if (!closest || minD > 120) {
+      showToast('Click near a player to start the shot');
+      return;
+    }
+    const origin = f.players[closest];
+    originX = origin.x;
+    originY = origin.y;
   }
 
-  const origin = f.players[closest];
   pushUndo();
-  shotStart = { x: origin.x, y: origin.y, player: closest };
-  shotPreviewLine = { x1: origin.x, y1: origin.y, x2: p.x, y2: p.y };
+  shotStart = { x: originX, y: originY };
+  shotPreviewLine = { x1: originX, y1: originY, x2: p.x, y2: p.y };
   document.addEventListener('mousemove', onShotDrag);
   document.addEventListener('mouseup', endShotDrag);
   document.addEventListener('touchmove', onShotDrag, { passive: false });

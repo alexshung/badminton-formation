@@ -272,6 +272,29 @@ function findPlayerAt(x, y, frame) {
   return closest;
 }
 
+// ===== SHUTTLE TRACKING =====
+function getShuttlePosition(frameIdx) {
+  // Walk backwards to find last shot endpoint
+  for (let i = frameIdx - 1; i >= 0; i--) {
+    if (state.frames[i].shot) {
+      return { x: state.frames[i].shot.x2, y: state.frames[i].shot.y2 };
+    }
+  }
+  return null;
+}
+
+// ===== POSITION PROPAGATION =====
+function propagatePositions(fromFrame) {
+  for (let i = fromFrame + 1; i < state.frames.length; i++) {
+    const prev = state.frames[i - 1];
+    const curr = state.frames[i];
+    for (const pid in prev.players) {
+      const endPos = prev.movements[pid] ? { ...prev.movements[pid] } : { ...prev.players[pid] };
+      curr.players[pid] = endPos;
+    }
+  }
+}
+
 function showToast(msg) {
   const el = document.getElementById('toast');
   if (!el) return;

@@ -165,6 +165,28 @@ function escapeXML(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+// ===== SHUTTLECOCK ICON =====
+function shuttlecockSVG(x, y, opacity) {
+  const op = opacity || 1;
+  let svg = `<g transform="translate(${x},${y})" opacity="${op}">`;
+  // Feather cone
+  svg += `<path d="M-7,-18 Q0,-12 7,-18 L4,-3 Q0,0 -4,-3 Z" fill="rgba(255,255,255,0.85)" stroke="rgba(255,255,255,0.5)" stroke-width="0.5"/>`;
+  // Feather vanes
+  svg += `<line x1="-5" y1="-15" x2="-2" y2="-5" stroke="rgba(0,0,0,0.12)" stroke-width="0.7"/>`;
+  svg += `<line x1="0" y1="-17" x2="0" y2="-5" stroke="rgba(0,0,0,0.12)" stroke-width="0.7"/>`;
+  svg += `<line x1="5" y1="-15" x2="2" y2="-5" stroke="rgba(0,0,0,0.12)" stroke-width="0.7"/>`;
+  // Cork ball
+  svg += `<circle r="4.5" fill="#F5DEB3" stroke="#8B7355" stroke-width="1.5"/>`;
+  svg += `<circle r="2" cy="-1" fill="rgba(255,255,255,0.3)"/>`;
+  // Glow ring
+  svg += `<circle r="10" fill="none" stroke="rgba(255,255,200,0.4)" stroke-width="1.5">`;
+  svg += `<animate attributeName="r" values="10;14;10" dur="2s" repeatCount="indefinite"/>`;
+  svg += `<animate attributeName="opacity" values="0.4;0.1;0.4" dur="2s" repeatCount="indefinite"/>`;
+  svg += `</circle>`;
+  svg += `</g>`;
+  return svg;
+}
+
 // ===== COVERAGE REGION RENDERING =====
 
 function regionDefs() {

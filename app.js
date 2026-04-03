@@ -54,6 +54,13 @@ function renderOverlay(container, interactive) {
     if (!f.shot && Object.keys(f.players).length > 0) {
       svg += frameNumberBadge(i, PAD + 22, PAD + 22 + i * 28);
     }
+    // Shuttle position for current frame
+    if (isActive) {
+      const shuttle = getShuttlePosition(i);
+      if (shuttle) svg += shuttlecockSVG(shuttle.x, shuttle.y, 1);
+      // Also show shuttle at current frame's shot endpoint if shot exists
+      if (f.shot) svg += shuttlecockSVG(f.shot.x2, f.shot.y2, 0.6);
+    }
   }
   svg += '</svg>';
   container.innerHTML = svg;
@@ -89,6 +96,10 @@ function renderPanel(container, interactive) {
         svg += `<circle cx="${d.x}" cy="${d.y}" r="${PR - 5}" fill="none" stroke="${TEAM_COLORS[pid[0]]}" stroke-width="2" stroke-dasharray="4,3" opacity="0.4"/>`;
       }
     }
+    // Shuttle position
+    const shuttle = getShuttlePosition(i);
+    if (shuttle) svg += shuttlecockSVG(shuttle.x, shuttle.y, 0.8);
+    if (f.shot) svg += shuttlecockSVG(f.shot.x2, f.shot.y2, 0.5);
     svg += '</g>';
   }
   svg += '</svg>';
