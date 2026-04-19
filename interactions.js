@@ -153,14 +153,14 @@ function courtRightClickPanel(evt) { evt.preventDefault(); courtRightClick(evt);
 function deleteAt(x, y) {
   const f = currentFrameData();
   const player = findPlayerAt(x, y, f);
-  if (player) { pushUndo(); delete f.players[player]; delete f.movements[player]; render(); showToast('Player removed'); return true; }
+  if (player) { pushUndo(); delete f.players[player]; delete f.movements[player]; propagatePositions(state.currentFrame); render(); showToast('Player removed'); return true; }
   if (f.shot) {
     const sx = (f.shot.x1 + f.shot.x2) / 2, sy = (f.shot.y1 + f.shot.y2) / 2;
     if (Math.hypot(sx - x, sy - y) < 50) { pushUndo(); f.shot = null; render(); showToast('Shot removed'); return true; }
   }
   for (const pid in f.movements) {
     const m = f.movements[pid];
-    if (Math.hypot(m.x - x, m.y - y) < HIT_R) { pushUndo(); delete f.movements[pid]; render(); showToast('Movement removed'); return true; }
+    if (Math.hypot(m.x - x, m.y - y) < HIT_R) { pushUndo(); delete f.movements[pid]; propagatePositions(state.currentFrame); render(); showToast('Movement removed'); return true; }
   }
   // Check if click is inside a coverage region
   if (f.regions) {
@@ -214,15 +214,17 @@ function startDrag(evt, pid) {
   if (evt.touches) startLongPress(evt, p.x, p.y);
 
   if (tool === 'player') {
+    // Auto-switch to movement drag for existing players
     pushUndo();
-    dragPlayer = pid;
+    moveDragPlayer = pid;
     selectedPlayer = pid;
+    setTool('movement');
     document.querySelectorAll('.player-token').forEach(t => t.classList.toggle('active', t.dataset.player === pid));
-    dragOffset = { x: f.players[pid].x - p.x, y: f.players[pid].y - p.y };
-    document.addEventListener('mousemove', onDrag);
-    document.addEventListener('mouseup', endDrag);
-    document.addEventListener('touchmove', onDrag, { passive: false });
-    document.addEventListener('touchend', endDrag);
+    moveDragStart = { x: f.players[pid].x, y: f.players[pid].y };
+    document.addEventListener('mousemove', onMoveDrag);
+    document.addEventListener('mouseup', endMoveDrag);
+    document.addEventListener('touchmove', onMoveDrag, { passive: false });
+    document.addEventListener('touchend', endMoveDrag);
   } else if (tool === 'movement') {
     pushUndo();
     moveDragPlayer = pid;
@@ -279,10 +281,10 @@ function endMoveDrag() {
       const m = f.movements[moveDragPlayer];
       if (Math.hypot(m.x - moveDragStart.x, m.y - moveDragStart.y) < 8) delete f.movements[moveDragPlayer];
     }
+    propagatePositions(state.currentFrame);
     render(); saveState();
   }
   moveDragPlayer = null; moveDragStart = null;
-  propagatePositions(state.currentFrame);
   document.removeEventListener('mousemove', onMoveDrag);
   document.removeEventListener('mouseup', endMoveDrag);
   document.removeEventListener('touchmove', onMoveDrag);
@@ -348,7 +350,7 @@ function onShotDrag(evt) {
 
 function endShotDrag(evt) {
   if (!shotStart) return;
-  const p = getSVGPoint(evt.changedTouches ? evt.changedTouches[0] : evt);
+  const p = getSVGPoint(evt);
   if (p && isOnCourt(p.x, p.y) && Math.hypot(p.x - shotStart.x, p.y - shotStart.y) > 15) {
     currentFrameData().shot = { type: shotType, x1: shotStart.x, y1: shotStart.y, x2: p.x, y2: p.y };
   }
@@ -360,7 +362,22 @@ function endShotDrag(evt) {
   render(); saveState();
 }
 
-function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  sb.classList.toggle('open');
+  // Close sidebar when clicking outside on mobile
+  if (sb.classList.contains('open')) {
+    setTimeout(() => {
+      function closeSidebar(e) {
+        if (!sb.contains(e.target) && !e.target.closest('.sidebar-toggle')) {
+          sb.classList.remove('open');
+          document.removeEventListener('click', closeSidebar);
+        }
+      }
+      document.addEventListener('click', closeSidebar);
+    }, 100);
+  }
+}
 
 // ===== HELP MODAL =====
 function toggleHelp() {

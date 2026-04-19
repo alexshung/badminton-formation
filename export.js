@@ -2,10 +2,10 @@
 
 function toggleExportMenu() {
   const menu = document.getElementById('exportMenu');
-  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+  menu.classList.toggle('show');
 }
 function hideExportMenu() {
-  document.getElementById('exportMenu').style.display = 'none';
+  document.getElementById('exportMenu').classList.remove('show');
 }
 // Close export menu when clicking elsewhere
 document.addEventListener('click', function(e) {
@@ -226,7 +226,10 @@ function exportVideo() {
   function vLerp(a, b, t) { return a + (b - a) * t; }
   function vEase(t) { return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; }
 
+  let videoErrorCount = 0;
+
   function renderVideoFrame() {
+    if (videoErrorCount > 10) { recorder.stop(); showToast('Video export failed — too many render errors'); return; }
     const fr = state.frames[currentGameFrame];
     if (!fr) { recorder.stop(); return; }
 
@@ -318,6 +321,7 @@ function exportVideo() {
       advanceVideoFrame();
     };
     img.onerror = function() {
+      videoErrorCount++;
       ctx.fillStyle = bgColor;
       ctx.fillRect(0, 0, w, h);
       advanceVideoFrame();

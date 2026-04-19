@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Badminton Formation Tool — Pro Coach</title>
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -16,41 +16,43 @@
     </div>
     <input class="title-input" id="titleInput" placeholder="Diagram title..." value="Doubles Formation">
     <div class="topbar-divider"></div>
-    <div class="export-group">
-      <input id="expW" type="number" value="1200" min="400" max="4000">
-      <span class="sep">&times;</span>
-      <input id="expH" type="number" value="630" min="300" max="4000">
-      <select id="exportBg" class="export-select" title="Export background">
-        <option value="dark">Dark BG</option>
-        <option value="light">Light BG</option>
-      </select>
-      <div class="export-dropdown" style="position:relative;display:inline-block;">
-        <button class="btn btn-primary btn-sm" id="exportBtn" onclick="toggleExportMenu()">Export ▾</button>
-        <div class="export-menu" id="exportMenu" style="display:none;position:absolute;top:100%;right:0;margin-top:4px;background:#1e2128;border:1px solid #383d47;border-radius:6px;min-width:140px;z-index:999;box-shadow:0 4px 12px rgba(0,0,0,.4);">
-          <button class="export-menu-item" onclick="exportImage();hideExportMenu()">📷 Export PNG</button>
-          <button class="export-menu-item" onclick="exportVideo();hideExportMenu()">🎬 Export Video</button>
-        </div>
-      </div>
-    </div>
-    <div class="topbar-divider"></div>
-    <div class="playback-group">
-      <button class="btn-icon" id="playBtn" onclick="toggleAnimation()" title="Play / Stop (Space)">
-        <svg width="14" height="14" viewBox="0 0 14 14"><polygon points="2,1 13,7 2,13" fill="currentColor"/></svg>
-      </button>
-      <span class="speed-label">Speed</span>
-      <input class="speed-slider" id="animSpeed" type="range" min="0.5" max="3" step="0.25" value="1">
-    </div>
-    <div class="topbar-divider"></div>
     <button class="btn btn-ghost btn-sm undo-btn" id="undoBtn" onclick="undo()" title="Undo last action (Ctrl+Z)" disabled>
       <svg width="14" height="14" viewBox="0 0 16 16"><path d="M4 7h8a4 4 0 010 8H8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M7 4L4 7l3 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       Undo <span class="undo-count" id="undoCount"></span>
     </button>
+    <div class="topbar-divider"></div>
+    <div class="topbar-row-2">
+      <div class="export-group">
+        <input id="expW" type="number" value="1200" min="400" max="4000">
+        <span class="sep">&times;</span>
+        <input id="expH" type="number" value="630" min="300" max="4000">
+        <select id="exportBg" class="export-select" title="Export background">
+          <option value="dark">Dark BG</option>
+          <option value="light">Light BG</option>
+        </select>
+        <div class="export-dropdown">
+          <button class="btn btn-primary btn-sm" id="exportBtn" onclick="toggleExportMenu()">Export ▾</button>
+          <div class="export-menu" id="exportMenu">
+            <button class="export-menu-item" onclick="exportImage();hideExportMenu()">📷 Export PNG</button>
+            <button class="export-menu-item" onclick="exportVideo();hideExportMenu()">🎬 Export Video</button>
+          </div>
+        </div>
+      </div>
+      <div class="playback-group">
+        <button class="btn-icon" id="playBtn" onclick="toggleAnimation()" title="Play / Stop (Space)">
+          <svg width="14" height="14" viewBox="0 0 14 14"><polygon points="2,1 13,7 2,13" fill="currentColor"/></svg>
+        </button>
+        <span class="speed-label">Speed</span>
+        <input class="speed-slider" id="animSpeed" type="range" min="0.5" max="3" step="0.25" value="1">
+      </div>
+    </div>
   </div>
 
   <!-- Main Area -->
   <div class="main-area">
     <div class="court-container" id="courtContainer"></div>
     <div class="sidebar" id="sidebar">
+      <div class="sidebar-handle"><span></span></div>
 
       <div class="sidebar-section">
         <h3>Tool</h3>
@@ -146,7 +148,7 @@
   </div>
 </div>
 
-<button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+<button class="sidebar-toggle" onclick="toggleSidebar()">🛠 Tools</button>
 <div class="toast" id="toast"></div>
 <canvas id="exportCanvas"></canvas>
 
