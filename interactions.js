@@ -90,6 +90,15 @@ function updateCursor() {
   svg.classList.add('tool-' + tool);
 }
 
+// Cached CTM for mid-drag coordinate conversion (render() replaces SVG, breaking getScreenCTM)
+let _dragCTM = null;
+
+function cacheCTM() {
+  const svg = document.querySelector('.court-svg');
+  if (svg) _dragCTM = svg.getScreenCTM();
+}
+function clearCTMCache() { _dragCTM = null; }
+
 function getSVGPoint(evt) {
   const svg = document.querySelector('.court-svg');
   if (!svg) return null;
@@ -98,7 +107,8 @@ function getSVGPoint(evt) {
   if (!touch) return null;
   pt.x = touch.clientX;
   pt.y = touch.clientY;
-  const ctm = svg.getScreenCTM();
+  // Use cached CTM during drags (since render() replaces the SVG element)
+  const ctm = _dragCTM || svg.getScreenCTM();
   if (!ctm) return null;
   const svgP = pt.matrixTransform(ctm.inverse());
 
@@ -164,9 +174,17 @@ function courtClick(evt) {
       pushUndo();
       f.players[selectedPlayer] = { x: p.x, y: p.y };
       propagatePositions(state.currentFrame);
-      render();
+      render(); saveState();
+    } else {
+      // Frame 2+: tap empty court = set movement for selected player
+      if (selectedPlayer && f.players[selectedPlayer]) {
+        pushUndo();
+        f.movements[selectedPlayer] = { x: p.x, y: p.y };
+        propagatePositions(state.currentFrame);
+        render(); saveState();
+        showToast('Movement set for ' + selectedPlayer);
+      }
     }
-    // Frame 2+: tap empty court does nothing (drag players to move)
   } else if (tool === 'shot') {
     // Check for shuttle position (previous shot's landing)
     const shuttle = getShuttlePosition(state.currentFrame);
@@ -338,6 +356,7 @@ function onDrag(evt) {
 
 function endDrag() {
   clearLongPress();
+  clearCTMCache();
   if (dragPlayer) propagatePositions(state.currentFrame);
   dragPlayer = null;
   document.removeEventListener('mousemove', onDrag);
@@ -361,6 +380,7 @@ function onMoveDrag(evt) {
 
 function endMoveDrag() {
   clearLongPress();
+  clearCTMCache();
   if (moveDragPlayer) {
     const f = currentFrameData();
     if (moveDragStart && f.movements[moveDragPlayer]) {
@@ -410,6 +430,7 @@ function onShotAdjustDrag(evt) {
 }
 
 function endShotAdjustDrag() {
+  clearCTMCache();
   shotDragEnd = null;
   document.removeEventListener('mousemove', onShotAdjustDrag);
   document.removeEventListener('mouseup', endShotAdjustDrag);
@@ -650,8 +671,8 @@ function initTouchDelegation() {
       const dStart = Math.hypot(p.x - f.shot.x1, p.y - f.shot.y1);
 
       if (dEnd < TOUCH_HIT_R && dEnd < dStart) {
-        // Dragging shot endpoint (shuttlecock)
         evt.preventDefault();
+        cacheCTM();
         shotDragEnd = 'end';
         pushUndo();
         document.addEventListener('touchmove', onShotAdjustDrag, { passive: false });
@@ -659,8 +680,8 @@ function initTouchDelegation() {
         return;
       }
       if (dStart < TOUCH_HIT_R) {
-        // Dragging shot origin
         evt.preventDefault();
+        cacheCTM();
         shotDragEnd = 'start';
         pushUndo();
         document.addEventListener('touchmove', onShotAdjustDrag, { passive: false });
@@ -673,6 +694,7 @@ function initTouchDelegation() {
     const nearPlayer = findPlayerAt(p.x, p.y, f, TOUCH_HIT_R);
     if (nearPlayer) {
       evt.preventDefault();
+      cacheCTM();
       selectedPlayer = nearPlayer;
       isDragging = false;
       document.querySelectorAll('.player-token').forEach(t => t.classList.toggle('active', t.dataset.player === nearPlayer));
