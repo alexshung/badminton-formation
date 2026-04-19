@@ -227,6 +227,35 @@ function startDrag(evt, pid) {
   const f = currentFrameData();
   if (!p || !f.players[pid]) return;
   isDragging = false;
+
+  // Shot mode: touching a player starts a shot from shuttle position or this player
+  if (tool === 'shot') {
+    const shuttle = getShuttlePosition(state.currentFrame);
+    let originX, originY;
+    if (shuttle) {
+      originX = shuttle.x;
+      originY = shuttle.y;
+    } else {
+      originX = f.players[pid].x;
+      originY = f.players[pid].y;
+    }
+    pushUndo();
+    shotStart = { x: originX, y: originY };
+    shotPreviewLine = { x1: originX, y1: originY, x2: p.x, y2: p.y };
+    document.addEventListener('mousemove', onShotDrag);
+    document.addEventListener('mouseup', endShotDrag);
+    document.addEventListener('touchmove', onShotDrag, { passive: false });
+    document.addEventListener('touchend', endShotDrag);
+    return;
+  }
+
+  // Coverage mode: select the player for coverage drawing
+  if (tool === 'coverage') {
+    selectPlayer(pid);
+    return;
+  }
+
+  // Long press for deletion only in player/movement modes
   if (evt.touches) startLongPress(evt, p.x, p.y);
 
   if (tool === 'player') {
