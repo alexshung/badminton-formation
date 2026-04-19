@@ -331,10 +331,10 @@ function startDrag(evt, pid) {
     document.addEventListener('touchmove', onDrag, { passive: false });
     document.addEventListener('touchend', endDrag);
   } else {
-    // Frame 2+: drag creates movement arrow
-    pushUndo();
+    // Frame 2+: drag creates movement arrow (undo deferred until real drag)
     moveDragPlayer = pid;
     moveDragStart = { x: f.players[pid].x, y: f.players[pid].y };
+    moveDragUndoPushed = false;
     document.addEventListener('mousemove', onMoveDrag);
     document.addEventListener('mouseup', endMoveDrag);
     document.addEventListener('touchmove', onMoveDrag, { passive: false });
@@ -367,13 +367,22 @@ function endDrag() {
 }
 
 // ===== DRAG: Movement =====
+let moveDragUndoPushed = false;
+
 function onMoveDrag(evt) {
   if (!moveDragPlayer) return;
   evt.preventDefault();
   clearLongPress();
-  isDragging = true;
   const p = getSVGPoint(evt);
   if (!p || !isOnCourt(p.x, p.y)) return;
+  // Only push undo & start real drag after meaningful finger movement
+  if (!isDragging) {
+    const dist = Math.hypot(p.x - moveDragStart.x, p.y - moveDragStart.y);
+    if (dist < 30) return; // ~6px on screen — ignore jitter
+    isDragging = true;
+    pushUndo();
+    moveDragUndoPushed = true;
+  }
   currentFrameData().movements[moveDragPlayer] = { x: p.x, y: p.y };
   render();
 }
@@ -382,15 +391,26 @@ function endMoveDrag() {
   clearLongPress();
   clearCTMCache();
   if (moveDragPlayer) {
-    const f = currentFrameData();
-    if (moveDragStart && f.movements[moveDragPlayer]) {
-      const m = f.movements[moveDragPlayer];
-      if (Math.hypot(m.x - moveDragStart.x, m.y - moveDragStart.y) < 8) delete f.movements[moveDragPlayer];
+    if (isDragging && moveDragUndoPushed) {
+      // Real drag happened — finalize movement
+      const f = currentFrameData();
+      if (moveDragStart && f.movements[moveDragPlayer]) {
+        const m = f.movements[moveDragPlayer];
+        if (Math.hypot(m.x - moveDragStart.x, m.y - moveDragStart.y) < 30) {
+          delete f.movements[moveDragPlayer];
+        }
+      }
+      propagatePositions(state.currentFrame);
+      render(); saveState();
+    } else {
+      // Tap (no drag) — just select the player for tap-tap flow
+      selectPlayer(moveDragPlayer);
+      render();
     }
-    propagatePositions(state.currentFrame);
-    render(); saveState();
   }
   moveDragPlayer = null; moveDragStart = null;
+  moveDragUndoPushed = false;
+  isDragging = false;
   document.removeEventListener('mousemove', onMoveDrag);
   document.removeEventListener('mouseup', endMoveDrag);
   document.removeEventListener('touchmove', onMoveDrag);
@@ -665,8 +685,8 @@ function initTouchDelegation() {
 
     const f = currentFrameData();
 
-    // 1. Check if touching a shot endpoint or origin (for adjustment)
-    if (f.shot) {
+    // 1. Shot endpoint adjustment — only when in shot tool mode
+    if (tool === 'shot' && f.shot) {
       const dEnd = Math.hypot(p.x - f.shot.x2, p.y - f.shot.y2);
       const dStart = Math.hypot(p.x - f.shot.x1, p.y - f.shot.y1);
 
@@ -707,10 +727,10 @@ function initTouchDelegation() {
         document.addEventListener('touchmove', onDrag, { passive: false });
         document.addEventListener('touchend', endDrag);
       } else {
-        // Frame 2+: movement arrow
-        pushUndo();
+        // Frame 2+: movement arrow (undo deferred until real drag detected)
         moveDragPlayer = nearPlayer;
         moveDragStart = { x: f.players[nearPlayer].x, y: f.players[nearPlayer].y };
+        moveDragUndoPushed = false;
         document.addEventListener('touchmove', onMoveDrag, { passive: false });
         document.addEventListener('touchend', endMoveDrag);
       }
