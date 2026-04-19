@@ -54,12 +54,14 @@ function renderOverlay(container, interactive) {
     if (!f.shot && Object.keys(f.players).length > 0) {
       svg += frameNumberBadge(i, PAD + 22, PAD + 22 + i * 28);
     }
-    // Shuttle position for current frame
+    // Shuttle position for current frame — one icon only
     if (isActive) {
-      const shuttle = getShuttlePosition(i);
-      if (shuttle) svg += shuttlecockSVG(shuttle.x, shuttle.y, 1);
-      // Also show shuttle at current frame's shot endpoint if shot exists
-      if (f.shot) svg += shuttlecockSVG(f.shot.x2, f.shot.y2, 0.6);
+      if (f.shot) {
+        svg += shuttlecockSVG(f.shot.x2, f.shot.y2, 0.8);
+      } else {
+        const shuttle = getShuttlePosition(i);
+        if (shuttle) svg += shuttlecockSVG(shuttle.x, shuttle.y, 1);
+      }
     }
   }
   svg += '</svg>';
@@ -88,18 +90,31 @@ function renderPanel(container, interactive) {
       if (f.players[pid]) svg += movementSVG(pid, f.players[pid].x, f.players[pid].y, f.movements[pid].x, f.movements[pid].y, 1);
     }
     svg += shotSVG(f.shot, 1);
+    // Shot preview line (active frame only)
+    if (isActive && shotPreviewLine && !f.shot) {
+      svg += shotSVG({ type: shotType, x1: shotPreviewLine.x1, y1: shotPreviewLine.y1, x2: shotPreviewLine.x2, y2: shotPreviewLine.y2 }, 0.45);
+    }
+    // Coverage drawing preview
+    if (isActive && tool === 'coverage' && coveragePoints.length > 0) {
+      svg += coveragePreviewSVG(coveragePoints, coveragePreview, selectedPlayer);
+    }
     for (const pid in f.players) {
       const p = f.players[pid];
       svg += playerSVG(pid, p.x, p.y, 1, interactive && isActive);
       if (f.movements[pid]) {
         const d = f.movements[pid];
         svg += `<circle cx="${d.x}" cy="${d.y}" r="${PR - 5}" fill="none" stroke="${TEAM_COLORS[pid[0]]}" stroke-width="2" stroke-dasharray="4,3" opacity="0.4"/>`;
+        const lbl = getPlayerLabel(pid);
+        svg += `<text x="${d.x}" y="${d.y}" fill="${TEAM_COLORS[pid[0]]}" font-size="9" font-weight="600" font-family="system-ui" text-anchor="middle" dominant-baseline="central" opacity="0.4">${escapeXML(lbl)}</text>`;
       }
     }
-    // Shuttle position
-    const shuttle = getShuttlePosition(i);
-    if (shuttle) svg += shuttlecockSVG(shuttle.x, shuttle.y, 0.8);
-    if (f.shot) svg += shuttlecockSVG(f.shot.x2, f.shot.y2, 0.5);
+    // Shuttle position — one per frame
+    if (f.shot) {
+      svg += shuttlecockSVG(f.shot.x2, f.shot.y2, 0.7);
+    } else {
+      const shuttle = getShuttlePosition(i);
+      if (shuttle) svg += shuttlecockSVG(shuttle.x, shuttle.y, 0.8);
+    }
     svg += '</g>';
   }
   svg += '</svg>';
@@ -180,3 +195,35 @@ document.getElementById('courtContainer').addEventListener('touchmove', function
 // Export bg toggle
 const expBgEl = document.getElementById('exportBg');
 if (expBgEl) expBgEl.addEventListener('change', function() { state.exportBg = this.value; saveState(); });
+
+// ===== LANDSCAPE ORIENTATION =====
+function dismissRotatePrompt() {
+  const el = document.getElementById('rotatePrompt');
+  if (el) el.classList.remove('visible');
+  sessionStorage.setItem('portrait-dismissed', '1');
+}
+
+function checkOrientation() {
+  const el = document.getElementById('rotatePrompt');
+  if (!el) return;
+  const isMobile = window.innerWidth <= 768 || window.innerHeight <= 768;
+  const isPortrait = window.innerHeight > window.innerWidth;
+  const dismissed = sessionStorage.getItem('portrait-dismissed') === '1';
+
+  if (isMobile && isPortrait && !dismissed) {
+    el.classList.add('visible');
+  } else {
+    el.classList.remove('visible');
+  }
+
+  // Try to lock orientation in PWA / fullscreen contexts
+  try {
+    if (screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('landscape').catch(() => {});
+    }
+  } catch (e) { /* Not supported outside fullscreen/PWA */ }
+}
+
+checkOrientation();
+window.addEventListener('orientationchange', () => setTimeout(checkOrientation, 200));
+window.addEventListener('resize', checkOrientation);

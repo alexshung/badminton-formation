@@ -354,3 +354,40 @@ input,button,select,textarea{font-family:var(--font);}
   .topbar{min-height:44px;padding:6px 16px;}
   .timeline{min-height:44px;padding:6px 16px;}
 }
+
+/* === Landscape orientation prompt === */
+.rotate-prompt{
+  display:none;position:fixed;inset:0;z-index:9999;
+  background:rgba(0,0,0,0.92);
+  align-items:center;justify-content:center;
+  opacity:0;transition:opacity 0.3s ease;
+  pointer-events:none;
+}
+.rotate-prompt.visible{
+  display:flex;opacity:1;pointer-events:auto;
+}
+.rotate-content{
+  text-align:center;padding:40px 30px;max-width:320px;
+}
+.rotate-icon{
+  font-size:64px;margin-bottom:20px;
+  animation:rotate-hint 2s ease-in-out infinite;
+}
+@keyframes rotate-hint{
+  0%,100%{transform:rotate(0deg);}
+  25%{transform:rotate(-15deg);}
+  75%{transform:rotate(15deg);}
+}
+.rotate-content p{
+  color:#e0e0e0;font-size:16px;line-height:1.5;
+  font-family:system-ui,sans-serif;margin:0 0 24px;
+}
+.rotate-content button{
+  background:#2a2f3a;color:#e0e0e0;border:1px solid #4a5568;
+  border-radius:10px;padding:12px 28px;font-size:14px;
+  font-family:system-ui,sans-serif;cursor:pointer;
+  transition:background 0.2s;min-height:44px;
+}
+.rotate-content button:hover,.rotate-content button:active{
+  background:#3a4050;border-color:#6b7280;
+}

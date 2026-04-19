@@ -12,6 +12,9 @@ function courtGradientDefs() {
       <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
     <filter id="netGlow"><feGaussianBlur stdDeviation="2" result="b"/>
       <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <pattern id="hatch-overlap" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="8" stroke="rgba(255,255,255,.5)" stroke-width="2"/>
+    </pattern>
   </defs>`;
 }
 
@@ -189,19 +192,10 @@ function shuttlecockSVG(x, y, opacity) {
 
 // ===== COVERAGE REGION RENDERING =====
 
-function regionDefs() {
-  // Hatching pattern for overlap areas
-  return `<defs>
-    <pattern id="hatch-overlap" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45)">
-      <line x1="0" y1="0" x2="0" y2="8" stroke="rgba(255,255,255,.5)" stroke-width="2"/>
-    </pattern>
-  </defs>`;
-}
-
 function regionSVG(regions, opacity) {
   if (!regions || Object.keys(regions).length === 0) return '';
   const op = opacity || 1;
-  let svg = regionDefs();
+  let svg = '';
 
   // Draw each player's region
   const playerIds = Object.keys(regions);
