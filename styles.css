@@ -277,6 +277,11 @@ input,button,select,textarea{font-family:var(--font);}
   -webkit-tap-highlight-color:transparent;}
 .sidebar-backdrop.show{display:block;}
 
+/* === MOBILE TOOL TOGGLES (hidden on desktop) === */
+.mobile-tool-btn{display:none;position:relative;}
+.shot-type-dot{display:none;position:absolute;bottom:2px;right:2px;width:7px;height:7px;
+  border-radius:50%;border:1px solid var(--surface);}
+
 /* =================================================================
    MOBILE (max-width: 768px)
    ================================================================= */
@@ -346,10 +351,17 @@ input,button,select,textarea{font-family:var(--font);}
   .frame-note-input{font-size:11px;padding:4px 8px;min-height:24px;}
 
   /* === FAB: Small circle, bottom-right === */
+  /* === Mobile tool toggles in topbar === */
+  .mobile-tool-btn{display:flex !important;width:32px;height:32px;min-height:32px;
+    border-radius:6px;position:relative;}
+  .mobile-tool-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .mobile-tool-btn .shot-type-dot{display:block;}
+
+  /* === FAB: hidden by default, accessible via long-press or keep as ⋯ === */
   .sidebar-toggle{display:flex !important;align-items:center;justify-content:center;
-    width:48px;height:48px;bottom:52px;right:12px;left:auto;transform:none;
-    border-radius:50%;padding:0;font-size:20px;line-height:1;
-    box-shadow:0 4px 16px rgba(0,0,0,.5);z-index:99;}
+    width:36px;height:36px;bottom:44px;right:8px;left:auto;transform:none;
+    border-radius:50%;padding:0;font-size:14px;line-height:1;
+    box-shadow:0 2px 8px rgba(0,0,0,.4);z-index:99;opacity:0.6;}
   .sidebar-toggle:active{transform:scale(.88);}
 
   /* === TIMELINE: Slim === */
@@ -391,7 +403,9 @@ input,button,select,textarea{font-family:var(--font);}
   .frame-btn{min-height:24px;min-width:34px;padding:2px 6px;font-size:10px;border-radius:12px;}
   .timeline-action{min-height:24px;min-width:24px;font-size:10px;}
   .sidebar{max-height:50vh;}
-  .sidebar-toggle{width:44px;height:44px;bottom:36px;right:10px;font-size:18px;}
+  .sidebar-toggle{width:32px;height:32px;bottom:32px;right:6px;font-size:14px;opacity:0.5;}
+  .mobile-tool-btn{width:28px;height:28px;min-height:28px;}
+  .mobile-tool-btn svg{width:13px;height:13px;}
   .court-container{padding:1px;}
   .toast{bottom:38px;}
 }

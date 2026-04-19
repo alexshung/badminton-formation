@@ -224,6 +224,7 @@ document.getElementById('frameNote').addEventListener('input', function() {
 window.addEventListener('resize', () => {
   if (state && !animRunning) render();
   updateOrientBtn();
+updateMobileToolBtns();
 });
 
 function updateOrientBtn() {

@@ -18,6 +18,7 @@ function setTool(t) {
   updateCoverageInfo();
   updateCursor();
   updateStatus();
+  updateMobileToolBtns();
   // Auto-close sidebar on mobile — but NOT for shot (wait for shot type pick)
   if (window.innerWidth <= 1024 && t !== 'shot') closeSidebar();
 }
@@ -52,7 +53,34 @@ function setShotType(t) {
   shotStart = null;
   document.querySelectorAll('.shot-btn').forEach(b => b.classList.toggle('active', b.dataset.shot === t));
   updateStatus();
+  updateMobileToolBtns();
   if (window.innerWidth <= 1024) closeSidebar();
+}
+
+// Mobile topbar tool toggle
+const SHOT_CYCLE = ['drop', 'drive', 'smash', 'clear', 'lift', 'serve'];
+
+function setToolMobile(t) {
+  if (t === 'shot' && tool === 'shot') {
+    // Already on shot — cycle through shot types
+    const idx = SHOT_CYCLE.indexOf(shotType);
+    const next = SHOT_CYCLE[(idx + 1) % SHOT_CYCLE.length];
+    setShotType(next);
+    showToast(SHOT_LABELS[next]);
+    return;
+  }
+  setTool(t);
+  updateMobileToolBtns();
+}
+
+function updateMobileToolBtns() {
+  const moveBtn = document.getElementById('toolMoveBtn');
+  const shotBtn = document.getElementById('toolShotBtn');
+  if (moveBtn) moveBtn.classList.toggle('active', tool === 'player');
+  if (shotBtn) shotBtn.classList.toggle('active', tool === 'shot');
+  // Update shot type color dot
+  const dot = document.getElementById('shotTypeDot');
+  if (dot) dot.style.background = SHOT_COLORS[shotType] || '#fff';
 }
 
 function updateCursor() {
