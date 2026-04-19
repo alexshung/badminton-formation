@@ -346,11 +346,17 @@ function initShotDrag() {
 function onShotMouseDown(evt) {
   if (tool !== 'shot' || evt.button === 2) return;
   const p = getSVGPoint(evt);
-  if (!p || !isOnCourt(p.x, p.y)) {
-    if (p) showToast(`Off court: (${p.x},${p.y}) land=${isLandscapeCourt()}`);
+  if (!p || !isOnCourt(p.x, p.y)) return;
+  evt.preventDefault();
+
+  // Two-tap mode: if shotStart already set from a previous tap, this completes the shot
+  if (shotStart && Math.hypot(p.x - shotStart.x, p.y - shotStart.y) > 15) {
+    currentFrameData().shot = { type: shotType, x1: shotStart.x, y1: shotStart.y, x2: p.x, y2: p.y };
+    shotStart = null; shotPreviewLine = null;
+    render(); saveState();
+    showToast('Shot placed');
     return;
   }
-  evt.preventDefault();
 
   // Check for shuttle position first, then snap to nearest player
   const f = currentFrameData();
@@ -358,20 +364,17 @@ function onShotMouseDown(evt) {
   let originX, originY;
 
   if (shuttle) {
-    // Shots start from shuttle position
     originX = shuttle.x;
     originY = shuttle.y;
   } else {
-    // No shuttle yet — snap to nearest player
     let closest = null, minD = Infinity;
     for (const pid in f.players) {
       const pl = f.players[pid];
       const d = Math.hypot(pl.x - p.x, pl.y - p.y);
       if (d < minD) { minD = d; closest = pid; }
     }
-    if (!closest || minD > 120) {
-      const players = Object.entries(f.players).map(([id,pl]) => `${id}:(${pl.x},${pl.y})`).join(' ');
-      showToast(`tap(${p.x},${p.y}) nearest=${Math.round(minD)}px ${players}`);
+    if (!closest) {
+      showToast('Place players first, then draw shots');
       return;
     }
     const origin = f.players[closest];
@@ -400,14 +403,23 @@ function onShotDrag(evt) {
 function endShotDrag(evt) {
   if (!shotStart) return;
   const p = getSVGPoint(evt);
-  if (p && isOnCourt(p.x, p.y) && Math.hypot(p.x - shotStart.x, p.y - shotStart.y) > 15) {
-    currentFrameData().shot = { type: shotType, x1: shotStart.x, y1: shotStart.y, x2: p.x, y2: p.y };
-  }
-  shotStart = null; shotPreviewLine = null;
+  
+  // Always remove drag listeners
   document.removeEventListener('mousemove', onShotDrag);
   document.removeEventListener('mouseup', endShotDrag);
   document.removeEventListener('touchmove', onShotDrag);
   document.removeEventListener('touchend', endShotDrag);
+  
+  if (p && isOnCourt(p.x, p.y) && Math.hypot(p.x - shotStart.x, p.y - shotStart.y) > 15) {
+    // Drag was long enough — place the shot
+    currentFrameData().shot = { type: shotType, x1: shotStart.x, y1: shotStart.y, x2: p.x, y2: p.y };
+    shotStart = null; shotPreviewLine = null;
+    showToast('Shot placed');
+  } else {
+    // Drag too short — enter two-tap mode: keep shotStart, tap again for endpoint
+    shotPreviewLine = null;
+    showToast('Now tap the landing spot');
+  }
   render(); saveState();
 }
 
