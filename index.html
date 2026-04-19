@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Badminton Formation Tool — Pro Coach</title>
-<link rel="stylesheet" href="styles.css?v=1776626129">
+<link rel="stylesheet" href="styles.css?v=1776626451">
 </head>
 <body>
 <div class="app">
@@ -64,8 +64,6 @@
             <span class="tool-icon">◎</span> Place / Move</button>
           <button class="tool-btn" data-tool="shot" onclick="setTool('shot')">
             <span class="tool-icon">⟶</span> Draw Shot</button>
-          <button class="tool-btn" data-tool="movement" onclick="setTool('movement')">
-            <span class="tool-icon">⤳</span> Movement</button>
           <button class="tool-btn" data-tool="coverage" onclick="setTool('coverage')">
             <span class="tool-icon">◻</span> Coverage</button>
         </div>
@@ -106,7 +104,7 @@
 
       <div class="sidebar-section" id="moveSection" style="display:none">
         <h3>Movement</h3>
-        <p style="font-size:11px;color:var(--muted)">Select a player, then drag them on the court to set their post-shot position.</p>
+        <p style="font-size:11px;color:var(--muted)">Drag players on the court to set their post-shot position. Frame 1 = placement, Frame 2+ = movement arrows.</p>
       </div>
 
       <div class="sidebar-section" id="coverageSection" style="display:none">
@@ -190,11 +188,11 @@
   </div>
 </div>
 
-<script src="state.js?v=1776626129"></script>
-<script src="court.js?v=1776626129"></script>
-<script src="interactions.js?v=1776626129"></script>
-<script src="animation.js?v=1776626129"></script>
-<script src="export.js?v=1776626129"></script>
-<script src="app.js?v=1776626129"></script>
+<script src="state.js?v=1776626451"></script>
+<script src="court.js?v=1776626451"></script>
+<script src="interactions.js?v=1776626451"></script>
+<script src="animation.js?v=1776626451"></script>
+<script src="export.js?v=1776626451"></script>
+<script src="app.js?v=1776626451"></script>
 </body>
 </html>

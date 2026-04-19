@@ -11,9 +11,9 @@ function setTool(t) {
   shotStart = null; movePlayer = null;
   coveragePoints = []; coveragePreview = null;
   document.querySelectorAll('.tool-btn').forEach(b => b.classList.toggle('active', b.dataset.tool === t));
-  document.getElementById('playerSection').style.display = (t === 'player' || t === 'movement' || t === 'coverage') ? '' : 'none';
+  document.getElementById('playerSection').style.display = (t === 'player' || t === 'coverage') ? '' : 'none';
   document.getElementById('shotSection').style.display = t === 'shot' ? '' : 'none';
-  document.getElementById('moveSection').style.display = t === 'movement' ? '' : 'none';
+  document.getElementById('moveSection').style.display = 'none';
   document.getElementById('coverageSection').style.display = t === 'coverage' ? '' : 'none';
   updateCoverageInfo();
   updateCursor();
@@ -22,7 +22,7 @@ function setTool(t) {
 
 function selectPlayer(id) {
   selectedPlayer = id;
-  if (tool !== 'movement' && tool !== 'shot') setTool('player');
+  if (tool !== 'shot' && tool !== 'coverage') setTool('player');
   document.querySelectorAll('.player-token').forEach(t => t.classList.toggle('active', t.dataset.player === id));
   render();
 }
@@ -124,16 +124,32 @@ function courtClick(evt) {
   if (tool === 'player') {
     const nearby = findPlayerAt(p.x, p.y, f);
     if (nearby) {
+      // Tapping on a player selects them
       selectPlayer(nearby);
-      setTool('movement');
       return;
     }
-    pushUndo();
-    f.players[selectedPlayer] = { x: p.x, y: p.y };
-    propagatePositions(state.currentFrame);
-    render();
+    if (state.currentFrame === 0) {
+      // Frame 1: tap empty court = place player
+      pushUndo();
+      f.players[selectedPlayer] = { x: p.x, y: p.y };
+      propagatePositions(state.currentFrame);
+      render();
+    }
+    // Frame 2+: tap empty court does nothing (drag players to move)
   } else if (tool === 'shot') {
-    // Two-tap shot mode: tap 1 = origin, tap 2 = endpoint
+    // Check for shuttle position (previous shot's landing)
+    const shuttle = getShuttlePosition(state.currentFrame);
+
+    if (shuttle && !shotStart) {
+      // Auto-origin from shuttle: single tap places the shot
+      pushUndo();
+      f.shot = { type: shotType, x1: shuttle.x, y1: shuttle.y, x2: p.x, y2: p.y };
+      render(); saveState();
+      showToast('Shot placed');
+      return;
+    }
+
+    // Two-tap mode (no shuttle, or already in two-tap)
     if (shotStart) {
       if (Math.hypot(p.x - shotStart.x, p.y - shotStart.y) > 15) {
         f.shot = { type: shotType, x1: shotStart.x, y1: shotStart.y, x2: p.x, y2: p.y };
@@ -141,18 +157,10 @@ function courtClick(evt) {
         render(); saveState();
         showToast('Shot placed');
       }
-      // If too close to origin, ignore (same spot tap)
       return;
     }
-    // First tap: find origin (shuttle or nearest player)
-    const shuttle = getShuttlePosition(state.currentFrame);
-    if (shuttle) {
-      pushUndo();
-      shotStart = { x: shuttle.x, y: shuttle.y };
-      render();
-      showToast('Now tap the landing spot');
-      return;
-    }
+
+    // First tap: find origin at nearest player
     let closest = null, minD = Infinity;
     for (const pid in f.players) {
       const pl = f.players[pid];
@@ -168,9 +176,6 @@ function courtClick(evt) {
     shotStart = { x: origin.x, y: origin.y };
     render();
     showToast('Now tap the landing spot');
-  } else if (tool === 'movement') {
-    const nearby = findPlayerAt(p.x, p.y, f);
-    if (nearby) selectPlayer(nearby);
   } else if (tool === 'coverage') {
     handleCoverageClick(p.x, p.y);
   }
@@ -262,19 +267,30 @@ function startDrag(evt, pid) {
   const f = currentFrameData();
   if (!p || !f.players[pid]) return;
   isDragging = false;
-
-  // Dragging a player ALWAYS starts movement, regardless of active tool
-  if (evt.touches) startLongPress(evt, p.x, p.y);
-
-  pushUndo();
-  moveDragPlayer = pid;
   selectedPlayer = pid;
   document.querySelectorAll('.player-token').forEach(t => t.classList.toggle('active', t.dataset.player === pid));
-  moveDragStart = { x: f.players[pid].x, y: f.players[pid].y };
-  document.addEventListener('mousemove', onMoveDrag);
-  document.addEventListener('mouseup', endMoveDrag);
-  document.addEventListener('touchmove', onMoveDrag, { passive: false });
-  document.addEventListener('touchend', endMoveDrag);
+
+  if (evt.touches) startLongPress(evt, p.x, p.y);
+
+  if (state.currentFrame === 0) {
+    // Frame 1: drag repositions the player's base position
+    pushUndo();
+    dragPlayer = pid;
+    dragOffset = { x: f.players[pid].x - p.x, y: f.players[pid].y - p.y };
+    document.addEventListener('mousemove', onDrag);
+    document.addEventListener('mouseup', endDrag);
+    document.addEventListener('touchmove', onDrag, { passive: false });
+    document.addEventListener('touchend', endDrag);
+  } else {
+    // Frame 2+: drag creates movement arrow
+    pushUndo();
+    moveDragPlayer = pid;
+    moveDragStart = { x: f.players[pid].x, y: f.players[pid].y };
+    document.addEventListener('mousemove', onMoveDrag);
+    document.addEventListener('mouseup', endMoveDrag);
+    document.addEventListener('touchmove', onMoveDrag, { passive: false });
+    document.addEventListener('touchend', endMoveDrag);
+  }
 }
 
 function onDrag(evt) {

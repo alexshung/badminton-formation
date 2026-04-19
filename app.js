@@ -187,10 +187,16 @@ function updatePlayerPalette() {
 
 function updateStatus() {
   const el = document.getElementById('statusText');
-  if (tool === 'player') el.textContent = `Place/Move: ${getPlayerLabel(selectedPlayer)} — click to place, drag to reposition`;
-  else if (tool === 'shot') el.textContent = `Shot (${SHOT_LABELS[shotType]}): click near a player and drag to the landing spot`;
-  else if (tool === 'movement') el.textContent = `Movement: drag ${getPlayerLabel(selectedPlayer)} to set movement path`;
-  else if (tool === 'coverage') {
+  const isFirst = state.currentFrame === 0;
+  const shuttle = getShuttlePosition(state.currentFrame);
+  if (tool === 'player') {
+    if (isFirst) el.textContent = `Frame 1: tap to place ${getPlayerLabel(selectedPlayer)}, drag to reposition`;
+    else el.textContent = `Drag ${getPlayerLabel(selectedPlayer)} to set movement path`;
+  } else if (tool === 'shot') {
+    if (shuttle) el.textContent = `Shot (${SHOT_LABELS[shotType]}): tap the landing spot`;
+    else if (shotStart) el.textContent = `Shot (${SHOT_LABELS[shotType]}): tap the landing spot`;
+    else el.textContent = `Shot (${SHOT_LABELS[shotType]}): tap near a player to set origin`;
+  } else if (tool === 'coverage') {
     if (coveragePoints.length === 0) el.textContent = `Coverage: click to start drawing ${getPlayerLabel(selectedPlayer)}'s zone`;
     else if (coveragePoints.length < 3) el.textContent = `Coverage: click to add points (${coveragePoints.length} placed, need at least 3)`;
     else el.textContent = `Coverage: click to add points, or click near first point / double-click to close (${coveragePoints.length} points)`;
