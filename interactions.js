@@ -346,7 +346,10 @@ function initShotDrag() {
 function onShotMouseDown(evt) {
   if (tool !== 'shot' || evt.button === 2) return;
   const p = getSVGPoint(evt);
-  if (!p || !isOnCourt(p.x, p.y)) return;
+  if (!p || !isOnCourt(p.x, p.y)) {
+    if (p) showToast(`Off court: (${p.x},${p.y}) land=${isLandscapeCourt()}`);
+    return;
+  }
   evt.preventDefault();
 
   // Check for shuttle position first, then snap to nearest player
@@ -367,7 +370,8 @@ function onShotMouseDown(evt) {
       if (d < minD) { minD = d; closest = pid; }
     }
     if (!closest || minD > 120) {
-      showToast('Click near a player to start the shot');
+      const players = Object.entries(f.players).map(([id,pl]) => `${id}:(${pl.x},${pl.y})`).join(' ');
+      showToast(`tap(${p.x},${p.y}) nearest=${Math.round(minD)}px ${players}`);
       return;
     }
     const origin = f.players[closest];
