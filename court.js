@@ -93,7 +93,7 @@ function playerSVG(id, x, y, opacity, interactive, frameNum) {
 
   // Invisible hit target (with event handlers for bigger touch area)
   if (interactive) {
-    svg += `<circle cx="${x}" cy="${y}" r="${HIT_R}" fill="transparent" data-player="${id}" style="cursor:grab;" onmousedown="startDrag(event,'${id}')" ontouchstart="startDrag(event,'${id}')"/>`;
+    svg += `<circle cx="${x}" cy="${y}" r="${HIT_R}" fill="transparent" data-player="${id}" style="cursor:grab;" onmousedown="startDrag(event,'${id}')"/>`;
   }
 
   // Player circle
@@ -183,7 +183,7 @@ function shuttlecockSVG(x, y, opacity, interactive) {
   svg += `<circle r="2" cy="-1" fill="rgba(255,255,255,0.3)"/>`;
   // Hit target for interaction
   if (interactive) {
-    svg += `<circle r="${HIT_R}" fill="transparent" style="cursor:grab;" onmousedown="startShuttleDrag(event)" ontouchstart="startShuttleDrag(event)"/>`;
+    svg += `<circle r="${HIT_R}" fill="transparent" style="cursor:grab;" onmousedown="startShuttleDrag(event)"/>`;
   } else {
     // Glow ring (only for non-interactive / decorative)
     svg += `<circle r="10" fill="none" stroke="rgba(255,255,200,0.4)" stroke-width="1.5">`;

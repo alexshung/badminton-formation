@@ -208,6 +208,7 @@ loadState();
 render();
 initShotDrag();
 initCoverageTracking();
+initTouchDelegation();
 
 document.getElementById('titleInput').addEventListener('input', () => {
   state.title = document.getElementById('titleInput').value;

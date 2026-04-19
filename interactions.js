@@ -387,8 +387,8 @@ function endShuttleDrag() {
 // ===== DRAG: Shot lines =====
 function initShotDrag() {
   const c = document.getElementById('courtContainer');
+  // Mouse only — touch shots handled by courtClick (two-tap) and touch delegation
   c.addEventListener('mousedown', onShotMouseDown);
-  c.addEventListener('touchstart', onShotMouseDown, { passive: false });
 }
 
 function onShotMouseDown(evt) {
@@ -597,4 +597,62 @@ function initCoverageTracking() {
     evt.preventDefault();
     finishCoverage();
   });
+}
+
+// ===== TOUCH DELEGATION (mobile) =====
+// Instead of inline SVG ontouchstart (unreliable on mobile),
+// we use a single touchstart handler on the container that
+// determines what was tapped and acts accordingly.
+
+function initTouchDelegation() {
+  const c = document.getElementById('courtContainer');
+
+  c.addEventListener('touchstart', function(evt) {
+    const p = getSVGPoint(evt);
+    if (!p || !isOnCourt(p.x, p.y)) return;
+
+    const f = currentFrameData();
+
+    // 1. Check if touching a player
+    const nearPlayer = findPlayerAt(p.x, p.y, f);
+    if (nearPlayer) {
+      evt.preventDefault();
+      selectedPlayer = nearPlayer;
+      isDragging = false;
+      document.querySelectorAll('.player-token').forEach(t => t.classList.toggle('active', t.dataset.player === nearPlayer));
+
+      if (state.currentFrame === 0) {
+        // Frame 1: reposition
+        pushUndo();
+        dragPlayer = nearPlayer;
+        dragOffset = { x: f.players[nearPlayer].x - p.x, y: f.players[nearPlayer].y - p.y };
+        document.addEventListener('touchmove', onDrag, { passive: false });
+        document.addEventListener('touchend', endDrag);
+      } else {
+        // Frame 2+: movement arrow
+        pushUndo();
+        moveDragPlayer = nearPlayer;
+        moveDragStart = { x: f.players[nearPlayer].x, y: f.players[nearPlayer].y };
+        document.addEventListener('touchmove', onMoveDrag, { passive: false });
+        document.addEventListener('touchend', endMoveDrag);
+      }
+      return;
+    }
+
+    // 2. Check if touching the shuttlecock (shot endpoint)
+    if (f.shot) {
+      const sd = Math.hypot(p.x - f.shot.x2, p.y - f.shot.y2);
+      if (sd < HIT_R) {
+        evt.preventDefault();
+        shuttleDragging = true;
+        pushUndo();
+        document.addEventListener('touchmove', onShuttleDrag, { passive: false });
+        document.addEventListener('touchend', endShuttleDrag);
+        return;
+      }
+    }
+
+    // 3. Empty court — do NOT preventDefault, let click event fire for courtClick
+    //    courtClick handles shot placement (two-tap / single-tap)
+  }, { passive: false });
 }
