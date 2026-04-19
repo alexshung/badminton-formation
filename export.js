@@ -37,8 +37,9 @@ function exportImage() {
   svg += `<text x="${w/2}" y="${titleH/2 + 2}" fill="${textColor}" font-size="18" font-weight="700" font-family="system-ui,-apple-system,sans-serif" text-anchor="middle" dominant-baseline="central">${escapeXML(title)}</text>`;
 
   let cvbW, cvbH;
-  if (state.mode === 'overlay') { cvbW = SW; cvbH = SH; }
-  else { const n = state.frames.length; cvbW = n * SW + (n - 1) * 20; cvbH = SH + 30; }
+  const isLand = isLandscapeCourt();
+  if (state.mode === 'overlay') { cvbW = isLand ? SH : SW; cvbH = isLand ? SW : SH; }
+  else { const n = state.frames.length; const cW = isLand ? SH : SW; cvbW = n * cW + (n - 1) * 20; cvbH = (isLand ? SW : SH) + 30; }
   const scX = (w * 0.96) / cvbW, scY = courtAreaH / cvbH;
   const sc = Math.min(scX, scY) * 0.92;
   const ox = (w - cvbW * sc) / 2;
@@ -102,7 +103,10 @@ function exportImage() {
 }
 
 function buildOverlaySVGContent() {
-  let svg = courtLines();
+  const isLand = isLandscapeCourt();
+  let svg = '';
+  if (isLand) svg += `<g transform="translate(${SH}, 0) rotate(90)">`;
+  svg += courtLines();
   for (let i = 0; i < state.frames.length; i++) {
     const f = state.frames[i];
     const op = 0.4 + (i / Math.max(state.frames.length - 1, 1)) * 0.6;
@@ -121,19 +125,24 @@ function buildOverlaySVGContent() {
       }
     }
   }
+  if (isLand) svg += '</g>';
   return svg;
 }
 
 function buildPanelSVGContent() {
   const n = state.frames.length;
+  const isLand = isLandscapeCourt();
+  const courtW = isLand ? SH : SW;
+  const courtH = isLand ? SW : SH;
   const gap = 20;
   let svg = '';
   for (let i = 0; i < n; i++) {
-    const ox = i * (SW + gap);
+    const ox = i * (courtW + gap);
     const f = state.frames[i];
     svg += `<g transform="translate(${ox}, 30)">`;
-    svg += `<text x="${SW/2}" y="-8" fill="#8b919a" font-size="13" font-weight="700" font-family="system-ui" text-anchor="middle">Frame ${i + 1}</text>`;
-    svg += `<rect x="0" y="0" width="${SW}" height="${SH}" fill="none" stroke="#383d47" stroke-width="1" rx="4"/>`;
+    svg += `<text x="${courtW/2}" y="-8" fill="#8b919a" font-size="13" font-weight="700" font-family="system-ui" text-anchor="middle">Frame ${i + 1}</text>`;
+    svg += `<rect x="0" y="0" width="${courtW}" height="${courtH}" fill="none" stroke="#383d47" stroke-width="1" rx="4"/>`;
+    if (isLand) svg += `<g transform="translate(${SH}, 0) rotate(90)">`;
     svg += courtLines();
     // Coverage regions
     if (f.regions) svg += regionSVG(f.regions, 1);
@@ -149,10 +158,12 @@ function buildPanelSVGContent() {
         svg += `<circle cx="${d.x}" cy="${d.y}" r="${PR - 5}" fill="none" stroke="${TEAM_COLORS[pid[0]]}" stroke-width="2" stroke-dasharray="4,3" opacity="0.4"/>`;
       }
     }
-    // Frame note in panel
+    if (isLand) svg += '</g>';
+    // Frame note (outside rotation so it reads correctly)
     if (f.note) {
-      svg += `<rect x="${PAD + 4}" y="${PAD + CH - 26}" width="${CW - 8}" height="22" rx="4" fill="rgba(0,0,0,.5)"/>`;
-      svg += `<text x="${PAD + CW/2}" y="${PAD + CH - 14}" fill="rgba(255,255,255,.6)" font-size="10" font-family="system-ui" text-anchor="middle" dominant-baseline="central">${escapeXML(f.note.substring(0, 40))}</text>`;
+      const noteW = Math.min(courtW - 16, 200);
+      svg += `<rect x="${(courtW - noteW)/2}" y="${courtH - 26}" width="${noteW}" height="22" rx="4" fill="rgba(0,0,0,.5)"/>`;
+      svg += `<text x="${courtW/2}" y="${courtH - 14}" fill="rgba(255,255,255,.6)" font-size="10" font-family="system-ui" text-anchor="middle" dominant-baseline="central">${escapeXML(f.note.substring(0, 40))}</text>`;
     }
     svg += '</g>';
   }
@@ -243,11 +254,15 @@ function exportVideo() {
     svg += `<text x="${w/2}" y="26" fill="${isDark ? '#e8eaed' : '#1A1A1A'}" font-size="18" font-weight="700" font-family="system-ui" text-anchor="middle" dominant-baseline="central">${escapeXML(title)}</text>`;
 
     // Scale court to fit
-    const courtScale = Math.min((w * 0.9) / SW, (h - 80) / SH) * 0.92;
-    const ox = (w - SW * courtScale) / 2;
-    const oy = 44 + ((h - 80) - SH * courtScale) / 2;
+    const isLand = isLandscapeCourt();
+    const vbW = isLand ? SH : SW;
+    const vbH = isLand ? SW : SH;
+    const courtScale = Math.min((w * 0.9) / vbW, (h - 80) / vbH) * 0.92;
+    const ox = (w - vbW * courtScale) / 2;
+    const oy = 44 + ((h - 80) - vbH * courtScale) / 2;
 
     svg += `<g transform="translate(${ox},${oy}) scale(${courtScale})">`;
+    if (isLand) svg += `<g transform="translate(${SH}, 0) rotate(90)">`;
     svg += courtLines();
 
     // Coverage regions
@@ -300,14 +315,17 @@ function exportVideo() {
       svg += shotSVG(fr.shot, 0.35);
     }
 
-    // Frame HUD
-    svg += `<rect x="${PAD + 8}" y="${PAD + 8}" width="110" height="26" rx="5" fill="rgba(0,0,0,.65)"/>`;
-    svg += `<text x="${PAD + 63}" y="${PAD + 22}" fill="#fff" font-size="13" font-weight="600" font-family="system-ui" text-anchor="middle" dominant-baseline="central">Frame ${currentGameFrame + 1} / ${state.frames.length}</text>`;
+    if (isLand) svg += '</g>';
+
+    // Frame HUD (outside rotation, inside scale group — uses viewBox coordinates)
+    svg += `<rect x="8" y="8" width="110" height="26" rx="5" fill="rgba(0,0,0,.65)"/>`;
+    svg += `<text x="63" y="22" fill="#fff" font-size="13" font-weight="600" font-family="system-ui" text-anchor="middle" dominant-baseline="central">Frame ${currentGameFrame + 1} / ${state.frames.length}</text>`;
 
     // Frame note
     if (fr.note) {
-      svg += `<rect x="${PAD + 8}" y="${PAD + CH - 26}" width="${CW - 16}" height="22" rx="4" fill="rgba(0,0,0,.55)"/>`;
-      svg += `<text x="${PAD + CW/2}" y="${PAD + CH - 14}" fill="rgba(255,255,255,.7)" font-size="11" font-family="system-ui" text-anchor="middle" dominant-baseline="central">${escapeXML((fr.note || '').substring(0, 60))}</text>`;
+      const noteW = Math.min(vbW - 16, 300);
+      svg += `<rect x="8" y="${vbH - 30}" width="${noteW}" height="22" rx="4" fill="rgba(0,0,0,.55)"/>`;
+      svg += `<text x="${8 + noteW/2}" y="${vbH - 18}" fill="rgba(255,255,255,.7)" font-size="11" font-family="system-ui" text-anchor="middle" dominant-baseline="central">${escapeXML((fr.note || '').substring(0, 60))}</text>`;
     }
 
     svg += `</g></svg>`;

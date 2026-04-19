@@ -66,7 +66,8 @@ let state = {
   frames: [createEmptyFrame(), createEmptyFrame(), createEmptyFrame()],
   title: 'Doubles Formation',
   playerNames: {},
-  exportBg: 'dark'
+  exportBg: 'dark',
+  courtOrientation: 'auto'
 };
 
 let tool = 'player';
@@ -143,6 +144,7 @@ function loadState() {
       state = s;
       if (!state.playerNames) state.playerNames = {};
       if (!state.exportBg) state.exportBg = 'dark';
+      if (!state.courtOrientation) state.courtOrientation = 'auto';
       state.frames.forEach(f => { if (!f.note) f.note = ''; if (!f.regions) f.regions = {}; });
     }
   } catch(e){}
@@ -302,4 +304,24 @@ function showToast(msg) {
   el.classList.add('show');
   clearTimeout(el._timer);
   el._timer = setTimeout(() => el.classList.remove('show'), 1400);
+}
+
+// ===== COURT ORIENTATION =====
+function isLandscapeCourt() {
+  const orient = state.courtOrientation || 'auto';
+  if (orient === 'landscape') return true;
+  if (orient === 'portrait') return false;
+  // auto: landscape when mobile-sized AND device is landscape
+  return window.innerWidth <= 1024 && window.innerWidth > window.innerHeight;
+}
+
+function toggleCourtOrientation() {
+  const current = state.courtOrientation || 'auto';
+  if (current === 'auto') state.courtOrientation = 'landscape';
+  else if (current === 'landscape') state.courtOrientation = 'portrait';
+  else state.courtOrientation = 'auto';
+  render();
+  saveState();
+  const label = isLandscapeCourt() ? 'Landscape' : 'Portrait';
+  showToast('Court: ' + label + (state.courtOrientation === 'auto' ? ' (auto)' : ''));
 }

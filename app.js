@@ -14,9 +14,15 @@ function render() {
 }
 
 function renderOverlay(container, interactive) {
-  let svg = `<svg class="court-svg tool-${tool}" viewBox="0 0 ${SW} ${SH}" xmlns="http://www.w3.org/2000/svg"`;
+  const isLand = isLandscapeCourt();
+  const vbW = isLand ? SH : SW;
+  const vbH = isLand ? SW : SH;
+
+  let svg = `<svg class="court-svg tool-${tool}" viewBox="0 0 ${vbW} ${vbH}" xmlns="http://www.w3.org/2000/svg"`;
   if (interactive) svg += ` onclick="courtClick(event)" oncontextmenu="courtRightClick(event)"`;
-  svg += `>` + courtGradientDefs() + courtLines();
+  svg += `>` + courtGradientDefs();
+  if (isLand) svg += `<g transform="translate(${SH}, 0) rotate(90)">`;
+  svg += courtLines();
 
   const total = state.frames.length;
   for (let i = 0; i < total; i++) {
@@ -64,25 +70,30 @@ function renderOverlay(container, interactive) {
       }
     }
   }
+  if (isLand) svg += '</g>';
   svg += '</svg>';
   container.innerHTML = svg;
 }
 
 function renderPanel(container, interactive) {
   const n = state.frames.length;
+  const isLand = isLandscapeCourt();
+  const courtW = isLand ? SH : SW;
+  const courtH = isLand ? SW : SH;
   const gap = 20;
-  const totalW = n * SW + (n - 1) * gap;
-  let svg = `<svg class="court-svg tool-${tool}" viewBox="0 0 ${totalW} ${SH + 30}" xmlns="http://www.w3.org/2000/svg"`;
+  const totalW = n * courtW + (n - 1) * gap;
+  let svg = `<svg class="court-svg tool-${tool}" viewBox="0 0 ${totalW} ${courtH + 30}" xmlns="http://www.w3.org/2000/svg"`;
   if (interactive) svg += ` onclick="courtClickPanel(event)" oncontextmenu="courtRightClickPanel(event)"`;
   svg += `>` + courtGradientDefs();
 
   for (let i = 0; i < n; i++) {
-    const ox = i * (SW + gap);
+    const ox = i * (courtW + gap);
     const f = state.frames[i];
     const isActive = i === state.currentFrame;
     svg += `<g transform="translate(${ox}, 30)">`;
-    svg += `<text x="${SW/2}" y="-8" fill="${isActive ? '#4a9eff' : '#8b919a'}" font-size="13" font-weight="700" font-family="system-ui" text-anchor="middle">Frame ${i + 1}</text>`;
-    svg += `<rect x="0" y="0" width="${SW}" height="${SH}" fill="none" stroke="${isActive ? '#4a9eff' : '#383d47'}" stroke-width="${isActive ? 2 : 1}" rx="4"/>`;
+    svg += `<text x="${courtW/2}" y="-8" fill="${isActive ? '#4a9eff' : '#8b919a'}" font-size="13" font-weight="700" font-family="system-ui" text-anchor="middle">Frame ${i + 1}</text>`;
+    svg += `<rect x="0" y="0" width="${courtW}" height="${courtH}" fill="none" stroke="${isActive ? '#4a9eff' : '#383d47'}" stroke-width="${isActive ? 2 : 1}" rx="4"/>`;
+    if (isLand) svg += `<g transform="translate(${SH}, 0) rotate(90)">`;
     svg += courtLines();
     // Coverage regions
     if (f.regions) svg += regionSVG(f.regions, 1);
@@ -115,6 +126,7 @@ function renderPanel(container, interactive) {
       const shuttle = getShuttlePosition(i);
       if (shuttle) svg += shuttlecockSVG(shuttle.x, shuttle.y, 0.8);
     }
+    if (isLand) svg += '</g>';
     svg += '</g>';
   }
   svg += '</svg>';
@@ -186,7 +198,16 @@ document.getElementById('frameNote').addEventListener('input', function() {
   saveState();
 });
 
-window.addEventListener('resize', () => { if (state && !animRunning) render(); });
+window.addEventListener('resize', () => {
+  if (state && !animRunning) render();
+  updateOrientBtn();
+});
+
+function updateOrientBtn() {
+  const btn = document.getElementById('courtOrientBtn');
+  if (btn) btn.title = isLandscapeCourt() ? 'Switch to portrait court' : 'Switch to landscape court';
+}
+
 document.getElementById('courtContainer').addEventListener('contextmenu', e => e.preventDefault());
 document.getElementById('courtContainer').addEventListener('touchmove', function(e) {
   if (dragPlayer || moveDragPlayer || shotStart) e.preventDefault();
@@ -196,34 +217,4 @@ document.getElementById('courtContainer').addEventListener('touchmove', function
 const expBgEl = document.getElementById('exportBg');
 if (expBgEl) expBgEl.addEventListener('change', function() { state.exportBg = this.value; saveState(); });
 
-// ===== LANDSCAPE ORIENTATION =====
-function dismissRotatePrompt() {
-  const el = document.getElementById('rotatePrompt');
-  if (el) el.classList.remove('visible');
-  sessionStorage.setItem('portrait-dismissed', '1');
-}
-
-function checkOrientation() {
-  const el = document.getElementById('rotatePrompt');
-  if (!el) return;
-  const isMobile = window.innerWidth <= 768 || window.innerHeight <= 768;
-  const isPortrait = window.innerHeight > window.innerWidth;
-  const dismissed = sessionStorage.getItem('portrait-dismissed') === '1';
-
-  if (isMobile && isPortrait && !dismissed) {
-    el.classList.add('visible');
-  } else {
-    el.classList.remove('visible');
-  }
-
-  // Try to lock orientation in PWA / fullscreen contexts
-  try {
-    if (screen.orientation && screen.orientation.lock) {
-      screen.orientation.lock('landscape').catch(() => {});
-    }
-  } catch (e) { /* Not supported outside fullscreen/PWA */ }
-}
-
-checkOrientation();
-window.addEventListener('orientationchange', () => setTimeout(checkOrientation, 200));
-window.addEventListener('resize', checkOrientation);
+updateOrientBtn();

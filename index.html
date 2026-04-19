@@ -20,6 +20,9 @@
       <svg width="14" height="14" viewBox="0 0 16 16"><path d="M4 7h8a4 4 0 010 8H8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M7 4L4 7l3 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       Undo <span class="undo-count" id="undoCount"></span>
     </button>
+    <button class="btn-icon" id="courtOrientBtn" onclick="toggleCourtOrientation()" title="Rotate court view">
+      <svg width="14" height="14" viewBox="0 0 16 16"><path d="M2 6V2h4M14 10v4h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M14 2L9 7M2 14l5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
     <div class="topbar-divider"></div>
     <div class="topbar-row-2">
       <div class="export-group">
@@ -148,7 +151,7 @@
   </div>
 </div>
 
-<button class="sidebar-toggle" onclick="toggleSidebar()">🛠 Tools</button>
+<button class="sidebar-toggle" onclick="toggleSidebar()">🛠</button>
 <div class="toast" id="toast"></div>
 <canvas id="exportCanvas"></canvas>
 
@@ -190,13 +193,6 @@
 <script src="state.js"></script>
 <script src="court.js"></script>
 <script src="interactions.js"></script>
-<div class="rotate-prompt" id="rotatePrompt">
-  <div class="rotate-content">
-    <div class="rotate-icon">📱↔️</div>
-    <p>Rotate your device to landscape for the best experience</p>
-    <button onclick="dismissRotatePrompt()">Continue in Portrait</button>
-  </div>
-</div>
 <script src="animation.js"></script>
 <script src="export.js"></script>
 <script src="app.js"></script>

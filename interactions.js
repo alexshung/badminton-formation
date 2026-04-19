@@ -70,11 +70,26 @@ function getSVGPoint(evt) {
   const ctm = svg.getScreenCTM();
   if (!ctm) return null;
   const svgP = pt.matrixTransform(ctm.inverse());
+
+  const isLand = isLandscapeCourt();
+
   // In panel mode, adjust coordinates relative to current frame's panel
   if (state.mode === 'panel') {
     const gap = 20;
-    const ox = state.currentFrame * (SW + gap);
-    return { x: Math.round(svgP.x - ox), y: Math.round(svgP.y - 30) };
+    const courtW = isLand ? SH : SW;
+    const ox = state.currentFrame * (courtW + gap);
+    const localX = svgP.x - ox;
+    const localY = svgP.y - 30;
+    if (isLand) {
+      // Inverse of translate(SH,0) rotate(90): origX = localY, origY = SH - localX
+      return { x: Math.round(localY), y: Math.round(SH - localX) };
+    }
+    return { x: Math.round(localX), y: Math.round(localY) };
+  }
+
+  if (isLand) {
+    // Inverse of translate(SH,0) rotate(90): origX = svgP.y, origY = SH - svgP.x
+    return { x: Math.round(svgP.y), y: Math.round(SH - svgP.x) };
   }
   return { x: Math.round(svgP.x), y: Math.round(svgP.y) };
 }
@@ -135,9 +150,10 @@ function courtClickPanel(evt) {
   if (!rawP) return;
   const n = state.frames.length;
   const gap = 20;
+  const courtW = isLandscapeCourt() ? SH : SW;
   for (let i = 0; i < n; i++) {
-    const ox = i * (SW + gap);
-    if (rawP.x >= ox && rawP.x < ox + SW) {
+    const ox = i * (courtW + gap);
+    if (rawP.x >= ox && rawP.x < ox + courtW) {
       if (i !== state.currentFrame) { state.currentFrame = i; render(); return; }
       break;
     }

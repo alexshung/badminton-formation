@@ -85,7 +85,13 @@ function renderAnimFrame() {
   const fr = state.frames[animState.frameIdx];
   if (!fr) return;
   const t = easeInOut(Math.min(animState.progress, 1));
-  let svg = courtGradientDefs() + courtLines();
+  const isLand = isLandscapeCourt();
+  const vbW = isLand ? SH : SW;
+  const vbH = isLand ? SW : SH;
+
+  let svg = courtGradientDefs();
+  if (isLand) svg += `<g transform="translate(${SH}, 0) rotate(90)">`;
+  svg += courtLines();
 
   // Coverage regions
   if (fr.regions) svg += regionSVG(fr.regions, 0.6);
@@ -138,22 +144,24 @@ function renderAnimFrame() {
     svg += shotSVG(fr.shot, 0.35);
   }
 
-  // Frame HUD
-  svg += `<rect x="${PAD + 8}" y="${PAD + 8}" width="110" height="26" rx="5" fill="rgba(0,0,0,.65)"/>`;
-  svg += `<text x="${PAD + 63}" y="${PAD + 22}" fill="#fff" font-size="13" font-weight="600" font-family="system-ui" text-anchor="middle" dominant-baseline="central">Frame ${animState.frameIdx + 1} / ${state.frames.length}</text>`;
+  if (isLand) svg += '</g>';
+
+  // Frame HUD (outside rotation — uses viewBox coordinates)
+  svg += `<rect x="8" y="8" width="110" height="26" rx="5" fill="rgba(0,0,0,.65)"/>`;
+  svg += `<text x="63" y="22" fill="#fff" font-size="13" font-weight="600" font-family="system-ui" text-anchor="middle" dominant-baseline="central">Frame ${animState.frameIdx + 1} / ${state.frames.length}</text>`;
   if (fr.shot && animState.phase === 'action') {
-    svg += `<rect x="${PAD + CW - 72}" y="${PAD + 8}" width="64" height="22" rx="5" fill="rgba(0,0,0,.55)"/>`;
-    svg += `<text x="${PAD + CW - 40}" y="${PAD + 20}" fill="${SHOT_COLORS[fr.shot.type]}" font-size="12" font-weight="700" font-family="system-ui" text-anchor="middle" dominant-baseline="central">${SHOT_LABELS[fr.shot.type]}</text>`;
+    svg += `<rect x="${vbW - 80}" y="8" width="64" height="22" rx="5" fill="rgba(0,0,0,.55)"/>`;
+    svg += `<text x="${vbW - 48}" y="20" fill="${SHOT_COLORS[fr.shot.type]}" font-size="12" font-weight="700" font-family="system-ui" text-anchor="middle" dominant-baseline="central">${SHOT_LABELS[fr.shot.type]}</text>`;
   }
 
   // Frame note
   if (fr.note) {
-    const noteY = PAD + CH - 8;
-    svg += `<rect x="${PAD + 8}" y="${noteY - 18}" width="${CW - 16}" height="22" rx="4" fill="rgba(0,0,0,.55)"/>`;
-    svg += `<text x="${PAD + CW/2}" y="${noteY - 6}" fill="rgba(255,255,255,.7)" font-size="11" font-family="system-ui" text-anchor="middle" dominant-baseline="central">${escapeXML(fr.note.substring(0, 60))}</text>`;
+    const noteW = Math.min(vbW - 16, 300);
+    svg += `<rect x="8" y="${vbH - 30}" width="${noteW}" height="22" rx="4" fill="rgba(0,0,0,.55)"/>`;
+    svg += `<text x="${8 + noteW/2}" y="${vbH - 18}" fill="rgba(255,255,255,.7)" font-size="11" font-family="system-ui" text-anchor="middle" dominant-baseline="central">${escapeXML(fr.note.substring(0, 60))}</text>`;
   }
 
-  document.getElementById('courtContainer').innerHTML = `<svg class="court-svg" viewBox="0 0 ${SW} ${SH}" xmlns="http://www.w3.org/2000/svg">${svg}</svg>`;
+  document.getElementById('courtContainer').innerHTML = `<svg class="court-svg" viewBox="0 0 ${vbW} ${vbH}" xmlns="http://www.w3.org/2000/svg">${svg}</svg>`;
 }
 
 function lerp(a, b, t) { return a + (b - a) * t; }
