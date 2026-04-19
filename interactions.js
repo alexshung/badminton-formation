@@ -124,7 +124,6 @@ function courtClick(evt) {
   if (tool === 'player') {
     const nearby = findPlayerAt(p.x, p.y, f);
     if (nearby) {
-      // Auto-switch to movement mode for this player
       selectPlayer(nearby);
       setTool('movement');
       return;
@@ -133,6 +132,42 @@ function courtClick(evt) {
     f.players[selectedPlayer] = { x: p.x, y: p.y };
     propagatePositions(state.currentFrame);
     render();
+  } else if (tool === 'shot') {
+    // Two-tap shot mode: tap 1 = origin, tap 2 = endpoint
+    if (shotStart) {
+      if (Math.hypot(p.x - shotStart.x, p.y - shotStart.y) > 15) {
+        f.shot = { type: shotType, x1: shotStart.x, y1: shotStart.y, x2: p.x, y2: p.y };
+        shotStart = null; shotPreviewLine = null;
+        render(); saveState();
+        showToast('Shot placed');
+      }
+      // If too close to origin, ignore (same spot tap)
+      return;
+    }
+    // First tap: find origin (shuttle or nearest player)
+    const shuttle = getShuttlePosition(state.currentFrame);
+    if (shuttle) {
+      pushUndo();
+      shotStart = { x: shuttle.x, y: shuttle.y };
+      render();
+      showToast('Now tap the landing spot');
+      return;
+    }
+    let closest = null, minD = Infinity;
+    for (const pid in f.players) {
+      const pl = f.players[pid];
+      const d = Math.hypot(pl.x - p.x, pl.y - p.y);
+      if (d < minD) { minD = d; closest = pid; }
+    }
+    if (!closest) {
+      showToast('Place players first');
+      return;
+    }
+    pushUndo();
+    const origin = f.players[closest];
+    shotStart = { x: origin.x, y: origin.y };
+    render();
+    showToast('Now tap the landing spot');
   } else if (tool === 'movement') {
     const nearby = findPlayerAt(p.x, p.y, f);
     if (nearby) selectPlayer(nearby);
