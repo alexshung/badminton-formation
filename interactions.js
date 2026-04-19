@@ -263,59 +263,18 @@ function startDrag(evt, pid) {
   if (!p || !f.players[pid]) return;
   isDragging = false;
 
-  // Shot mode: touching a player starts a shot from shuttle position or this player
-  if (tool === 'shot') {
-    const shuttle = getShuttlePosition(state.currentFrame);
-    let originX, originY;
-    if (shuttle) {
-      originX = shuttle.x;
-      originY = shuttle.y;
-    } else {
-      originX = f.players[pid].x;
-      originY = f.players[pid].y;
-    }
-    pushUndo();
-    shotStart = { x: originX, y: originY };
-    shotPreviewLine = { x1: originX, y1: originY, x2: p.x, y2: p.y };
-    document.addEventListener('mousemove', onShotDrag);
-    document.addEventListener('mouseup', endShotDrag);
-    document.addEventListener('touchmove', onShotDrag, { passive: false });
-    document.addEventListener('touchend', endShotDrag);
-    return;
-  }
-
-  // Coverage mode: select the player for coverage drawing
-  if (tool === 'coverage') {
-    selectPlayer(pid);
-    return;
-  }
-
-  // Long press for deletion only in player/movement modes
+  // Dragging a player ALWAYS starts movement, regardless of active tool
   if (evt.touches) startLongPress(evt, p.x, p.y);
 
-  if (tool === 'player') {
-    // Auto-switch to movement drag for existing players
-    pushUndo();
-    moveDragPlayer = pid;
-    selectedPlayer = pid;
-    setTool('movement');
-    document.querySelectorAll('.player-token').forEach(t => t.classList.toggle('active', t.dataset.player === pid));
-    moveDragStart = { x: f.players[pid].x, y: f.players[pid].y };
-    document.addEventListener('mousemove', onMoveDrag);
-    document.addEventListener('mouseup', endMoveDrag);
-    document.addEventListener('touchmove', onMoveDrag, { passive: false });
-    document.addEventListener('touchend', endMoveDrag);
-  } else if (tool === 'movement') {
-    pushUndo();
-    moveDragPlayer = pid;
-    selectedPlayer = pid;
-    document.querySelectorAll('.player-token').forEach(t => t.classList.toggle('active', t.dataset.player === pid));
-    moveDragStart = { x: f.players[pid].x, y: f.players[pid].y };
-    document.addEventListener('mousemove', onMoveDrag);
-    document.addEventListener('mouseup', endMoveDrag);
-    document.addEventListener('touchmove', onMoveDrag, { passive: false });
-    document.addEventListener('touchend', endMoveDrag);
-  }
+  pushUndo();
+  moveDragPlayer = pid;
+  selectedPlayer = pid;
+  document.querySelectorAll('.player-token').forEach(t => t.classList.toggle('active', t.dataset.player === pid));
+  moveDragStart = { x: f.players[pid].x, y: f.players[pid].y };
+  document.addEventListener('mousemove', onMoveDrag);
+  document.addEventListener('mouseup', endMoveDrag);
+  document.addEventListener('touchmove', onMoveDrag, { passive: false });
+  document.addEventListener('touchend', endMoveDrag);
 }
 
 function onDrag(evt) {
