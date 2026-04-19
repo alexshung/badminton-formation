@@ -18,6 +18,8 @@ function setTool(t) {
   updateCoverageInfo();
   updateCursor();
   updateStatus();
+  // Auto-close sidebar on mobile after selecting a tool
+  if (window.innerWidth <= 768) closeSidebar();
 }
 
 function selectPlayer(id) {
@@ -50,6 +52,7 @@ function setShotType(t) {
   shotStart = null;
   document.querySelectorAll('.shot-btn').forEach(b => b.classList.toggle('active', b.dataset.shot === t));
   updateStatus();
+  if (window.innerWidth <= 768) closeSidebar();
 }
 
 function updateCursor() {
@@ -473,19 +476,15 @@ function endShotDrag(evt) {
 
 function toggleSidebar() {
   const sb = document.getElementById('sidebar');
-  sb.classList.toggle('open');
-  // Close sidebar when clicking outside on mobile
-  if (sb.classList.contains('open')) {
-    setTimeout(() => {
-      function closeSidebar(e) {
-        if (!sb.contains(e.target) && !e.target.closest('.sidebar-toggle')) {
-          sb.classList.remove('open');
-          document.removeEventListener('click', closeSidebar);
-        }
-      }
-      document.addEventListener('click', closeSidebar);
-    }, 100);
-  }
+  const backdrop = document.getElementById('sidebarBackdrop');
+  const isOpen = sb.classList.toggle('open');
+  if (backdrop) backdrop.classList.toggle('show', isOpen);
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  if (backdrop) backdrop.classList.remove('show');
 }
 
 // ===== HELP MODAL =====

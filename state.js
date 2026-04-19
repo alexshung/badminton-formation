@@ -246,6 +246,7 @@ function applyPreset(key) {
   }
   render();
   showToast(p.label + ' applied');
+  if (window.innerWidth <= 768) closeSidebar();
 }
 
 // ===== PLAYER RENAME =====

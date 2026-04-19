@@ -272,6 +272,11 @@ input,button,select,textarea{font-family:var(--font);}
   font-family:var(--font);}
 .sidebar-toggle:active{transform:scale(.88);}
 
+/* === SIDEBAR BACKDROP === */
+.sidebar-backdrop{display:none;position:fixed;inset:0;z-index:99;background:rgba(0,0,0,0.3);
+  -webkit-tap-highlight-color:transparent;}
+.sidebar-backdrop.show{display:block;}
+
 /* =================================================================
    MOBILE (max-width: 768px)
    ================================================================= */
