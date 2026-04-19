@@ -18,8 +18,8 @@ function setTool(t) {
   updateCoverageInfo();
   updateCursor();
   updateStatus();
-  // Auto-close sidebar on mobile after selecting a tool
-  if (window.innerWidth <= 768) closeSidebar();
+  // Auto-close sidebar on mobile — but NOT for shot (wait for shot type pick)
+  if (window.innerWidth <= 1024 && t !== 'shot') closeSidebar();
 }
 
 function selectPlayer(id) {
@@ -52,7 +52,7 @@ function setShotType(t) {
   shotStart = null;
   document.querySelectorAll('.shot-btn').forEach(b => b.classList.toggle('active', b.dataset.shot === t));
   updateStatus();
-  if (window.innerWidth <= 768) closeSidebar();
+  if (window.innerWidth <= 1024) closeSidebar();
 }
 
 function updateCursor() {
@@ -349,41 +349,44 @@ function endMoveDrag() {
   document.removeEventListener('touchend', endMoveDrag);
 }
 
-// ===== DRAG: Shuttlecock =====
-let shuttleDragging = false;
+// ===== DRAG: Shot adjustment (both origin and endpoint) =====
+let shotDragEnd = null; // 'start' or 'end'
 
 function startShuttleDrag(evt) {
+  // Desktop mouse handler for shuttlecock endpoint
   evt.preventDefault();
   evt.stopPropagation();
   const f = currentFrameData();
   if (!f.shot) return;
-  shuttleDragging = true;
+  shotDragEnd = 'end';
   pushUndo();
-  document.addEventListener('mousemove', onShuttleDrag);
-  document.addEventListener('mouseup', endShuttleDrag);
-  document.addEventListener('touchmove', onShuttleDrag, { passive: false });
-  document.addEventListener('touchend', endShuttleDrag);
+  document.addEventListener('mousemove', onShotAdjustDrag);
+  document.addEventListener('mouseup', endShotAdjustDrag);
 }
 
-function onShuttleDrag(evt) {
-  if (!shuttleDragging) return;
+function onShotAdjustDrag(evt) {
+  if (!shotDragEnd) return;
   evt.preventDefault();
   const p = getSVGPoint(evt);
   if (!p || !isOnCourt(p.x, p.y)) return;
   const f = currentFrameData();
-  if (f.shot) {
+  if (!f.shot) return;
+  if (shotDragEnd === 'end') {
     f.shot.x2 = p.x;
     f.shot.y2 = p.y;
-    render();
+  } else {
+    f.shot.x1 = p.x;
+    f.shot.y1 = p.y;
   }
+  render();
 }
 
-function endShuttleDrag() {
-  shuttleDragging = false;
-  document.removeEventListener('mousemove', onShuttleDrag);
-  document.removeEventListener('mouseup', endShuttleDrag);
-  document.removeEventListener('touchmove', onShuttleDrag);
-  document.removeEventListener('touchend', endShuttleDrag);
+function endShotAdjustDrag() {
+  shotDragEnd = null;
+  document.removeEventListener('mousemove', onShotAdjustDrag);
+  document.removeEventListener('mouseup', endShotAdjustDrag);
+  document.removeEventListener('touchmove', onShotAdjustDrag);
+  document.removeEventListener('touchend', endShotAdjustDrag);
   render(); saveState();
 }
 
@@ -613,15 +616,27 @@ function initTouchDelegation() {
 
     const f = currentFrameData();
 
-    // 1. Check if touching the shuttlecock FIRST (it's smaller, check before players)
+    // 1. Check if touching a shot endpoint or origin (for adjustment)
     if (f.shot) {
-      const sd = Math.hypot(p.x - f.shot.x2, p.y - f.shot.y2);
-      if (sd < TOUCH_HIT_R) {
+      const dEnd = Math.hypot(p.x - f.shot.x2, p.y - f.shot.y2);
+      const dStart = Math.hypot(p.x - f.shot.x1, p.y - f.shot.y1);
+
+      if (dEnd < TOUCH_HIT_R && dEnd < dStart) {
+        // Dragging shot endpoint (shuttlecock)
         evt.preventDefault();
-        shuttleDragging = true;
+        shotDragEnd = 'end';
         pushUndo();
-        document.addEventListener('touchmove', onShuttleDrag, { passive: false });
-        document.addEventListener('touchend', endShuttleDrag);
+        document.addEventListener('touchmove', onShotAdjustDrag, { passive: false });
+        document.addEventListener('touchend', endShotAdjustDrag);
+        return;
+      }
+      if (dStart < TOUCH_HIT_R) {
+        // Dragging shot origin
+        evt.preventDefault();
+        shotDragEnd = 'start';
+        pushUndo();
+        document.addEventListener('touchmove', onShotAdjustDrag, { passive: false });
+        document.addEventListener('touchend', endShotAdjustDrag);
         return;
       }
     }
