@@ -264,13 +264,14 @@ function renamePlayer(id) {
 }
 
 // ===== UTILITY =====
-function findPlayerAt(x, y, frame) {
+function findPlayerAt(x, y, frame, maxRadius) {
   const f = frame || currentFrameData();
+  const maxR = maxRadius || HIT_R;
   let closest = null, minD = Infinity;
   for (const pid in f.players) {
     const pl = f.players[pid];
     const d = Math.hypot(pl.x - x, pl.y - y);
-    if (d < HIT_R && d < minD) { minD = d; closest = pid; }
+    if (d < maxR && d < minD) { minD = d; closest = pid; }
   }
   return closest;
 }

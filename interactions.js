@@ -599,9 +599,10 @@ function initCoverageTracking() {
 }
 
 // ===== TOUCH DELEGATION (mobile) =====
-// Instead of inline SVG ontouchstart (unreliable on mobile),
-// we use a single touchstart handler on the container that
-// determines what was tapped and acts accordingly.
+// Single touchstart on the container — replaces unreliable inline SVG touch events.
+// Uses larger hit radius because SVG coordinates map to tiny screen pixels on mobile.
+
+const TOUCH_HIT_R = 180; // ~36px on screen at landscape scale
 
 function initTouchDelegation() {
   const c = document.getElementById('courtContainer');
@@ -612,8 +613,21 @@ function initTouchDelegation() {
 
     const f = currentFrameData();
 
-    // 1. Check if touching a player
-    const nearPlayer = findPlayerAt(p.x, p.y, f);
+    // 1. Check if touching the shuttlecock FIRST (it's smaller, check before players)
+    if (f.shot) {
+      const sd = Math.hypot(p.x - f.shot.x2, p.y - f.shot.y2);
+      if (sd < TOUCH_HIT_R) {
+        evt.preventDefault();
+        shuttleDragging = true;
+        pushUndo();
+        document.addEventListener('touchmove', onShuttleDrag, { passive: false });
+        document.addEventListener('touchend', endShuttleDrag);
+        return;
+      }
+    }
+
+    // 2. Check if touching a player (large touch radius)
+    const nearPlayer = findPlayerAt(p.x, p.y, f, TOUCH_HIT_R);
     if (nearPlayer) {
       evt.preventDefault();
       selectedPlayer = nearPlayer;
@@ -636,19 +650,6 @@ function initTouchDelegation() {
         document.addEventListener('touchend', endMoveDrag);
       }
       return;
-    }
-
-    // 2. Check if touching the shuttlecock (shot endpoint)
-    if (f.shot) {
-      const sd = Math.hypot(p.x - f.shot.x2, p.y - f.shot.y2);
-      if (sd < HIT_R) {
-        evt.preventDefault();
-        shuttleDragging = true;
-        pushUndo();
-        document.addEventListener('touchmove', onShuttleDrag, { passive: false });
-        document.addEventListener('touchend', endShuttleDrag);
-        return;
-      }
     }
 
     // 3. Empty court — do NOT preventDefault, let click event fire for courtClick
