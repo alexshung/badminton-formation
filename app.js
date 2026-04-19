@@ -79,10 +79,10 @@ function renderOverlay(container, interactive) {
     // Shuttle position for current frame — one icon only
     if (isActive) {
       if (f.shot) {
-        svg += shuttlecockSVG(f.shot.x2, f.shot.y2, 0.8);
+        svg += shuttlecockSVG(f.shot.x2, f.shot.y2, 0.8, interactive);
       } else {
         const shuttle = getShuttlePosition(i);
-        if (shuttle) svg += shuttlecockSVG(shuttle.x, shuttle.y, 1);
+        if (shuttle) svg += shuttlecockSVG(shuttle.x, shuttle.y, 1, interactive);
       }
     }
   }
@@ -137,10 +137,10 @@ function renderPanel(container, interactive) {
     }
     // Shuttle position — one per frame
     if (f.shot) {
-      svg += shuttlecockSVG(f.shot.x2, f.shot.y2, 0.7);
+      svg += shuttlecockSVG(f.shot.x2, f.shot.y2, 0.7, interactive && isActive);
     } else {
       const shuttle = getShuttlePosition(i);
-      if (shuttle) svg += shuttlecockSVG(shuttle.x, shuttle.y, 0.8);
+      if (shuttle) svg += shuttlecockSVG(shuttle.x, shuttle.y, 0.8, interactive && isActive);
     }
     if (isLand) svg += '</g>';
     svg += '</g>';

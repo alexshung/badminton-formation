@@ -346,6 +346,44 @@ function endMoveDrag() {
   document.removeEventListener('touchend', endMoveDrag);
 }
 
+// ===== DRAG: Shuttlecock =====
+let shuttleDragging = false;
+
+function startShuttleDrag(evt) {
+  evt.preventDefault();
+  evt.stopPropagation();
+  const f = currentFrameData();
+  if (!f.shot) return;
+  shuttleDragging = true;
+  pushUndo();
+  document.addEventListener('mousemove', onShuttleDrag);
+  document.addEventListener('mouseup', endShuttleDrag);
+  document.addEventListener('touchmove', onShuttleDrag, { passive: false });
+  document.addEventListener('touchend', endShuttleDrag);
+}
+
+function onShuttleDrag(evt) {
+  if (!shuttleDragging) return;
+  evt.preventDefault();
+  const p = getSVGPoint(evt);
+  if (!p || !isOnCourt(p.x, p.y)) return;
+  const f = currentFrameData();
+  if (f.shot) {
+    f.shot.x2 = p.x;
+    f.shot.y2 = p.y;
+    render();
+  }
+}
+
+function endShuttleDrag() {
+  shuttleDragging = false;
+  document.removeEventListener('mousemove', onShuttleDrag);
+  document.removeEventListener('mouseup', endShuttleDrag);
+  document.removeEventListener('touchmove', onShuttleDrag);
+  document.removeEventListener('touchend', endShuttleDrag);
+  render(); saveState();
+}
+
 // ===== DRAG: Shot lines =====
 function initShotDrag() {
   const c = document.getElementById('courtContainer');

@@ -91,15 +91,15 @@ function playerSVG(id, x, y, opacity, interactive, frameNum) {
     svg += `<circle cx="${x}" cy="${y}" r="${PR + 4}" fill="none" stroke="${color}" stroke-width="1" opacity="${op * 0.2}"/>`;
   }
 
-  // Invisible hit target
+  // Invisible hit target (with event handlers for bigger touch area)
   if (interactive) {
-    svg += `<circle cx="${x}" cy="${y}" r="${HIT_R}" fill="transparent" data-player="${id}" style="cursor:grab;"/>`;
+    svg += `<circle cx="${x}" cy="${y}" r="${HIT_R}" fill="transparent" data-player="${id}" style="cursor:grab;" onmousedown="startDrag(event,'${id}')" ontouchstart="startDrag(event,'${id}')"/>`;
   }
 
   // Player circle
   const shadowFilter = `filter:drop-shadow(0 2px 6px rgba(0,0,0,.5))`;
   if (interactive) {
-    svg += `<circle cx="${x}" cy="${y}" r="${PR}" fill="${color}" opacity="${op}" class="player-circle" data-player="${id}" style="${shadowFilter};cursor:grab;" onmousedown="startDrag(event,'${id}')" ontouchstart="startDrag(event,'${id}')"/>`;
+    svg += `<circle cx="${x}" cy="${y}" r="${PR}" fill="${color}" opacity="${op}" class="player-circle" data-player="${id}" style="${shadowFilter};cursor:grab;pointer-events:none"/>`;
     // Inner highlight
     svg += `<circle cx="${x}" cy="${y - 3}" r="${PR - 6}" fill="rgba(255,255,255,.15)" opacity="${op}" style="pointer-events:none"/>`;
   } else {
@@ -169,7 +169,7 @@ function escapeXML(s) {
 }
 
 // ===== SHUTTLECOCK ICON =====
-function shuttlecockSVG(x, y, opacity) {
+function shuttlecockSVG(x, y, opacity, interactive) {
   const op = opacity || 1;
   let svg = `<g transform="translate(${x},${y})" opacity="${op}">`;
   // Feather cone
@@ -181,11 +181,16 @@ function shuttlecockSVG(x, y, opacity) {
   // Cork ball
   svg += `<circle r="4.5" fill="#F5DEB3" stroke="#8B7355" stroke-width="1.5"/>`;
   svg += `<circle r="2" cy="-1" fill="rgba(255,255,255,0.3)"/>`;
-  // Glow ring
-  svg += `<circle r="10" fill="none" stroke="rgba(255,255,200,0.4)" stroke-width="1.5">`;
-  svg += `<animate attributeName="r" values="10;14;10" dur="2s" repeatCount="indefinite"/>`;
-  svg += `<animate attributeName="opacity" values="0.4;0.1;0.4" dur="2s" repeatCount="indefinite"/>`;
-  svg += `</circle>`;
+  // Hit target for interaction
+  if (interactive) {
+    svg += `<circle r="${HIT_R}" fill="transparent" style="cursor:grab;" onmousedown="startShuttleDrag(event)" ontouchstart="startShuttleDrag(event)"/>`;
+  } else {
+    // Glow ring (only for non-interactive / decorative)
+    svg += `<circle r="10" fill="none" stroke="rgba(255,255,200,0.4)" stroke-width="1.5">`;
+    svg += `<animate attributeName="r" values="10;14;10" dur="2s" repeatCount="indefinite"/>`;
+    svg += `<animate attributeName="opacity" values="0.4;0.1;0.4" dur="2s" repeatCount="indefinite"/>`;
+    svg += `</circle>`;
+  }
   svg += `</g>`;
   return svg;
 }
