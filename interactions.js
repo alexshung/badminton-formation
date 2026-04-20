@@ -732,31 +732,33 @@ function initTouchDelegation() {
       }
     }
 
-    // 2. Check if touching a player (large touch radius)
-    const nearPlayer = findPlayerAt(p.x, p.y, f, TOUCH_HIT_R);
-    if (nearPlayer) {
-      evt.preventDefault();
-      cacheCTM();
-      selectedPlayer = nearPlayer;
-      isDragging = false;
-      document.querySelectorAll('.player-token').forEach(t => t.classList.toggle('active', t.dataset.player === nearPlayer));
+    // 2. Check if touching a player — skip when in shot mode (shot tool uses courtClick for placement)
+    if (tool !== 'shot') {
+      const nearPlayer = findPlayerAt(p.x, p.y, f, TOUCH_HIT_R);
+      if (nearPlayer) {
+        evt.preventDefault();
+        cacheCTM();
+        selectedPlayer = nearPlayer;
+        isDragging = false;
+        document.querySelectorAll('.player-token').forEach(t => t.classList.toggle('active', t.dataset.player === nearPlayer));
 
-      if (state.currentFrame === 0) {
-        // Frame 1: reposition
-        pushUndo();
-        dragPlayer = nearPlayer;
-        dragOffset = { x: f.players[nearPlayer].x - p.x, y: f.players[nearPlayer].y - p.y };
-        document.addEventListener('touchmove', onDrag, { passive: false });
-        document.addEventListener('touchend', endDrag);
-      } else {
-        // Frame 2+: movement arrow (undo deferred until real drag detected)
-        moveDragPlayer = nearPlayer;
-        moveDragStart = { x: f.players[nearPlayer].x, y: f.players[nearPlayer].y };
-        moveDragUndoPushed = false;
-        document.addEventListener('touchmove', onMoveDrag, { passive: false });
-        document.addEventListener('touchend', endMoveDrag);
+        if (state.currentFrame === 0) {
+          // Frame 1: reposition
+          pushUndo();
+          dragPlayer = nearPlayer;
+          dragOffset = { x: f.players[nearPlayer].x - p.x, y: f.players[nearPlayer].y - p.y };
+          document.addEventListener('touchmove', onDrag, { passive: false });
+          document.addEventListener('touchend', endDrag);
+        } else {
+          // Frame 2+: movement arrow (undo deferred until real drag detected)
+          moveDragPlayer = nearPlayer;
+          moveDragStart = { x: f.players[nearPlayer].x, y: f.players[nearPlayer].y };
+          moveDragUndoPushed = false;
+          document.addEventListener('touchmove', onMoveDrag, { passive: false });
+          document.addEventListener('touchend', endMoveDrag);
+        }
+        return;
       }
-      return;
     }
 
     // 3. Empty court — do NOT preventDefault, let click event fire for courtClick
