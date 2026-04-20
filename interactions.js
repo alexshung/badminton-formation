@@ -734,9 +734,14 @@ function initTouchDelegation() {
       }
     }
 
-    // 2. Check if touching a player — skip when in shot mode (shot tool uses courtClick for placement)
+    // 2. Check if touching a player — skip when in shot mode
     if (tool !== 'shot') {
-      const nearPlayer = findPlayerAt(p.x, p.y, f, TOUCH_HIT_R);
+      // On frame 2+ with a selected player (tap-tap movement mode), use a tight
+      // radius so only direct hits on a player circle start drags. Taps further
+      // away fall through to courtClick for movement placement or player selection.
+      const inTapTapMode = state.currentFrame > 0 && selectedPlayer;
+      const hitR = inTapTapMode ? (PR + 25) : TOUCH_HIT_R;
+      const nearPlayer = findPlayerAt(p.x, p.y, f, hitR);
       if (nearPlayer) {
         evt.preventDefault();
         cacheCTM();
