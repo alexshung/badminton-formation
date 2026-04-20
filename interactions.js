@@ -168,17 +168,29 @@ function courtClick(evt) {
     // Use large radius for tap detection (small on-screen at mobile landscape scale)
     const nearby = findPlayerAt(p.x, p.y, f, 120);
     if (nearby) {
-      // Tapping on a player selects them
       selectPlayer(nearby);
       return;
     }
-    // Tap empty court = set movement for selected player (all frames)
-    if (selectedPlayer && f.players[selectedPlayer]) {
-      pushUndo();
-      f.movements[selectedPlayer] = { x: p.x, y: p.y };
-      propagatePositions(state.currentFrame);
-      render(); saveState();
-      showToast('Movement set for ' + selectedPlayer);
+    // On touch devices, all frames use movement arrows (tap-tap flow)
+    // On desktop (mouse), frame 1 repositions the player's base position
+    const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+    if (state.currentFrame === 0 && !isTouchDevice) {
+      // Frame 1 desktop: click = reposition selected player
+      if (selectedPlayer) {
+        pushUndo();
+        f.players[selectedPlayer] = { x: p.x, y: p.y };
+        propagatePositions(state.currentFrame);
+        render(); saveState();
+      }
+    } else {
+      // Frame 2+ (all platforms) or frame 1 on mobile: movement arrow
+      if (selectedPlayer && f.players[selectedPlayer]) {
+        pushUndo();
+        f.movements[selectedPlayer] = { x: p.x, y: p.y };
+        propagatePositions(state.currentFrame);
+        render(); saveState();
+        showToast('Movement set for ' + selectedPlayer);
+      }
     }
   } else if (tool === 'shot') {
     // On desktop, onShotMouseDown handles shots; skip here to avoid double-handling
@@ -307,7 +319,7 @@ function clearLongPress() {
   longPressTarget = null;
 }
 
-// ===== DRAG: Player =====
+// ===== DRAG: Player (desktop mouse via inline onmousedown) =====
 function startDrag(evt, pid) {
   evt.preventDefault();
   evt.stopPropagation();
@@ -318,12 +330,21 @@ function startDrag(evt, pid) {
   selectedPlayer = pid;
   document.querySelectorAll('.player-token').forEach(t => t.classList.toggle('active', t.dataset.player === pid));
 
-  // All frames: drag creates movement arrow (undo deferred until real drag)
-  moveDragPlayer = pid;
-  moveDragStart = { x: f.players[pid].x, y: f.players[pid].y };
-  moveDragUndoPushed = false;
-  document.addEventListener('mousemove', onMoveDrag);
-  document.addEventListener('mouseup', endMoveDrag);
+  if (state.currentFrame === 0) {
+    // Frame 1 desktop: drag repositions the player's base position
+    pushUndo();
+    dragPlayer = pid;
+    dragOffset = { x: f.players[pid].x - p.x, y: f.players[pid].y - p.y };
+    document.addEventListener('mousemove', onDrag);
+    document.addEventListener('mouseup', endDrag);
+  } else {
+    // Frame 2+: drag creates movement arrow (undo deferred until real drag)
+    moveDragPlayer = pid;
+    moveDragStart = { x: f.players[pid].x, y: f.players[pid].y };
+    moveDragUndoPushed = false;
+    document.addEventListener('mousemove', onMoveDrag);
+    document.addEventListener('mouseup', endMoveDrag);
+  }
 }
 
 function onDrag(evt) {
