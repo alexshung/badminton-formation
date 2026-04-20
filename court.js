@@ -112,7 +112,7 @@ function playerSVG(id, x, y, opacity, interactive, frameNum) {
   return svg;
 }
 
-function shotSVG(shot, opacity) {
+function shotSVG(shot, opacity, interactive) {
   if (!shot) return '';
   const c = SHOT_COLORS[shot.type];
   const op = opacity || 1;
@@ -145,6 +145,11 @@ function shotSVG(shot, opacity) {
   const tw = SHOT_LABELS[shot.type].length * 6.5 + 12;
   svg += `<rect x="${lx - tw/2}" y="${ly - 9}" width="${tw}" height="18" rx="4" fill="rgba(0,0,0,.65)" opacity="${op}"/>`;
   svg += `<text x="${lx}" y="${ly + 1}" fill="${c}" font-size="11" font-family="system-ui" font-weight="700" text-anchor="middle" dominant-baseline="central" opacity="${op}">${SHOT_LABELS[shot.type]}</text>`;
+  // Interactive origin drag handle (desktop)
+  if (interactive) {
+    svg += `<circle cx="${shot.x1}" cy="${shot.y1}" r="8" fill="${c}" opacity="0.4" stroke="${c}" stroke-width="1.5"/>`;
+    svg += `<circle cx="${shot.x1}" cy="${shot.y1}" r="${HIT_R}" fill="transparent" style="cursor:grab;" onmousedown="startShotOriginDrag(event)"/>`;
+  }
   return svg;
 }
 

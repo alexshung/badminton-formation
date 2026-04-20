@@ -90,7 +90,9 @@ function updateCursor() {
   svg.classList.add('tool-' + tool);
 }
 
-// Cached CTM for mid-drag coordinate conversion (render() replaces SVG, breaking getScreenCTM)
+// Cached CTM for mid-drag coordinate conversion (render() replaces SVG, breaking getScreenCTM).
+// NOTE: If the user resizes/rotates the device MID-DRAG, the cached CTM becomes stale.
+// This is rare enough to accept; clearing on resize would cause worse jank.
 let _dragCTM = null;
 
 function cacheCTM() {
@@ -163,7 +165,8 @@ function courtClick(evt) {
   const f = currentFrameData();
 
   if (tool === 'player') {
-    const nearby = findPlayerAt(p.x, p.y, f);
+    // Use large radius for tap detection (small on-screen at mobile landscape scale)
+    const nearby = findPlayerAt(p.x, p.y, f, 120);
     if (nearby) {
       // Tapping on a player selects them
       selectPlayer(nearby);
@@ -186,6 +189,8 @@ function courtClick(evt) {
       }
     }
   } else if (tool === 'shot') {
+    // On desktop, onShotMouseDown handles shots; skip here to avoid double-handling
+    if (_shotMouseDownHandled) { _shotMouseDownHandled = false; return; }
     // Check for shuttle position (previous shot's landing)
     const shuttle = getShuttlePosition(state.currentFrame);
 
@@ -209,15 +214,15 @@ function courtClick(evt) {
       return;
     }
 
-    // First tap: find origin at nearest player
+    // First tap: find origin at nearest player (within max distance)
     let closest = null, minD = Infinity;
     for (const pid in f.players) {
       const pl = f.players[pid];
       const d = Math.hypot(pl.x - p.x, pl.y - p.y);
       if (d < minD) { minD = d; closest = pid; }
     }
-    if (!closest) {
-      showToast('Place players first');
+    if (!closest || minD > 300) {
+      showToast(closest ? 'Tap closer to a player' : 'Place players first');
       return;
     }
     pushUndo();
@@ -234,6 +239,8 @@ function courtClickPanel(evt) {
   evt.preventDefault();
   if (evt.button === 2) return;
   if (isDragging) { isDragging = false; return; }
+  // Block frame switching during active drags (prevents stale coordinate state)
+  if (dragPlayer || moveDragPlayer || shotDragEnd) return;
   // Detect which frame panel was clicked using raw coordinates
   const rawP = getRawSVGPoint(evt);
   if (!rawP) return;
@@ -319,8 +326,6 @@ function startDrag(evt, pid) {
   selectedPlayer = pid;
   document.querySelectorAll('.player-token').forEach(t => t.classList.toggle('active', t.dataset.player === pid));
 
-  if (evt.touches) startLongPress(evt, p.x, p.y);
-
   if (state.currentFrame === 0) {
     // Frame 1: drag repositions the player's base position
     pushUndo();
@@ -396,7 +401,8 @@ function endMoveDrag() {
       const f = currentFrameData();
       if (moveDragStart && f.movements[moveDragPlayer]) {
         const m = f.movements[moveDragPlayer];
-        if (Math.hypot(m.x - moveDragStart.x, m.y - moveDragStart.y) < 30) {
+        // Cancel threshold (15) < start threshold (30) so any started drag survives
+        if (Math.hypot(m.x - moveDragStart.x, m.y - moveDragStart.y) < 15) {
           delete f.movements[moveDragPlayer];
         }
       }
@@ -405,7 +411,7 @@ function endMoveDrag() {
     } else {
       // Tap (no drag) — just select the player for tap-tap flow
       selectPlayer(moveDragPlayer);
-      render();
+      // selectPlayer() already calls render(), no extra render needed
     }
   }
   moveDragPlayer = null; moveDragStart = null;
@@ -427,6 +433,18 @@ function startShuttleDrag(evt) {
   const f = currentFrameData();
   if (!f.shot) return;
   shotDragEnd = 'end';
+  pushUndo();
+  document.addEventListener('mousemove', onShotAdjustDrag);
+  document.addEventListener('mouseup', endShotAdjustDrag);
+}
+
+function startShotOriginDrag(evt) {
+  // Desktop mouse handler for shot origin circle
+  evt.preventDefault();
+  evt.stopPropagation();
+  const f = currentFrameData();
+  if (!f.shot) return;
+  shotDragEnd = 'start';
   pushUndo();
   document.addEventListener('mousemove', onShotAdjustDrag);
   document.addEventListener('mouseup', endShotAdjustDrag);
@@ -466,11 +484,15 @@ function initShotDrag() {
   c.addEventListener('mousedown', onShotMouseDown);
 }
 
+let _shotMouseDownHandled = false;
+
 function onShotMouseDown(evt) {
+  _shotMouseDownHandled = false;
   if (tool !== 'shot' || evt.button === 2) return;
   const p = getSVGPoint(evt);
   if (!p || !isOnCourt(p.x, p.y)) return;
   evt.preventDefault();
+  _shotMouseDownHandled = true; // prevent courtClick from also handling this
 
   // Two-tap mode: if shotStart already set from a previous tap, this completes the shot
   if (shotStart && Math.hypot(p.x - shotStart.x, p.y - shotStart.y) > 15) {
@@ -496,8 +518,8 @@ function onShotMouseDown(evt) {
       const d = Math.hypot(pl.x - p.x, pl.y - p.y);
       if (d < minD) { minD = d; closest = pid; }
     }
-    if (!closest) {
-      showToast('Place players first, then draw shots');
+    if (!closest || minD > 300) {
+      showToast(closest ? 'Tap closer to a player' : 'Place players first');
       return;
     }
     const origin = f.players[closest];

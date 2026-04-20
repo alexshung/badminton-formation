@@ -37,21 +37,13 @@ function renderOverlay(container, interactive) {
       if (f.players[pid]) svg += movementSVG(pid, f.players[pid].x, f.players[pid].y, f.movements[pid].x, f.movements[pid].y, baseOp);
     }
     if (f.shot) {
-      svg += shotSVG(f.shot, baseOp);
+      svg += shotSVG(f.shot, baseOp, interactive && isActive);
       svg += frameNumberBadge(i, f.shot.x1, f.shot.y1 - 22);
     }
     if (isActive && shotPreviewLine && !f.shot) {
       svg += shotSVG({ type: shotType, x1: shotPreviewLine.x1, y1: shotPreviewLine.y1, x2: shotPreviewLine.x2, y2: shotPreviewLine.y2 }, 0.45);
     }
     // Two-tap mode: show origin marker
-    if (isActive && shotStart && !shotPreviewLine && !f.shot) {
-      const c = SHOT_COLORS[shotType];
-      svg += `<circle cx="${shotStart.x}" cy="${shotStart.y}" r="12" fill="none" stroke="${c}" stroke-width="3" stroke-dasharray="4,3" opacity="0.8">
-        <animate attributeName="r" values="10;16;10" dur="1.2s" repeatCount="indefinite"/>
-      </circle>`;
-      svg += `<circle cx="${shotStart.x}" cy="${shotStart.y}" r="5" fill="${c}" opacity="0.8"/>`;
-    }
-    // Two-tap mode: show origin marker when shotStart is set but no preview line
     if (isActive && shotStart && !shotPreviewLine && !f.shot) {
       const c = SHOT_COLORS[shotType];
       svg += `<circle cx="${shotStart.x}" cy="${shotStart.y}" r="12" fill="none" stroke="${c}" stroke-width="3" stroke-dasharray="4,3" opacity="0.8">
@@ -116,7 +108,7 @@ function renderPanel(container, interactive) {
     for (const pid in f.movements) {
       if (f.players[pid]) svg += movementSVG(pid, f.players[pid].x, f.players[pid].y, f.movements[pid].x, f.movements[pid].y, 1);
     }
-    svg += shotSVG(f.shot, 1);
+    svg += shotSVG(f.shot, 1, interactive && isActive);
     // Shot preview line (active frame only)
     if (isActive && shotPreviewLine && !f.shot) {
       svg += shotSVG({ type: shotType, x1: shotPreviewLine.x1, y1: shotPreviewLine.y1, x2: shotPreviewLine.x2, y2: shotPreviewLine.y2 }, 0.45);

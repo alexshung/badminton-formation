@@ -92,7 +92,7 @@ input,button,select,textarea{font-family:var(--font);}
 .undo-btn:not(:disabled) .undo-count{display:inline-block;}
 
 /* === MAIN LAYOUT === */
-.main-area{display:flex;flex:1;overflow:hidden;}
+.main-area{display:flex;flex:1;overflow:hidden;position:relative;}
 .court-container{flex:1;display:flex;align-items:center;justify-content:center;
   padding:12px;overflow:auto;position:relative;background:var(--bg);
   touch-action:none;-webkit-overflow-scrolling:touch;}
@@ -277,10 +277,17 @@ input,button,select,textarea{font-family:var(--font);}
   -webkit-tap-highlight-color:transparent;}
 .sidebar-backdrop.show{display:block;}
 
-/* === MOBILE TOOL TOGGLES (hidden on desktop) === */
-.mobile-tool-btn{display:none;position:relative;}
-.shot-type-dot{display:none;position:absolute;bottom:2px;right:2px;width:7px;height:7px;
-  border-radius:50%;border:1px solid var(--surface);}
+/* === FLOATING TOOL TOGGLES (hidden on desktop, visible on mobile) === */
+.floating-tools{display:none;}
+.floating-tool-btn{width:44px;height:44px;border-radius:50%;background:var(--surface);
+  border:2px solid var(--border);color:var(--text);display:flex;align-items:center;
+  justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.4);cursor:pointer;
+  position:relative;transition:all .15s;-webkit-tap-highlight-color:transparent;}
+.floating-tool-btn:active{transform:scale(.9);}
+.floating-tool-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);
+  box-shadow:0 2px 12px rgba(74,158,255,0.4);}
+.shot-type-dot{display:none;position:absolute;bottom:2px;right:2px;width:8px;height:8px;
+  border-radius:50%;border:1.5px solid var(--surface);}
 
 /* =================================================================
    MOBILE (max-width: 768px)
@@ -350,14 +357,12 @@ input,button,select,textarea{font-family:var(--font);}
   .coverage-dot{width:12px;height:12px;}
   .frame-note-input{font-size:11px;padding:4px 8px;min-height:24px;}
 
-  /* === FAB: Small circle, bottom-right === */
-  /* === Mobile tool toggles in topbar === */
-  .mobile-tool-btn{display:flex !important;width:32px;height:32px;min-height:32px;
-    border-radius:6px;position:relative;}
-  .mobile-tool-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
-  .mobile-tool-btn .shot-type-dot{display:block;}
+  /* === Floating tool icons on court edge === */
+  .floating-tools{display:flex;flex-direction:column;gap:8px;position:absolute;
+    right:12px;top:50%;transform:translateY(-50%);z-index:50;pointer-events:auto;}
+  .floating-tool-btn .shot-type-dot{display:block;}
 
-  /* === FAB: hidden by default, accessible via long-press or keep as ⋯ === */
+  /* === FAB: smaller, semi-transparent === */
   .sidebar-toggle{display:flex !important;align-items:center;justify-content:center;
     width:36px;height:36px;bottom:44px;right:8px;left:auto;transform:none;
     border-radius:50%;padding:0;font-size:14px;line-height:1;
@@ -404,8 +409,9 @@ input,button,select,textarea{font-family:var(--font);}
   .timeline-action{min-height:24px;min-width:24px;font-size:10px;}
   .sidebar{max-height:50vh;}
   .sidebar-toggle{width:32px;height:32px;bottom:32px;right:6px;font-size:14px;opacity:0.5;}
-  .mobile-tool-btn{width:28px;height:28px;min-height:28px;}
-  .mobile-tool-btn svg{width:13px;height:13px;}
+  .floating-tools{right:8px;gap:6px;}
+  .floating-tool-btn{width:38px;height:38px;}
+  .floating-tool-btn svg{width:17px;height:17px;}
   .court-container{padding:1px;}
   .toast{bottom:38px;}
 }
