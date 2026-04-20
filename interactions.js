@@ -427,7 +427,8 @@ function endMoveDrag() {
 let shotDragEnd = null; // 'start' or 'end'
 
 function startShuttleDrag(evt) {
-  // Desktop mouse handler for shuttlecock endpoint
+  // Desktop mouse handler for shuttlecock endpoint — only in shot mode
+  if (tool !== 'shot') return; // let event propagate to player handling
   evt.preventDefault();
   evt.stopPropagation();
   const f = currentFrameData();
@@ -439,7 +440,8 @@ function startShuttleDrag(evt) {
 }
 
 function startShotOriginDrag(evt) {
-  // Desktop mouse handler for shot origin circle
+  // Desktop mouse handler for shot origin circle — only in shot mode
+  if (tool !== 'shot') return; // let event propagate to player handling
   evt.preventDefault();
   evt.stopPropagation();
   const f = currentFrameData();

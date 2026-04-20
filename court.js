@@ -81,14 +81,14 @@ function playerSVG(id, x, y, opacity, interactive, frameNum) {
   const op = opacity || 1;
   const isSelected = interactive && (tool === 'player' || tool === 'movement') && selectedPlayer === id;
   const label = getPlayerLabel(id);
-  const fontSize = label.length > 3 ? 10 : (label.length > 2 ? 11 : 13);
+  const fontSize = label.length > 3 ? 14 : (label.length > 2 ? 16 : 18);
   let svg = '';
 
   // Selection ring
   if (isSelected) {
-    svg += `<circle cx="${x}" cy="${y}" r="${PR + 7}" fill="none" stroke="${color}" stroke-width="2" stroke-dasharray="5,4" opacity="${op * 0.6}">`;
+    svg += `<circle cx="${x}" cy="${y}" r="${PR + 10}" fill="none" stroke="${color}" stroke-width="2.5" stroke-dasharray="6,5" opacity="${op * 0.6}">`;
     svg += `<animateTransform attributeName="transform" type="rotate" from="0 ${x} ${y}" to="360 ${x} ${y}" dur="4s" repeatCount="indefinite"/></circle>`;
-    svg += `<circle cx="${x}" cy="${y}" r="${PR + 4}" fill="none" stroke="${color}" stroke-width="1" opacity="${op * 0.2}"/>`;
+    svg += `<circle cx="${x}" cy="${y}" r="${PR + 6}" fill="none" stroke="${color}" stroke-width="1.5" opacity="${op * 0.2}"/>`;
   }
 
   // Invisible hit target (with event handlers for bigger touch area)
@@ -101,10 +101,10 @@ function playerSVG(id, x, y, opacity, interactive, frameNum) {
   if (interactive) {
     svg += `<circle cx="${x}" cy="${y}" r="${PR}" fill="${color}" opacity="${op}" class="player-circle" data-player="${id}" style="${shadowFilter};cursor:grab;pointer-events:none"/>`;
     // Inner highlight
-    svg += `<circle cx="${x}" cy="${y - 3}" r="${PR - 6}" fill="rgba(255,255,255,.15)" opacity="${op}" style="pointer-events:none"/>`;
+    svg += `<circle cx="${x}" cy="${y - 4}" r="${PR - 10}" fill="rgba(255,255,255,.15)" opacity="${op}" style="pointer-events:none"/>`;
   } else {
     svg += `<circle cx="${x}" cy="${y}" r="${PR}" fill="${color}" opacity="${op}" style="${shadowFilter}"/>`;
-    svg += `<circle cx="${x}" cy="${y - 3}" r="${PR - 6}" fill="rgba(255,255,255,.15)" opacity="${op}"/>`;
+    svg += `<circle cx="${x}" cy="${y - 4}" r="${PR - 10}" fill="rgba(255,255,255,.15)" opacity="${op}"/>`;
   }
 
   // Label

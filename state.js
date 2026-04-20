@@ -2,8 +2,8 @@
 const CW = 610, CH = 1340;
 const PAD = 40;
 const SW = CW + PAD * 2, SH = CH + PAD * 2;
-const PR = 28;
-const HIT_R = 42;
+const PR = 42;
+const HIT_R = 56;
 const SHOT_COLORS = { drop: '#ff9f43', drive: '#feca57', smash: '#ee5a24', clear: '#2ed573', lift: '#a29bfe', serve: '#fd79a8' };
 const SHOT_LABELS = { drop: 'Drop', drive: 'Drive', smash: 'Smash', clear: 'Clear', lift: 'Lift', serve: 'Serve' };
 const TEAM_COLORS = { A: '#4a9eff', B: '#ff6b6b' };
