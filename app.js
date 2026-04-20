@@ -159,6 +159,9 @@ function renderTimeline() {
     h += `<button class="timeline-action" onclick="duplicateFrame()" title="Duplicate current frame">⧉</button>`;
     h += `<button class="timeline-action" onclick="addFrame()" title="Add new frame">+</button>`;
   }
+  if (state.frames.length > 1) {
+    h += `<button class="timeline-action timeline-remove" onclick="removeLastFrame()" title="Remove last frame">−</button>`;
+  }
   tl.innerHTML = h;
   document.getElementById('frameInfo').textContent = `Frame ${state.currentFrame + 1}/${state.frames.length}`;
 }

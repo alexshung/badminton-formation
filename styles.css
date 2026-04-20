@@ -201,6 +201,8 @@ input,button,select,textarea{font-family:var(--font);}
   font-weight:600;}
 .timeline-action:hover{border-color:var(--accent);color:var(--accent);}
 .timeline-action:active{transform:scale(.9);}
+.timeline-remove{color:var(--error, #e74c3c);border-color:var(--error, #e74c3c);opacity:0.6;}
+.timeline-remove:hover{opacity:1;}
 
 /* === COURT SVG === */
 .court-svg{max-width:100%;max-height:100%;touch-action:none;}

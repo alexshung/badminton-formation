@@ -212,7 +212,16 @@ function removeFrame(evt, i) {
   pushUndo();
   state.frames.splice(i, 1);
   if (state.currentFrame >= state.frames.length) state.currentFrame = state.frames.length - 1;
-  render();
+  render(); saveState();
+}
+
+function removeLastFrame() {
+  if (state.frames.length <= 1) return;
+  pushUndo();
+  state.frames.pop();
+  if (state.currentFrame >= state.frames.length) state.currentFrame = state.frames.length - 1;
+  render(); saveState();
+  showToast('Frame ' + (state.frames.length + 1) + ' removed');
 }
 
 function clearFrame() {
