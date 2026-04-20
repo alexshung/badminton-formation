@@ -172,21 +172,13 @@ function courtClick(evt) {
       selectPlayer(nearby);
       return;
     }
-    if (state.currentFrame === 0) {
-      // Frame 1: tap empty court = place player
+    // Tap empty court = set movement for selected player (all frames)
+    if (selectedPlayer && f.players[selectedPlayer]) {
       pushUndo();
-      f.players[selectedPlayer] = { x: p.x, y: p.y };
+      f.movements[selectedPlayer] = { x: p.x, y: p.y };
       propagatePositions(state.currentFrame);
       render(); saveState();
-    } else {
-      // Frame 2+: tap empty court = set movement for selected player
-      if (selectedPlayer && f.players[selectedPlayer]) {
-        pushUndo();
-        f.movements[selectedPlayer] = { x: p.x, y: p.y };
-        propagatePositions(state.currentFrame);
-        render(); saveState();
-        showToast('Movement set for ' + selectedPlayer);
-      }
+      showToast('Movement set for ' + selectedPlayer);
     }
   } else if (tool === 'shot') {
     // On desktop, onShotMouseDown handles shots; skip here to avoid double-handling
@@ -315,7 +307,7 @@ function clearLongPress() {
   longPressTarget = null;
 }
 
-// ===== DRAG: Player placement =====
+// ===== DRAG: Player =====
 function startDrag(evt, pid) {
   evt.preventDefault();
   evt.stopPropagation();
@@ -326,25 +318,12 @@ function startDrag(evt, pid) {
   selectedPlayer = pid;
   document.querySelectorAll('.player-token').forEach(t => t.classList.toggle('active', t.dataset.player === pid));
 
-  if (state.currentFrame === 0) {
-    // Frame 1: drag repositions the player's base position
-    pushUndo();
-    dragPlayer = pid;
-    dragOffset = { x: f.players[pid].x - p.x, y: f.players[pid].y - p.y };
-    document.addEventListener('mousemove', onDrag);
-    document.addEventListener('mouseup', endDrag);
-    document.addEventListener('touchmove', onDrag, { passive: false });
-    document.addEventListener('touchend', endDrag);
-  } else {
-    // Frame 2+: drag creates movement arrow (undo deferred until real drag)
-    moveDragPlayer = pid;
-    moveDragStart = { x: f.players[pid].x, y: f.players[pid].y };
-    moveDragUndoPushed = false;
-    document.addEventListener('mousemove', onMoveDrag);
-    document.addEventListener('mouseup', endMoveDrag);
-    document.addEventListener('touchmove', onMoveDrag, { passive: false });
-    document.addEventListener('touchend', endMoveDrag);
-  }
+  // All frames: drag creates movement arrow (undo deferred until real drag)
+  moveDragPlayer = pid;
+  moveDragStart = { x: f.players[pid].x, y: f.players[pid].y };
+  moveDragUndoPushed = false;
+  document.addEventListener('mousemove', onMoveDrag);
+  document.addEventListener('mouseup', endMoveDrag);
 }
 
 function onDrag(evt) {
@@ -409,9 +388,27 @@ function endMoveDrag() {
       propagatePositions(state.currentFrame);
       render(); saveState();
     } else {
-      // Tap (no drag) — just select the player for tap-tap flow
-      selectPlayer(moveDragPlayer);
-      // selectPlayer() already calls render(), no extra render needed
+      // Tap (no drag) — check for double-tap to delete
+      const now = Date.now();
+      if (_lastTapPlayer === moveDragPlayer && (now - _lastTapTime) < 400) {
+        // Double-tap on same player → remove
+        _lastTapTime = 0;
+        _lastTapPlayer = null;
+        const f = currentFrameData();
+        pushUndo();
+        delete f.players[moveDragPlayer];
+        delete f.movements[moveDragPlayer];
+        if (f.regions) delete f.regions[moveDragPlayer];
+        propagatePositions(state.currentFrame);
+        render(); saveState();
+        showToast(moveDragPlayer + ' removed');
+        if (navigator.vibrate) navigator.vibrate(30);
+      } else {
+        // Single tap — select for tap-tap flow
+        _lastTapTime = now;
+        _lastTapPlayer = moveDragPlayer;
+        selectPlayer(moveDragPlayer);
+      }
     }
   }
   moveDragPlayer = null; moveDragStart = null;
@@ -700,6 +697,10 @@ function initCoverageTracking() {
 
 const TOUCH_HIT_R = 180; // ~36px on screen at landscape scale
 
+// Double-tap detection for mobile (dblclick unreliable on touch)
+let _lastTapTime = 0;
+let _lastTapPlayer = null;
+
 function initTouchDelegation() {
   const c = document.getElementById('courtContainer');
 
@@ -736,10 +737,10 @@ function initTouchDelegation() {
 
     // 2. Check if touching a player — skip when in shot mode
     if (tool !== 'shot') {
-      // On frame 2+ with a selected player (tap-tap movement mode), use a tight
-      // radius so only direct hits on a player circle start drags. Taps further
-      // away fall through to courtClick for movement placement or player selection.
-      const inTapTapMode = state.currentFrame > 0 && selectedPlayer;
+      // With a selected player (tap-tap movement mode), use a tight radius so
+      // only direct hits on a player circle start drags. Taps further away
+      // fall through to courtClick for movement placement or player selection.
+      const inTapTapMode = selectedPlayer != null;
       const hitR = inTapTapMode ? (PR + 25) : TOUCH_HIT_R;
       const nearPlayer = findPlayerAt(p.x, p.y, f, hitR);
       if (nearPlayer) {
@@ -749,21 +750,12 @@ function initTouchDelegation() {
         isDragging = false;
         document.querySelectorAll('.player-token').forEach(t => t.classList.toggle('active', t.dataset.player === nearPlayer));
 
-        if (state.currentFrame === 0) {
-          // Frame 1: reposition
-          pushUndo();
-          dragPlayer = nearPlayer;
-          dragOffset = { x: f.players[nearPlayer].x - p.x, y: f.players[nearPlayer].y - p.y };
-          document.addEventListener('touchmove', onDrag, { passive: false });
-          document.addEventListener('touchend', endDrag);
-        } else {
-          // Frame 2+: movement arrow (undo deferred until real drag detected)
-          moveDragPlayer = nearPlayer;
-          moveDragStart = { x: f.players[nearPlayer].x, y: f.players[nearPlayer].y };
-          moveDragUndoPushed = false;
-          document.addEventListener('touchmove', onMoveDrag, { passive: false });
-          document.addEventListener('touchend', endMoveDrag);
-        }
+        // All frames: movement arrow with drag, double-tap to remove
+        moveDragPlayer = nearPlayer;
+        moveDragStart = { x: f.players[nearPlayer].x, y: f.players[nearPlayer].y };
+        moveDragUndoPushed = false;
+        document.addEventListener('touchmove', onMoveDrag, { passive: false });
+        document.addEventListener('touchend', endMoveDrag);
         return;
       }
     }
