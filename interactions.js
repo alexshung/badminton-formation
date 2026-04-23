@@ -198,16 +198,7 @@ function courtClick(evt) {
     // Check for shuttle position (previous shot's landing)
     const shuttle = getShuttlePosition(state.currentFrame);
 
-    if (shuttle && !shotStart) {
-      // Auto-origin from shuttle: single tap places the shot
-      pushUndo();
-      f.shot = { type: shotType, x1: shuttle.x, y1: shuttle.y, x2: p.x, y2: p.y };
-      render(); saveState();
-      showToast('Shot placed');
-      return;
-    }
-
-    // Two-tap mode (no shuttle, or already in two-tap)
+    // Already in two-tap mode (second tap = destination)
     if (shotStart) {
       if (Math.hypot(p.x - shotStart.x, p.y - shotStart.y) > 15) {
         f.shot = { type: shotType, x1: shotStart.x, y1: shotStart.y, x2: p.x, y2: p.y };
@@ -218,20 +209,56 @@ function courtClick(evt) {
       return;
     }
 
-    // First tap: find origin at nearest player (within max distance)
-    let closest = null, minD = Infinity;
-    for (const pid in f.players) {
-      const pl = f.players[pid];
-      const d = Math.hypot(pl.x - p.x, pl.y - p.y);
-      if (d < minD) { minD = d; closest = pid; }
+    // Determine origin automatically:
+    // 1. Shuttle from previous frame's shot landing
+    // 2. Selected player's position (most intuitive on mobile)
+    // 3. Nearest player within range
+    let originX, originY, originLabel;
+
+    if (shuttle) {
+      originX = shuttle.x;
+      originY = shuttle.y;
+      originLabel = 'shuttle';
+    } else if (selectedPlayer && f.players[selectedPlayer]) {
+      // Use selected player as origin — single tap places the shot
+      const sp = f.players[selectedPlayer];
+      // If selected player has a movement on this frame, use the movement end position
+      const mv = f.movements[selectedPlayer];
+      originX = mv ? mv.x : sp.x;
+      originY = mv ? mv.y : sp.y;
+      originLabel = selectedPlayer;
+    } else {
+      // Fallback: nearest player within range
+      let closest = null, minD = Infinity;
+      for (const pid in f.players) {
+        const pl = f.players[pid];
+        const d = Math.hypot(pl.x - p.x, pl.y - p.y);
+        if (d < minD) { minD = d; closest = pid; }
+      }
+      if (!closest || minD > 300) {
+        showToast(closest ? 'Tap closer to a player' : 'Place players first');
+        return;
+      }
+      const pl = f.players[closest];
+      const mv = f.movements[closest];
+      originX = mv ? mv.x : pl.x;
+      originY = mv ? mv.y : pl.y;
+      originLabel = closest;
     }
-    if (!closest || minD > 300) {
-      showToast(closest ? 'Tap closer to a player' : 'Place players first');
+
+    // If tap is far enough from origin, place shot directly (single-tap)
+    const distFromOrigin = Math.hypot(p.x - originX, p.y - originY);
+    if (distFromOrigin > 80) {
+      pushUndo();
+      f.shot = { type: shotType, x1: originX, y1: originY, x2: p.x, y2: p.y };
+      render(); saveState();
+      showToast('Shot placed from ' + originLabel);
       return;
     }
+
+    // Tap is close to the origin — enter two-tap mode (user is tapping the origin area)
     pushUndo();
-    const origin = f.players[closest];
-    shotStart = { x: origin.x, y: origin.y };
+    shotStart = { x: originX, y: originY };
     render();
     showToast('Now tap the landing spot');
   } else if (tool === 'coverage') {
@@ -523,7 +550,7 @@ function onShotMouseDown(evt) {
     return;
   }
 
-  // Check for shuttle position first, then snap to nearest player
+  // Determine origin: shuttle > selected player > nearest player
   const f = currentFrameData();
   const shuttle = getShuttlePosition(state.currentFrame);
   let originX, originY;
@@ -531,6 +558,11 @@ function onShotMouseDown(evt) {
   if (shuttle) {
     originX = shuttle.x;
     originY = shuttle.y;
+  } else if (selectedPlayer && f.players[selectedPlayer]) {
+    const sp = f.players[selectedPlayer];
+    const mv = f.movements[selectedPlayer];
+    originX = mv ? mv.x : sp.x;
+    originY = mv ? mv.y : sp.y;
   } else {
     let closest = null, minD = Infinity;
     for (const pid in f.players) {
@@ -542,9 +574,10 @@ function onShotMouseDown(evt) {
       showToast(closest ? 'Tap closer to a player' : 'Place players first');
       return;
     }
-    const origin = f.players[closest];
-    originX = origin.x;
-    originY = origin.y;
+    const pl = f.players[closest];
+    const mv = f.movements[closest];
+    originX = mv ? mv.x : pl.x;
+    originY = mv ? mv.y : pl.y;
   }
 
   pushUndo();
@@ -552,8 +585,6 @@ function onShotMouseDown(evt) {
   shotPreviewLine = { x1: originX, y1: originY, x2: p.x, y2: p.y };
   document.addEventListener('mousemove', onShotDrag);
   document.addEventListener('mouseup', endShotDrag);
-  document.addEventListener('touchmove', onShotDrag, { passive: false });
-  document.addEventListener('touchend', endShotDrag);
 }
 
 function onShotDrag(evt) {
