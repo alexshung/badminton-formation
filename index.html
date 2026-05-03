@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Badminton Formation Tool — Pro Coach</title>
-<link rel="stylesheet" href="styles.css?v=1777785679">
+<link rel="stylesheet" href="styles.css?v=1777785760">
 </head>
 <body>
 <div class="app">
@@ -22,6 +22,9 @@
     </button>
     <button class="btn-icon" id="courtOrientBtn" onclick="toggleCourtOrientation()" title="Rotate court view">
       <svg width="14" height="14" viewBox="0 0 16 16"><path d="M2 6V2h4M14 10v4h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M14 2L9 7M2 14l5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+    <button class="btn-icon" onclick="enterPresentation()" title="Presentation mode">
+      <svg width="14" height="14" viewBox="0 0 16 16"><path d="M2 3h12v8H2z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 14h6M8 11v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
     </button>
     <div class="topbar-divider"></div>
     <div class="topbar-row-2">
@@ -201,11 +204,23 @@
   </div>
 </div>
 
-<script src="state.js?v=1777785679"></script>
-<script src="court.js?v=1777785679"></script>
-<script src="interactions.js?v=1777785679"></script>
-<script src="animation.js?v=1777785679"></script>
-<script src="export.js?v=1777785679"></script>
-<script src="app.js?v=1777785679"></script>
+<!-- Presentation Mode Overlay -->
+<div class="presentation-overlay" id="presentationOverlay">
+  <div class="presentation-court" id="presentationCourt"></div>
+  <div class="presentation-controls">
+    <button class="pres-btn" onclick="presStep(-1)" title="Previous frame">⏮</button>
+    <button class="pres-btn pres-play" id="presPlayBtn" onclick="presTogglePlay()" title="Play/Pause">▶</button>
+    <button class="pres-btn" onclick="presStep(1)" title="Next frame">⏭</button>
+    <span class="pres-frame-info" id="presFrameInfo"></span>
+    <button class="pres-btn pres-close" onclick="exitPresentation()" title="Exit (Esc)">✕</button>
+  </div>
+</div>
+
+<script src="state.js?v=1777785760"></script>
+<script src="court.js?v=1777785760"></script>
+<script src="interactions.js?v=1777785760"></script>
+<script src="animation.js?v=1777785760"></script>
+<script src="export.js?v=1777785760"></script>
+<script src="app.js?v=1777785760"></script>
 </body>
 </html>

@@ -439,3 +439,35 @@ input,button,select,textarea{font-family:var(--font);}
   outline: none;
 }
 .frame-label-input:focus { border-color: var(--accent); }
+
+/* Presentation Mode */
+.presentation-overlay {
+  display: none; position: fixed; inset: 0; z-index: 10000;
+  background: #0a0b0d; flex-direction: column; align-items: center; justify-content: center;
+}
+.presentation-overlay.active { display: flex; }
+.presentation-court {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  width: 100%; max-height: calc(100vh - 60px); padding: 16px; box-sizing: border-box;
+}
+.presentation-court svg { max-width: 100%; max-height: 100%; }
+.presentation-controls {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 20px; background: rgba(30,32,38,.9);
+  border-radius: 12px; margin-bottom: 16px;
+}
+.pres-btn {
+  width: 40px; height: 40px; border-radius: 50%; border: none;
+  background: rgba(255,255,255,.1); color: #fff; font-size: 16px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+}
+.pres-btn:hover { background: rgba(255,255,255,.2); }
+.pres-play { width: 48px; height: 48px; font-size: 20px; background: var(--accent); }
+.pres-play:hover { background: #3d8ae6; }
+.pres-close { background: rgba(255,60,60,.3); font-size: 18px; }
+.pres-close:hover { background: rgba(255,60,60,.5); }
+.pres-frame-info { color: rgba(255,255,255,.6); font-size: 13px; font-family: system-ui; min-width: 80px; text-align: center; }
+
+body.presentation .app, body.presentation .sidebar-toggle,
+body.presentation .sidebar-backdrop, body.presentation .toast { display: none !important; }
