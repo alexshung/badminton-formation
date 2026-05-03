@@ -67,11 +67,22 @@ function animTick(timestamp) {
     if (animState.progress >= 1) {
       animState.frameIdx++;
       if (animState.frameIdx >= state.frames.length) { stopAnimation(); return; }
+      // Save current positions as transition start
+      const transFrom = {};
+      for (const pid in animState.playerPositions) transFrom[pid] = { ...animState.playerPositions[pid] };
+      animState.transitionFrom = transFrom;
+      animState.phase = 'transition'; animState.progress = 0;
+    }
+  } else if (animState.phase === 'transition') {
+    const TRANS_DUR = 0.35;
+    animState.progress += dt / TRANS_DUR;
+    if (animState.progress >= 1) {
+      // Snap to next frame base positions
       const nextFr = state.frames[animState.frameIdx];
       const np = {};
-      for (const pid in animState.playerPositions) np[pid] = { ...animState.playerPositions[pid] };
       for (const pid in nextFr.players) np[pid] = { ...nextFr.players[pid] };
       animState.playerPositions = np;
+      animState.transitionFrom = null;
       animState.phase = 'action'; animState.progress = 0;
     }
   }
@@ -105,6 +116,14 @@ function renderAnimFrame() {
     if (animState.phase === 'action' && fr.movements[pid]) {
       const dest = fr.movements[pid];
       dx = lerp(pos.x, dest.x, t); dy = lerp(pos.y, dest.y, t);
+    } else if (animState.phase === 'transition' && animState.transitionFrom) {
+      const from = animState.transitionFrom[pid];
+      const to = fr.players[pid];
+      if (from && to) {
+        dx = lerp(from.x, to.x, t); dy = lerp(from.y, to.y, t);
+      } else if (to) {
+        dx = to.x; dy = to.y;
+      }
     }
     const team = pid[0];
     const color = TEAM_COLORS[team];
