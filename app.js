@@ -153,7 +153,9 @@ function renderTimeline() {
     if (pc > 0) dots += `<span class="frame-dot" style="background:var(--accent)"></span>`;
     if (hasShot) dots += `<span class="frame-dot" style="background:${SHOT_COLORS[f.shot.type]}"></span>`;
     if (hasMoves) dots += `<span class="frame-dot" style="background:var(--muted)"></span>`;
-    h += `<button class="frame-btn${active}" onclick="switchFrame(${i})" oncontextmenu="removeFrame(event,${i})">${dots}F${i + 1}<span class="frame-meta">${pc}P</span></button>`;
+    const lbl = f.label ? f.label : '';
+    const displayLabel = lbl ? lbl.substring(0, 8) : 'F' + (i + 1);
+    h += `<button class="frame-btn${active}" onclick="switchFrame(${i})" oncontextmenu="removeFrame(event,${i})">${dots}${escapeXML(displayLabel)}<span class="frame-meta">${pc}P</span></button>`;
   });
   if (state.frames.length < 6) {
     h += `<button class="timeline-action" onclick="duplicateFrame()" title="Duplicate current frame">⧉</button>`;
@@ -169,6 +171,8 @@ function renderTimeline() {
 function renderFrameNote() {
   const el = document.getElementById('frameNote');
   if (el) el.value = currentFrameData().note || '';
+  const labelEl = document.getElementById('frameLabelInput');
+  if (labelEl) labelEl.value = currentFrameData().label || '';
 }
 
 function updatePlayerPalette() {
@@ -213,6 +217,13 @@ document.getElementById('titleInput').addEventListener('input', () => {
 // Frame note input
 document.getElementById('frameNote').addEventListener('input', function() {
   currentFrameData().note = this.value;
+  saveState();
+});
+
+// Frame label input
+document.getElementById('frameLabelInput').addEventListener('input', function() {
+  currentFrameData().label = this.value.substring(0, 12);
+  renderTimeline();
   saveState();
 });
 

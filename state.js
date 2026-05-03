@@ -145,7 +145,7 @@ function loadState() {
       if (!state.playerNames) state.playerNames = {};
       if (!state.exportBg) state.exportBg = 'dark';
       if (!state.courtOrientation) state.courtOrientation = 'auto';
-      state.frames.forEach(f => { if (!f.note) f.note = ''; if (!f.regions) f.regions = {}; });
+      state.frames.forEach(f => { if (!f.note) f.note = ''; if (!f.regions) f.regions = {}; if (f.label === undefined) f.label = ''; });
     }
   } catch(e){}
   const titleEl = document.getElementById('titleInput');

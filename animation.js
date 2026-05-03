@@ -166,8 +166,11 @@ function renderAnimFrame() {
   if (isLand) svg += '</g>';
 
   // Frame HUD (outside rotation — uses viewBox coordinates)
-  svg += `<rect x="8" y="8" width="110" height="26" rx="5" fill="rgba(0,0,0,.65)"/>`;
-  svg += `<text x="63" y="22" fill="#fff" font-size="13" font-weight="600" font-family="system-ui" text-anchor="middle" dominant-baseline="central">Frame ${animState.frameIdx + 1} / ${state.frames.length}</text>`;
+  const frameLabel = fr.label ? escapeXML(fr.label) : 'Frame ' + (animState.frameIdx + 1);
+  const hudText = frameLabel + ' (' + (animState.frameIdx + 1) + '/' + state.frames.length + ')';
+  const hudW = Math.max(110, hudText.length * 7.5 + 20);
+  svg += `<rect x="8" y="8" width="${hudW}" height="26" rx="5" fill="rgba(0,0,0,.65)"/>`;
+  svg += `<text x="${8 + hudW/2}" y="22" fill="#fff" font-size="13" font-weight="600" font-family="system-ui" text-anchor="middle" dominant-baseline="central">${hudText}</text>`;
   if (fr.shot && animState.phase === 'action') {
     svg += `<rect x="${vbW - 80}" y="8" width="64" height="22" rx="5" fill="rgba(0,0,0,.55)"/>`;
     svg += `<text x="${vbW - 48}" y="20" fill="${SHOT_COLORS[fr.shot.type]}" font-size="12" font-weight="700" font-family="system-ui" text-anchor="middle" dominant-baseline="central">${SHOT_LABELS[fr.shot.type]}</text>`;
