@@ -521,3 +521,11 @@ body.presentation .sidebar-backdrop, body.presentation .toast { display: none !i
   .onb-players { bottom: 120px; }
   .onb-timeline { bottom: 55px; left: 20px; right: auto; }
 }
+
+/* Timeline dot indicators */
+.frame-dots {
+  display: flex; gap: 2px; justify-content: center; margin-bottom: 2px; min-height: 6px;
+}
+.frame-dot {
+  width: 5px; height: 5px; border-radius: 50%; display: inline-block; flex-shrink: 0;
+}

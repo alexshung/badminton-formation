@@ -153,10 +153,14 @@ function renderTimeline() {
     const pc = Object.keys(f.players).length;
     const hasShot = f.shot;
     const hasMoves = Object.keys(f.movements).length > 0;
-    let dots = '';
-    if (pc > 0) dots += `<span class="frame-dot" style="background:var(--accent)"></span>`;
-    if (hasShot) dots += `<span class="frame-dot" style="background:${SHOT_COLORS[f.shot.type]}"></span>`;
-    if (hasMoves) dots += `<span class="frame-dot" style="background:var(--muted)"></span>`;
+    const hasCoverage = f.regions && Object.keys(f.regions).length > 0;
+    const hasAnnotations = f.annotations && f.annotations.length > 0;
+    let dots = '<span class="frame-dots">';
+    if (hasMoves) dots += '<span class="frame-dot" style="background:#4a9eff" title="Movement"></span>';
+    if (hasShot) dots += '<span class="frame-dot" style="background:' + SHOT_COLORS[f.shot.type] + '" title="' + SHOT_LABELS[f.shot.type] + '"></span>';
+    if (hasCoverage) dots += '<span class="frame-dot" style="background:#2ed573" title="Coverage"></span>';
+    if (hasAnnotations) dots += '<span class="frame-dot" style="background:#a29bfe" title="Annotations"></span>';
+    dots += '</span>';
     const lbl = f.label ? f.label : '';
     const displayLabel = lbl ? lbl.substring(0, 8) : 'F' + (i + 1);
     h += `<button class="frame-btn${active}" onclick="switchFrame(${i})" oncontextmenu="removeFrame(event,${i})">${dots}${escapeXML(displayLabel)}<span class="frame-meta">${pc}P</span></button>`;
