@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Badminton Formation Tool — Pro Coach</title>
-<link rel="stylesheet" href="styles.css?v=1777785962">
+<link rel="stylesheet" href="styles.css?v=1777785998">
 </head>
 <body>
 <div class="app">
@@ -221,6 +221,31 @@
   </div>
 </div>
 
+<!-- Onboarding Overlay -->
+<div class="onboarding-overlay" id="onboardingOverlay">
+  <div class="onboarding-backdrop" onclick="dismissOnboarding()"></div>
+  <div class="onboarding-card onb-players">
+    <div class="onb-arrow onb-arrow-down"></div>
+    <span class="onb-icon">👆</span>
+    <p>Tap a <strong>player token</strong> to select, then tap the court to place them</p>
+  </div>
+  <div class="onboarding-card onb-tools">
+    <div class="onb-arrow onb-arrow-left"></div>
+    <span class="onb-icon">🔧</span>
+    <p>Switch <strong>tools</strong> here — Player, Shot, Coverage, or Annotate</p>
+  </div>
+  <div class="onboarding-card onb-timeline">
+    <div class="onb-arrow onb-arrow-up"></div>
+    <span class="onb-icon">🎬</span>
+    <p>Add <strong>frames</strong> for animation — click + to add, ▶ to play</p>
+  </div>
+  <div class="onboarding-card onb-court">
+    <span class="onb-icon">🏸</span>
+    <p><strong>Drag players</strong> on the court to reposition. In frames 2+, drags create movement arrows</p>
+  </div>
+  <button class="onb-dismiss" onclick="dismissOnboarding()">Got it!</button>
+</div>
+
 <!-- Presentation Mode Overlay -->
 <div class="presentation-overlay" id="presentationOverlay">
   <div class="presentation-court" id="presentationCourt"></div>
@@ -233,11 +258,11 @@
   </div>
 </div>
 
-<script src="state.js?v=1777785962"></script>
-<script src="court.js?v=1777785962"></script>
-<script src="interactions.js?v=1777785962"></script>
-<script src="animation.js?v=1777785962"></script>
-<script src="export.js?v=1777785962"></script>
-<script src="app.js?v=1777785962"></script>
+<script src="state.js?v=1777785998"></script>
+<script src="court.js?v=1777785998"></script>
+<script src="interactions.js?v=1777785998"></script>
+<script src="animation.js?v=1777785998"></script>
+<script src="export.js?v=1777785998"></script>
+<script src="app.js?v=1777785998"></script>
 </body>
 </html>

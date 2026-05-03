@@ -256,3 +256,17 @@ const expBgEl = document.getElementById('exportBg');
 if (expBgEl) expBgEl.addEventListener('change', function() { state.exportBg = this.value; saveState(); });
 
 updateOrientBtn();
+
+// ===== ONBOARDING =====
+function showOnboarding() {
+  if (localStorage.getItem('bf-onboarded')) return;
+  document.getElementById('onboardingOverlay').classList.add('active');
+}
+
+function dismissOnboarding() {
+  document.getElementById('onboardingOverlay').classList.remove('active');
+  localStorage.setItem('bf-onboarded', '1');
+}
+
+// Show onboarding on first visit (after a short delay)
+setTimeout(showOnboarding, 500);
