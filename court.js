@@ -96,15 +96,28 @@ function playerSVG(id, x, y, opacity, interactive, frameNum) {
     svg += `<circle cx="${x}" cy="${y}" r="${HIT_R}" fill="transparent" data-player="${id}" style="cursor:grab;" onmousedown="startDrag(event,'${id}')"/>`;
   }
 
-  // Player circle
+  // Player circle — Team A filled, Team B outlined for distinction
   const shadowFilter = `filter:drop-shadow(0 2px 6px rgba(0,0,0,.5))`;
+  const isFilled = team === 'A';
   if (interactive) {
-    svg += `<circle cx="${x}" cy="${y}" r="${PR}" fill="${color}" opacity="${op}" class="player-circle" data-player="${id}" style="${shadowFilter};cursor:grab;pointer-events:none"/>`;
-    // Inner highlight
-    svg += `<circle cx="${x}" cy="${y - 4}" r="${PR - 10}" fill="rgba(255,255,255,.15)" opacity="${op}" style="pointer-events:none"/>`;
+    if (isFilled) {
+      svg += `<circle cx="${x}" cy="${y}" r="${PR}" fill="${color}" opacity="${op}" class="player-circle" data-player="${id}" style="${shadowFilter};cursor:grab;pointer-events:none"/>`;
+      svg += `<circle cx="${x}" cy="${y - 4}" r="${PR - 10}" fill="rgba(255,255,255,.15)" opacity="${op}" style="pointer-events:none"/>`;
+    } else {
+      svg += `<circle cx="${x}" cy="${y}" r="${PR}" fill="rgba(0,0,0,.4)" stroke="${color}" stroke-width="4" opacity="${op}" class="player-circle" data-player="${id}" style="${shadowFilter};cursor:grab;pointer-events:none"/>`;
+      // Diagonal stripe pattern for colorblind distinction
+      svg += `<line x1="${x - PR*0.5}" y1="${y - PR*0.5}" x2="${x + PR*0.5}" y2="${y + PR*0.5}" stroke="${color}" stroke-width="1.5" opacity="${op * 0.2}" style="pointer-events:none"/>`;
+      svg += `<line x1="${x - PR*0.5}" y1="${y + PR*0.2}" x2="${x + PR*0.2}" y2="${y - PR*0.5}" stroke="${color}" stroke-width="1.5" opacity="${op * 0.2}" style="pointer-events:none"/>`;
+    }
   } else {
-    svg += `<circle cx="${x}" cy="${y}" r="${PR}" fill="${color}" opacity="${op}" style="${shadowFilter}"/>`;
-    svg += `<circle cx="${x}" cy="${y - 4}" r="${PR - 10}" fill="rgba(255,255,255,.15)" opacity="${op}"/>`;
+    if (isFilled) {
+      svg += `<circle cx="${x}" cy="${y}" r="${PR}" fill="${color}" opacity="${op}" style="${shadowFilter}"/>`;
+      svg += `<circle cx="${x}" cy="${y - 4}" r="${PR - 10}" fill="rgba(255,255,255,.15)" opacity="${op}"/>`;
+    } else {
+      svg += `<circle cx="${x}" cy="${y}" r="${PR}" fill="rgba(0,0,0,.4)" stroke="${color}" stroke-width="4" opacity="${op}" style="${shadowFilter}"/>`;
+      svg += `<line x1="${x - PR*0.5}" y1="${y - PR*0.5}" x2="${x + PR*0.5}" y2="${y + PR*0.5}" stroke="${color}" stroke-width="1.5" opacity="${op * 0.2}"/>`;
+      svg += `<line x1="${x - PR*0.5}" y1="${y + PR*0.2}" x2="${x + PR*0.2}" y2="${y - PR*0.5}" stroke="${color}" stroke-width="1.5" opacity="${op * 0.2}"/>`;
+    }
   }
 
   // Label

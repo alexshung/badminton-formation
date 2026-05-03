@@ -129,8 +129,12 @@ function renderAnimFrame() {
     const color = TEAM_COLORS[team];
     const label = getPlayerLabel(pid);
     const fs = label.length > 3 ? 10 : (label.length > 2 ? 11 : 13);
-    svg += `<circle cx="${dx}" cy="${dy}" r="${PR}" fill="${color}" stroke="rgba(255,255,255,.3)" stroke-width="2" style="filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))"/>`;
-    svg += `<circle cx="${dx}" cy="${dy - 3}" r="${PR - 6}" fill="rgba(255,255,255,.15)"/>`;
+    if (team === 'A') {
+      svg += `<circle cx="${dx}" cy="${dy}" r="${PR}" fill="${color}" stroke="rgba(255,255,255,.3)" stroke-width="2" style="filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))"/>`;
+      svg += `<circle cx="${dx}" cy="${dy - 3}" r="${PR - 6}" fill="rgba(255,255,255,.15)"/>`;
+    } else {
+      svg += `<circle cx="${dx}" cy="${dy}" r="${PR}" fill="rgba(0,0,0,.4)" stroke="${color}" stroke-width="4" style="filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))"/>`;
+    }
     svg += `<text x="${dx}" y="${dy + 1}" fill="#fff" font-size="${fs}" font-weight="700" font-family="system-ui" text-anchor="middle" dominant-baseline="central">${escapeXML(label)}</text>`;
     if (animState.phase === 'action' && fr.movements[pid]) {
       svg += `<line x1="${pos.x}" y1="${pos.y}" x2="${dx}" y2="${dy}" stroke="${color}" stroke-width="2.5" stroke-dasharray="5,4" opacity=".35"/>`;
