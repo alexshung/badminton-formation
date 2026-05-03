@@ -56,6 +56,33 @@ const PRESETS = {
       B1: { x: PAD + CW*0.35, y: PAD + CH*0.12 },
       B2: { x: PAD + CW*0.6, y: PAD + CH*0.35 }
     }
+  },
+  'attack-front-back': {
+    label: 'Attack (Front-Back)',
+    players: {
+      A1: { x: PAD + CW*0.5, y: PAD + CH*0.58 },
+      A2: { x: PAD + CW*0.5, y: PAD + CH*0.82 },
+      B1: { x: PAD + CW*0.35, y: PAD + CH*0.3 },
+      B2: { x: PAD + CW*0.65, y: PAD + CH*0.3 }
+    }
+  },
+  'defense-side': {
+    label: 'Defense (Side-by-Side)',
+    players: {
+      A1: { x: PAD + CW*0.3, y: PAD + CH*0.72 },
+      A2: { x: PAD + CW*0.7, y: PAD + CH*0.72 },
+      B1: { x: PAD + CW*0.5, y: PAD + CH*0.2 },
+      B2: { x: PAD + CW*0.5, y: PAD + CH*0.38 }
+    }
+  },
+  'mixed-doubles': {
+    label: 'Mixed Doubles',
+    players: {
+      A1: { x: PAD + CW*0.5, y: PAD + CH*0.56 },
+      A2: { x: PAD + CW*0.5, y: PAD + CH*0.85 },
+      B1: { x: PAD + CW*0.5, y: PAD + CH*0.15 },
+      B2: { x: PAD + CW*0.5, y: PAD + CH*0.42 }
+    }
   }
 };
 
