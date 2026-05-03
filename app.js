@@ -204,6 +204,7 @@ function updateStatus() {
 
 // ===== INIT =====
 loadState();
+if (loadFromHash()) { saveState(); }
 render();
 initShotDrag();
 initCoverageTracking();

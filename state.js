@@ -336,3 +336,69 @@ function toggleCourtOrientation() {
   const label = isLandscapeCourt() ? 'Landscape' : 'Portrait';
   showToast('Court: ' + label + (state.courtOrientation === 'auto' ? ' (auto)' : ''));
 }
+
+// ===== SHAREABLE URL =====
+// LZString (MIT) — minimal UTF16 compress/decompress
+var LZString=function(){function o(o,r){if(!t[o]){t[o]={};for(var n=0;n<o.length;n++)t[o][o.charAt(n)]=n}return t[o][r]}var r=String.fromCharCode,n="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",e="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$",t={},i={compressToBase64:function(o){if(null==o)return"";var r=i._compress(o,6,function(o){return n.charAt(o)});switch(r.length%4){default:case 0:return r;case 1:return r+"===";case 2:return r+"==";case 3:return r+"="}},decompressFromBase64:function(r){return null==r?"":""==r?null:i._decompress(r.length,32,function(e){return o(n,r.charAt(e))})},compressToEncodedURIComponent:function(o){return null==o?"":i._compress(o,6,function(o){return e.charAt(o)})},decompressFromEncodedURIComponent:function(n){return null==n?"":""==n?null:(n=n.replace(/ /g,"+"),i._decompress(n.length,32,function(r){return o(e,n.charAt(r))}))},_compress:function(o,n,e){if(null==o)return"";var t,i,s,u={},f={},a="",p="",c="",l=2,d=3,g=2,h=[],v=0,m=0;for(s=0;s<o.length;s+=1)if(a=o.charAt(s),Object.prototype.hasOwnProperty.call(u,a)||(u[a]=d++,f[a]=!0),p=c+a,Object.prototype.hasOwnProperty.call(u,p))c=p;else{if(Object.prototype.hasOwnProperty.call(f,c)){if(c.charCodeAt(0)<256){for(t=0;t<g;t++)v<<=1,m==n-1?(m=0,h.push(e(v)),v=0):m++;for(i=c.charCodeAt(0),t=0;t<8;t++)v=v<<1|1&i,m==n-1?(m=0,h.push(e(v)),v=0):m++,i>>=1}else{for(i=1,t=0;t<g;t++)v=v<<1|i,m==n-1?(m=0,h.push(e(v)),v=0):m++,i=0;for(i=c.charCodeAt(0),t=0;t<16;t++)v=v<<1|1&i,m==n-1?(m=0,h.push(e(v)),v=0):m++,i>>=1}0==--l&&(l=Math.pow(2,g),g++),delete f[c]}else for(i=u[c],t=0;t<g;t++)v=v<<1|1&i,m==n-1?(m=0,h.push(e(v)),v=0):m++,i>>=1;0==--l&&(l=Math.pow(2,g),g++),u[p]=d++,c=a}if(""!==c){if(Object.prototype.hasOwnProperty.call(f,c)){if(c.charCodeAt(0)<256){for(t=0;t<g;t++)v<<=1,m==n-1?(m=0,h.push(e(v)),v=0):m++;for(i=c.charCodeAt(0),t=0;t<8;t++)v=v<<1|1&i,m==n-1?(m=0,h.push(e(v)),v=0):m++,i>>=1}else{for(i=1,t=0;t<g;t++)v=v<<1|i,m==n-1?(m=0,h.push(e(v)),v=0):m++,i=0;for(i=c.charCodeAt(0),t=0;t<16;t++)v=v<<1|1&i,m==n-1?(m=0,h.push(e(v)),v=0):m++,i>>=1}0==--l&&(l=Math.pow(2,g),g++),delete f[c]}else for(i=u[c],t=0;t<g;t++)v=v<<1|1&i,m==n-1?(m=0,h.push(e(v)),v=0):m++,i>>=1;0==--l&&(l=Math.pow(2,g),g++)}for(i=2,t=0;t<g;t++)v=v<<1|1&i,m==n-1?(m=0,h.push(e(v)),v=0):m++,i>>=1;for(;;){if(v<<=1,m==n-1){h.push(e(v));break}m++}return h.join("")},_decompress:function(o,n,e){var t,i,s,u,f,a,p,c=[],l=4,d=4,g=3,h="",v=[],m={val:e(0),position:n,index:1};for(t=0;t<3;t+=1)c[t]=t;for(s=0,f=Math.pow(2,2),a=1;a!=f;)u=m.val&m.position,m.position>>=1,0==m.position&&(m.position=n,m.val=e(m.index++)),s|=(u>0?1:0)*a,a<<=1;switch(s){case 0:for(s=0,f=Math.pow(2,8),a=1;a!=f;)u=m.val&m.position,m.position>>=1,0==m.position&&(m.position=n,m.val=e(m.index++)),s|=(u>0?1:0)*a,a<<=1;p=r(s);break;case 1:for(s=0,f=Math.pow(2,16),a=1;a!=f;)u=m.val&m.position,m.position>>=1,0==m.position&&(m.position=n,m.val=e(m.index++)),s|=(u>0?1:0)*a,a<<=1;p=r(s);break;case 2:return""}for(c[3]=p,i=p,v.push(p);;){if(m.index>o)return"";for(s=0,f=Math.pow(2,g),a=1;a!=f;)u=m.val&m.position,m.position>>=1,0==m.position&&(m.position=n,m.val=e(m.index++)),s|=(u>0?1:0)*a,a<<=1;switch(p=s){case 0:for(s=0,f=Math.pow(2,8),a=1;a!=f;)u=m.val&m.position,m.position>>=1,0==m.position&&(m.position=n,m.val=e(m.index++)),s|=(u>0?1:0)*a,a<<=1;c[d++]=r(s),p=d-1,l--;break;case 1:for(s=0,f=Math.pow(2,16),a=1;a!=f;)u=m.val&m.position,m.position>>=1,0==m.position&&(m.position=n,m.val=e(m.index++)),s|=(u>0?1:0)*a,a<<=1;c[d++]=r(s),p=d-1,l--;break;case 2:return v.join("")}if(0==l&&(l=Math.pow(2,g),g++),c[p])h=c[p];else{if(p!==d)return null;h=i+i.charAt(0)}v.push(h),c[d++]=i+h.charAt(0),i=h,0==--l&&(l=Math.pow(2,g),g++)}}};return i}();
+
+function shareState() {
+  // Build compact representation
+  const compact = {
+    t: state.title || '',
+    f: state.frames.map(f => {
+      const cf = {};
+      if (Object.keys(f.players).length) cf.p = f.players;
+      if (f.shot) cf.s = f.shot;
+      if (Object.keys(f.movements).length) cf.m = f.movements;
+      if (f.label) cf.l = f.label;
+      if (f.note) cf.n = f.note;
+      if (f.regions && Object.keys(f.regions).length) cf.r = f.regions;
+      return cf;
+    }),
+    pn: Object.keys(state.playerNames).length ? state.playerNames : undefined
+  };
+  const json = JSON.stringify(compact);
+  const compressed = LZString.compressToEncodedURIComponent(json);
+  const url = window.location.origin + window.location.pathname + '#s=' + compressed;
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(() => showToast('Link copied!')).catch(() => fallbackCopy(url));
+  } else {
+    fallbackCopy(url);
+  }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); showToast('Link copied!'); } catch(e) { showToast('Copy failed'); }
+  document.body.removeChild(ta);
+}
+
+function loadFromHash() {
+  const hash = window.location.hash;
+  if (!hash || !hash.startsWith('#s=')) return false;
+  try {
+    const compressed = hash.substring(3);
+    const json = LZString.decompressFromEncodedURIComponent(compressed);
+    if (!json) return false;
+    const compact = JSON.parse(json);
+    state.title = compact.t || 'Doubles Formation';
+    state.playerNames = compact.pn || {};
+    state.frames = compact.f.map(cf => ({
+      players: cf.p || {},
+      shot: cf.s || null,
+      movements: cf.m || {},
+      label: cf.l || '',
+      note: cf.n || '',
+      regions: cf.r || {}
+    }));
+    state.currentFrame = 0;
+    const titleEl = document.getElementById('titleInput');
+    if (titleEl) titleEl.value = state.title;
+    // Clear hash to prevent re-loading on refresh (user can re-share)
+    history.replaceState(null, '', window.location.pathname);
+    return true;
+  } catch(e) { console.warn('Failed to load from URL:', e); return false; }
+}
