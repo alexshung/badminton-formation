@@ -124,9 +124,21 @@ function shotSVG(shot, opacity, interactive) {
     const mx = (shot.x1 + shot.x2) / 2, my = (shot.y1 + shot.y2) / 2 - 40;
     svg += `<path d="M${shot.x1},${shot.y1} Q${mx},${my} ${shot.x2},${shot.y2}" fill="none" stroke="${c}" stroke-width="4" stroke-dasharray="8,5" opacity="${op}" marker-end="url(#${arrowId})"/>`;
   } else if (shot.type === 'drive') {
-    svg += `<line x1="${shot.x1}" y1="${shot.y1}" x2="${shot.x2}" y2="${shot.y2}" stroke="${c}" stroke-width="4.5" opacity="${op}" marker-end="url(#${arrowId})"/>`;
+    // Flat drive — very subtle curve perpendicular to shot direction
+    const ddx = shot.x2 - shot.x1, ddy = shot.y2 - shot.y1;
+    const dLen = Math.hypot(ddx, ddy) || 1;
+    const perpX = -ddy / dLen, perpY = ddx / dLen;
+    const dOff = dLen * 0.06; // very subtle
+    const dmx = (shot.x1 + shot.x2) / 2 + perpX * dOff;
+    const dmy = (shot.y1 + shot.y2) / 2 + perpY * dOff;
+    svg += `<path d="M${shot.x1},${shot.y1} Q${dmx},${dmy} ${shot.x2},${shot.y2}" fill="none" stroke="${c}" stroke-width="4.5" opacity="${op}" marker-end="url(#${arrowId})"/>`;
   } else if (shot.type === 'smash') {
-    svg += `<line x1="${shot.x1}" y1="${shot.y1}" x2="${shot.x2}" y2="${shot.y2}" stroke="${c}" stroke-width="6.5" opacity="${op}" marker-end="url(#${arrowId})"/>`;
+    // Smash — steep downward arc (control point biased toward origin, above)
+    const smDist = Math.hypot(shot.x2 - shot.x1, shot.y2 - shot.y1) || 1;
+    const smOff = Math.min(smDist * 0.25, 120);
+    const smMx = shot.x1 * 0.65 + shot.x2 * 0.35;
+    const smMy = Math.min(shot.y1, shot.y2) - smOff;
+    svg += `<path d="M${shot.x1},${shot.y1} Q${smMx},${smMy} ${shot.x2},${shot.y2}" fill="none" stroke="${c}" stroke-width="6.5" opacity="${op}" marker-end="url(#${arrowId})"/>`;
     svg += `<circle cx="${shot.x2}" cy="${shot.y2}" r="10" fill="none" stroke="${c}" stroke-width="2.5" opacity="${op * 0.5}"/>`;
     svg += `<circle cx="${shot.x2}" cy="${shot.y2}" r="20" fill="none" stroke="${c}" stroke-width="1.5" opacity="${op * 0.25}"/>`;
   } else if (shot.type === 'clear') {
@@ -136,7 +148,12 @@ function shotSVG(shot, opacity, interactive) {
     const mx = (shot.x1 + shot.x2) / 2, my = (shot.y1 + shot.y2) / 2 - 100;
     svg += `<path d="M${shot.x1},${shot.y1} Q${mx},${my} ${shot.x2},${shot.y2}" fill="none" stroke="${c}" stroke-width="4" stroke-dasharray="12,4" opacity="${op}" marker-end="url(#${arrowId})"/>`;
   } else if (shot.type === 'serve') {
-    svg += `<line x1="${shot.x1}" y1="${shot.y1}" x2="${shot.x2}" y2="${shot.y2}" stroke="${c}" stroke-width="3.5" stroke-dasharray="3,3" opacity="${op}" marker-end="url(#${arrowId})"/>`;
+    // Serve — gentle upward arc
+    const svDist = Math.hypot(shot.x2 - shot.x1, shot.y2 - shot.y1) || 1;
+    const svOff = Math.min(svDist * 0.15, 60);
+    const svMx = (shot.x1 + shot.x2) / 2;
+    const svMy = (shot.y1 + shot.y2) / 2 - svOff;
+    svg += `<path d="M${shot.x1},${shot.y1} Q${svMx},${svMy} ${shot.x2},${shot.y2}" fill="none" stroke="${c}" stroke-width="3.5" stroke-dasharray="3,3" opacity="${op}" marker-end="url(#${arrowId})"/>`;
     svg += `<circle cx="${shot.x1}" cy="${shot.y1}" r="8" fill="none" stroke="${c}" stroke-width="2" opacity="${op * 0.6}"/>`;
   }
 
