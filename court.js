@@ -343,3 +343,16 @@ function lineIntersection(p1, p2, p3, p4) {
   const t = ((p1.x - p3.x) * (p3.y - p4.y) - (p1.y - p3.y) * (p3.x - p4.x)) / d;
   return { x: p1.x + t * (p2.x - p1.x), y: p1.y + t * (p2.y - p1.y) };
 }
+
+// ===== ANNOTATION RENDERING =====
+function annotationSVG(annotations, opacity) {
+  if (!annotations || annotations.length === 0) return '';
+  const op = opacity || 1;
+  let svg = '';
+  for (const ann of annotations) {
+    if (!ann.points || ann.points.length < 2) continue;
+    const d = ann.points.map((p, i) => (i === 0 ? 'M' : 'L') + p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' ');
+    svg += '<path d="' + d + '" fill="none" stroke="' + (ann.color || '#fff') + '" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="' + (op * 0.8) + '"/>';
+  }
+  return svg;
+}

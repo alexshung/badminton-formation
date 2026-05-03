@@ -15,6 +15,7 @@ function setTool(t) {
   document.getElementById('shotSection').style.display = t === 'shot' ? '' : 'none';
   document.getElementById('moveSection').style.display = 'none';
   document.getElementById('coverageSection').style.display = t === 'coverage' ? '' : 'none';
+  document.getElementById('drawSection').style.display = t === 'draw' ? '' : 'none';
   updateCoverageInfo();
   updateCursor();
   updateStatus();
@@ -815,4 +816,118 @@ function initTouchDelegation() {
     // 3. Empty court — do NOT preventDefault, let click event fire for courtClick
     //    courtClick handles shot placement (two-tap / single-tap)
   }, { passive: false });
+}
+
+// ===== DRAW / ANNOTATION TOOL =====
+let isDrawing = false;
+let drawPoints = [];
+
+function setDrawColor(color, btn) {
+  drawColor = color;
+  document.querySelectorAll('.draw-color-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+
+function clearAnnotations() {
+  pushUndo();
+  currentFrameData().annotations = [];
+  render();
+  showToast('Annotations cleared');
+}
+
+function initDrawTool() {
+  const container = document.getElementById('courtContainer');
+  
+  container.addEventListener('mousedown', function(e) {
+    if (tool !== 'draw') return;
+    e.preventDefault();
+    const p = getSVGPoint(e);
+    if (!p || !isOnCourt(p.x, p.y)) return;
+    isDrawing = true;
+    drawPoints = [{ x: p.x, y: p.y }];
+    pushUndo();
+  });
+
+  document.addEventListener('mousemove', function(e) {
+    if (!isDrawing || tool !== 'draw') return;
+    const p = getSVGPoint(e);
+    if (!p) return;
+    drawPoints.push({ x: p.x, y: p.y });
+    // Live preview by rendering
+    renderDrawPreview();
+  });
+
+  document.addEventListener('mouseup', function(e) {
+    if (!isDrawing) return;
+    isDrawing = false;
+    if (drawPoints.length > 2) {
+      const f = currentFrameData();
+      f.annotations.push({ points: drawPoints, color: drawColor });
+      saveState();
+    }
+    drawPoints = [];
+    render();
+  });
+
+  // Touch support for draw
+  container.addEventListener('touchstart', function(e) {
+    if (tool !== 'draw') return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    const p = getSVGPoint(touch);
+    if (!p || !isOnCourt(p.x, p.y)) return;
+    isDrawing = true;
+    drawPoints = [{ x: p.x, y: p.y }];
+    pushUndo();
+  }, { passive: false });
+
+  container.addEventListener('touchmove', function(e) {
+    if (!isDrawing || tool !== 'draw') return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    const p = getSVGPoint(touch);
+    if (!p) return;
+    drawPoints.push({ x: p.x, y: p.y });
+    renderDrawPreview();
+  }, { passive: false });
+
+  container.addEventListener('touchend', function(e) {
+    if (!isDrawing || tool !== 'draw') return;
+    isDrawing = false;
+    if (drawPoints.length > 2) {
+      const f = currentFrameData();
+      f.annotations.push({ points: drawPoints, color: drawColor });
+      saveState();
+    }
+    drawPoints = [];
+    render();
+  });
+}
+
+function renderDrawPreview() {
+  // Quick SVG update for live drawing preview
+  const existing = document.querySelector('.draw-preview-path');
+  if (existing) existing.remove();
+
+  if (drawPoints.length < 2) return;
+  const svg = document.querySelector('.court-svg');
+  if (!svg) return;
+
+  const d = drawPoints.map((p, i) => (i === 0 ? 'M' : 'L') + p.x + ',' + p.y).join(' ');
+  const ns = 'http://www.w3.org/2000/svg';
+  
+  // For landscape mode, we need to add it inside the rotation group
+  const isLand = isLandscapeCourt();
+  const parent = isLand ? svg.querySelector('g') || svg : svg;
+  
+  const path = document.createElementNS(ns, 'path');
+  path.setAttribute('d', d);
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke', drawColor);
+  path.setAttribute('stroke-width', '3');
+  path.setAttribute('stroke-linecap', 'round');
+  path.setAttribute('stroke-linejoin', 'round');
+  path.setAttribute('opacity', '0.8');
+  path.classList.add('draw-preview-path');
+  parent.appendChild(path);
 }

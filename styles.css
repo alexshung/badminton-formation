@@ -471,3 +471,12 @@ input,button,select,textarea{font-family:var(--font);}
 
 body.presentation .app, body.presentation .sidebar-toggle,
 body.presentation .sidebar-backdrop, body.presentation .toast { display: none !important; }
+
+/* Draw/Annotation tool */
+.draw-colors { display: flex; gap: 8px; margin-top: 6px; }
+.draw-color-btn {
+  width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent;
+  cursor: pointer; transition: border-color .15s;
+}
+.draw-color-btn.active { border-color: var(--accent); }
+.draw-color-btn:hover { border-color: rgba(255,255,255,.5); }

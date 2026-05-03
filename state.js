@@ -78,6 +78,7 @@ let movePlayer = null;
 let shotPreviewLine = null;
 let moveDragPlayer = null;
 let moveDragStart = null;
+let drawColor = '#ffffff';
 let coveragePoints = [];       // points being drawn for current polygon
 let coveragePreview = null;    // {x,y} of mouse for live preview line
 let dragPlayer = null, dragOffset = { x: 0, y: 0 };
@@ -87,7 +88,7 @@ let longPressTarget = null;
 let undoStack = [];
 
 function createEmptyFrame() {
-  return { players: {}, shot: null, movements: {}, regions: {}, note: '' };
+  return { players: {}, shot: null, movements: {}, regions: {}, note: '', label: '', annotations: [] };
 }
 
 function currentFrameData() { return state.frames[state.currentFrame]; }
@@ -145,7 +146,7 @@ function loadState() {
       if (!state.playerNames) state.playerNames = {};
       if (!state.exportBg) state.exportBg = 'dark';
       if (!state.courtOrientation) state.courtOrientation = 'auto';
-      state.frames.forEach(f => { if (!f.note) f.note = ''; if (!f.regions) f.regions = {}; if (f.label === undefined) f.label = ''; });
+      state.frames.forEach(f => { if (!f.note) f.note = ''; if (!f.regions) f.regions = {}; if (f.label === undefined) f.label = ''; if (!f.annotations) f.annotations = []; });
     }
   } catch(e){}
   const titleEl = document.getElementById('titleInput');
@@ -353,6 +354,7 @@ function shareState() {
       if (f.label) cf.l = f.label;
       if (f.note) cf.n = f.note;
       if (f.regions && Object.keys(f.regions).length) cf.r = f.regions;
+      if (f.annotations && f.annotations.length) cf.a = f.annotations;
       return cf;
     }),
     pn: Object.keys(state.playerNames).length ? state.playerNames : undefined
@@ -392,7 +394,8 @@ function loadFromHash() {
       movements: cf.m || {},
       label: cf.l || '',
       note: cf.n || '',
-      regions: cf.r || {}
+      regions: cf.r || {},
+      annotations: cf.a || []
     }));
     state.currentFrame = 0;
     const titleEl = document.getElementById('titleInput');

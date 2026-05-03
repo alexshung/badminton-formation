@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Badminton Formation Tool — Pro Coach</title>
-<link rel="stylesheet" href="styles.css?v=1777785846">
+<link rel="stylesheet" href="styles.css?v=1777785909">
 </head>
 <body>
 <div class="app">
@@ -80,6 +80,8 @@
             <span class="tool-icon">⟶</span> Draw Shot</button>
           <button class="tool-btn" data-tool="coverage" onclick="setTool('coverage')">
             <span class="tool-icon">◻</span> Coverage</button>
+          <button class="tool-btn" data-tool="draw" onclick="setTool('draw')">
+            <span class="tool-icon">✏</span> Annotate</button>
         </div>
       </div>
 
@@ -119,6 +121,17 @@
       <div class="sidebar-section" id="moveSection" style="display:none">
         <h3>Movement</h3>
         <p style="font-size:11px;color:var(--muted)">Drag players on the court to set their post-shot position. Frame 1 = placement, Frame 2+ = movement arrows.</p>
+      </div>
+
+      <div class="sidebar-section" id="drawSection" style="display:none">
+        <h3>Annotation</h3>
+        <div class="draw-colors">
+          <button class="draw-color-btn active" style="background:#fff" onclick="setDrawColor('#ffffff',this)"></button>
+          <button class="draw-color-btn" style="background:#ff4444" onclick="setDrawColor('#ff4444',this)"></button>
+          <button class="draw-color-btn" style="background:#ffd700" onclick="setDrawColor('#ffd700',this)"></button>
+          <button class="draw-color-btn" style="background:#4a9eff" onclick="setDrawColor('#4a9eff',this)"></button>
+        </div>
+        <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px" onclick="clearAnnotations()">Clear Annotations</button>
       </div>
 
       <div class="sidebar-section" id="coverageSection" style="display:none">
@@ -217,11 +230,11 @@
   </div>
 </div>
 
-<script src="state.js?v=1777785846"></script>
-<script src="court.js?v=1777785846"></script>
-<script src="interactions.js?v=1777785846"></script>
-<script src="animation.js?v=1777785846"></script>
-<script src="export.js?v=1777785846"></script>
-<script src="app.js?v=1777785846"></script>
+<script src="state.js?v=1777785909"></script>
+<script src="court.js?v=1777785909"></script>
+<script src="interactions.js?v=1777785909"></script>
+<script src="animation.js?v=1777785909"></script>
+<script src="export.js?v=1777785909"></script>
+<script src="app.js?v=1777785909"></script>
 </body>
 </html>

@@ -32,6 +32,8 @@ function renderOverlay(container, interactive) {
 
     // Coverage regions (rendered behind players and shots)
     if (f.regions) svg += regionSVG(f.regions, baseOp);
+    // Annotations
+    if (f.annotations) svg += annotationSVG(f.annotations, baseOp);
 
     for (const pid in f.movements) {
       if (f.players[pid]) svg += movementSVG(pid, f.players[pid].x, f.players[pid].y, f.movements[pid].x, f.movements[pid].y, baseOp);
@@ -105,6 +107,8 @@ function renderPanel(container, interactive) {
     svg += courtLines();
     // Coverage regions
     if (f.regions) svg += regionSVG(f.regions, 1);
+    // Annotations
+    if (f.annotations) svg += annotationSVG(f.annotations, 1);
     for (const pid in f.movements) {
       if (f.players[pid]) svg += movementSVG(pid, f.players[pid].x, f.players[pid].y, f.movements[pid].x, f.movements[pid].y, 1);
     }
@@ -195,6 +199,8 @@ function updateStatus() {
     if (shuttle) el.textContent = `Shot (${SHOT_LABELS[shotType]}): tap the landing spot`;
     else if (shotStart) el.textContent = `Shot (${SHOT_LABELS[shotType]}): tap the landing spot`;
     else el.textContent = `Shot (${SHOT_LABELS[shotType]}): tap near a player to set origin`;
+  } else if (tool === 'draw') {
+    el.textContent = 'Draw: freehand annotate on the court';
   } else if (tool === 'coverage') {
     if (coveragePoints.length === 0) el.textContent = `Coverage: click to start drawing ${getPlayerLabel(selectedPlayer)}'s zone`;
     else if (coveragePoints.length < 3) el.textContent = `Coverage: click to add points (${coveragePoints.length} placed, need at least 3)`;
@@ -209,6 +215,7 @@ render();
 initShotDrag();
 initCoverageTracking();
 initTouchDelegation();
+initDrawTool();
 
 document.getElementById('titleInput').addEventListener('input', () => {
   state.title = document.getElementById('titleInput').value;

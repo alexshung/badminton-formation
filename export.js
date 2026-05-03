@@ -112,6 +112,7 @@ function buildOverlaySVGContent() {
     const op = 0.4 + (i / Math.max(state.frames.length - 1, 1)) * 0.6;
     // Coverage regions
     if (f.regions) svg += regionSVG(f.regions, op);
+    if (f.annotations) svg += annotationSVG(f.annotations, op);
     for (const pid in f.movements) {
       if (f.players[pid]) svg += movementSVG(pid, f.players[pid].x, f.players[pid].y, f.movements[pid].x, f.movements[pid].y, op);
     }
@@ -146,6 +147,7 @@ function buildPanelSVGContent() {
     svg += courtLines();
     // Coverage regions
     if (f.regions) svg += regionSVG(f.regions, 1);
+    if (f.annotations) svg += annotationSVG(f.annotations, 1);
     for (const pid in f.movements) {
       if (f.players[pid]) svg += movementSVG(pid, f.players[pid].x, f.players[pid].y, f.movements[pid].x, f.movements[pid].y, 1);
     }
