@@ -3,9 +3,9 @@
 function courtGradientDefs() {
   return `<defs>
     <linearGradient id="courtGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="var(--court-light)"/>
-      <stop offset="50%" stop-color="var(--court-dark)"/>
-      <stop offset="100%" stop-color="var(--court-light)"/>
+      <stop offset="0%" stop-color="#162033"/>
+      <stop offset="50%" stop-color="#0f1624"/>
+      <stop offset="100%" stop-color="#162033"/>
     </linearGradient>
     <filter id="shadow"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.5"/></filter>
     <filter id="glow"><feGaussianBlur stdDeviation="4" result="blur"/>
@@ -23,8 +23,8 @@ function courtGradientDefs() {
 function courtLines() {
   let svg = '';
   const lw = 2;
-  const lc = 'var(--court-line)';
-  const lcd = 'var(--court-line-dim)';
+  const lc = '#00d4ff';
+  const lcd = 'rgba(0,212,255,.6)';
 
   // Court fill with gradient
   svg += `<rect x="${PAD}" y="${PAD}" width="${CW}" height="${CH}" rx="3" fill="url(#courtGrad)"/>`;
@@ -41,11 +41,11 @@ function courtLines() {
 
   // Net with glow
   const netY = PAD + CH / 2;
-  svg += `<line x1="${PAD - 4}" y1="${netY}" x2="${PAD + CW + 4}" y2="${netY}" stroke="var(--net-glow)" stroke-width="10" filter="url(#netGlow)" opacity="0.8"/>`;
-  svg += `<line x1="${PAD}" y1="${netY}" x2="${PAD + CW}" y2="${netY}" stroke="${lc}" stroke-width="3" filter="url(#cyanGlow)"/>`;
+  svg += `<line x1="${PAD - 4}" y1="${netY}" x2="${PAD + CW + 4}" y2="${netY}" stroke="rgba(0,212,255,0.8)" stroke-width="12" filter="url(#netGlow)" opacity="0.9"/>`;
+  svg += `<line x1="${PAD}" y1="${netY}" x2="${PAD + CW}" y2="${netY}" stroke="${lc}" stroke-width="4" filter="url(#cyanGlow)"/>`;
   // Net posts with glow
-  svg += `<circle cx="${PAD - 2}" cy="${netY}" r="4" fill="var(--court-line)" filter="url(#cyanGlow)"/>`;
-  svg += `<circle cx="${PAD + CW + 2}" cy="${netY}" r="4" fill="var(--court-line)" filter="url(#cyanGlow)"/>`;
+  svg += `<circle cx="${PAD - 2}" cy="${netY}" r="5" fill="${lc}" filter="url(#cyanGlow)"/>`;
+  svg += `<circle cx="${PAD + CW + 2}" cy="${netY}" r="5" fill="${lc}" filter="url(#cyanGlow)"/>`;
 
   // Short service lines
   const ssl = 198;
@@ -63,7 +63,7 @@ function courtLines() {
   svg += `<line x1="${cx}" y1="${netY + ssl}" x2="${cx}" y2="${PAD + CH}" stroke="${lcd}" stroke-width="${lw * 0.6}" filter="url(#cyanGlow)"/>`;
 
   // NET label
-  svg += `<text x="${PAD + CW + 20}" y="${netY}" fill="var(--court-line-dim)" font-size="13" font-family="system-ui" font-weight="700" text-anchor="middle" dominant-baseline="central" letter-spacing="2" transform="rotate(-90,${PAD + CW + 20},${netY})" filter="url(#cyanGlow)">NET</text>`;
+  svg += `<text x="${PAD + CW + 20}" y="${netY}" fill="rgba(0,212,255,0.7)" font-size="13" font-family="system-ui" font-weight="700" text-anchor="middle" dominant-baseline="central" letter-spacing="2" transform="rotate(-90,${PAD + CW + 20},${netY})" filter="url(#cyanGlow)">NET</text>`;
 
   return svg;
 }
