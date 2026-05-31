@@ -3,17 +3,19 @@
 function courtGradientDefs() {
   return `<defs>
     <linearGradient id="courtGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#237a3c"/>
-      <stop offset="50%" stop-color="#1a5c2e"/>
-      <stop offset="100%" stop-color="#237a3c"/>
+      <stop offset="0%" stop-color="var(--court-light)"/>
+      <stop offset="50%" stop-color="var(--court-dark)"/>
+      <stop offset="100%" stop-color="var(--court-light)"/>
     </linearGradient>
     <filter id="shadow"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.5"/></filter>
-    <filter id="glow"><feGaussianBlur stdDeviation="3" result="blur"/>
+    <filter id="glow"><feGaussianBlur stdDeviation="4" result="blur"/>
       <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-    <filter id="netGlow"><feGaussianBlur stdDeviation="2" result="b"/>
+    <filter id="netGlow"><feGaussianBlur stdDeviation="3" result="b"/>
       <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="cyanGlow"><feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
     <pattern id="hatch-overlap" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45)">
-      <line x1="0" y1="0" x2="0" y2="8" stroke="rgba(255,255,255,.5)" stroke-width="2"/>
+      <line x1="0" y1="0" x2="0" y2="8" stroke="rgba(0,212,255,.6)" stroke-width="2"/>
     </pattern>
   </defs>`;
 }
@@ -21,47 +23,47 @@ function courtGradientDefs() {
 function courtLines() {
   let svg = '';
   const lw = 2;
-  const lc = 'rgba(255,255,255,.85)';
-  const lcd = 'rgba(255,255,255,.45)';
+  const lc = 'var(--court-line)';
+  const lcd = 'var(--court-line-dim)';
 
   // Court fill with gradient
   svg += `<rect x="${PAD}" y="${PAD}" width="${CW}" height="${CH}" rx="3" fill="url(#courtGrad)"/>`;
   // Subtle inner shadow
-  svg += `<rect x="${PAD}" y="${PAD}" width="${CW}" height="${CH}" rx="3" fill="none" stroke="rgba(0,0,0,.3)" stroke-width="1"/>`;
+  svg += `<rect x="${PAD}" y="${PAD}" width="${CW}" height="${CH}" rx="3" fill="none" stroke="rgba(0,0,0,.5)" stroke-width="1"/>`;
 
-  // Boundary (brightest)
-  svg += `<rect x="${PAD}" y="${PAD}" width="${CW}" height="${CH}" fill="none" stroke="${lc}" stroke-width="${lw + 0.5}"/>`;
+  // Boundary (brightest) with glow
+  svg += `<rect x="${PAD}" y="${PAD}" width="${CW}" height="${CH}" fill="none" stroke="${lc}" stroke-width="${lw + 0.5}" filter="url(#cyanGlow)"/>`;
 
   // Side tramlines
   const ss = 46;
-  svg += `<line x1="${PAD + ss}" y1="${PAD}" x2="${PAD + ss}" y2="${PAD + CH}" stroke="${lcd}" stroke-width="${lw * 0.6}"/>`;
-  svg += `<line x1="${PAD + CW - ss}" y1="${PAD}" x2="${PAD + CW - ss}" y2="${PAD + CH}" stroke="${lcd}" stroke-width="${lw * 0.6}"/>`;
+  svg += `<line x1="${PAD + ss}" y1="${PAD}" x2="${PAD + ss}" y2="${PAD + CH}" stroke="${lcd}" stroke-width="${lw * 0.6}" filter="url(#cyanGlow)"/>`;
+  svg += `<line x1="${PAD + CW - ss}" y1="${PAD}" x2="${PAD + CW - ss}" y2="${PAD + CH}" stroke="${lcd}" stroke-width="${lw * 0.6}" filter="url(#cyanGlow)"/>`;
 
   // Net with glow
   const netY = PAD + CH / 2;
-  svg += `<line x1="${PAD - 4}" y1="${netY}" x2="${PAD + CW + 4}" y2="${netY}" stroke="rgba(255,255,255,.15)" stroke-width="8" filter="url(#netGlow)"/>`;
-  svg += `<line x1="${PAD}" y1="${netY}" x2="${PAD + CW}" y2="${netY}" stroke="rgba(255,255,255,.7)" stroke-width="2.5"/>`;
-  // Net posts
-  svg += `<circle cx="${PAD - 2}" cy="${netY}" r="3" fill="rgba(255,255,255,.5)"/>`;
-  svg += `<circle cx="${PAD + CW + 2}" cy="${netY}" r="3" fill="rgba(255,255,255,.5)"/>`;
+  svg += `<line x1="${PAD - 4}" y1="${netY}" x2="${PAD + CW + 4}" y2="${netY}" stroke="var(--net-glow)" stroke-width="10" filter="url(#netGlow)" opacity="0.8"/>`;
+  svg += `<line x1="${PAD}" y1="${netY}" x2="${PAD + CW}" y2="${netY}" stroke="${lc}" stroke-width="3" filter="url(#cyanGlow)"/>`;
+  // Net posts with glow
+  svg += `<circle cx="${PAD - 2}" cy="${netY}" r="4" fill="var(--court-line)" filter="url(#cyanGlow)"/>`;
+  svg += `<circle cx="${PAD + CW + 2}" cy="${netY}" r="4" fill="var(--court-line)" filter="url(#cyanGlow)"/>`;
 
   // Short service lines
   const ssl = 198;
-  svg += `<line x1="${PAD}" y1="${netY - ssl}" x2="${PAD + CW}" y2="${netY - ssl}" stroke="${lcd}" stroke-width="${lw * 0.6}"/>`;
-  svg += `<line x1="${PAD}" y1="${netY + ssl}" x2="${PAD + CW}" y2="${netY + ssl}" stroke="${lcd}" stroke-width="${lw * 0.6}"/>`;
+  svg += `<line x1="${PAD}" y1="${netY - ssl}" x2="${PAD + CW}" y2="${netY - ssl}" stroke="${lcd}" stroke-width="${lw * 0.6}" filter="url(#cyanGlow)"/>`;
+  svg += `<line x1="${PAD}" y1="${netY + ssl}" x2="${PAD + CW}" y2="${netY + ssl}" stroke="${lcd}" stroke-width="${lw * 0.6}" filter="url(#cyanGlow)"/>`;
 
   // Long service lines
   const lsl = 76;
-  svg += `<line x1="${PAD}" y1="${PAD + lsl}" x2="${PAD + CW}" y2="${PAD + lsl}" stroke="${lcd}" stroke-width="${lw * 0.4}" stroke-dasharray="4,4"/>`;
-  svg += `<line x1="${PAD}" y1="${PAD + CH - lsl}" x2="${PAD + CW}" y2="${PAD + CH - lsl}" stroke="${lcd}" stroke-width="${lw * 0.4}" stroke-dasharray="4,4"/>`;
+  svg += `<line x1="${PAD}" y1="${PAD + lsl}" x2="${PAD + CW}" y2="${PAD + lsl}" stroke="${lcd}" stroke-width="${lw * 0.4}" stroke-dasharray="5,5" filter="url(#cyanGlow)"/>`;
+  svg += `<line x1="${PAD}" y1="${PAD + CH - lsl}" x2="${PAD + CW}" y2="${PAD + CH - lsl}" stroke="${lcd}" stroke-width="${lw * 0.4}" stroke-dasharray="5,5" filter="url(#cyanGlow)"/>`;
 
   // Center lines
   const cx = PAD + CW / 2;
-  svg += `<line x1="${cx}" y1="${netY - ssl}" x2="${cx}" y2="${PAD}" stroke="${lcd}" stroke-width="${lw * 0.6}"/>`;
-  svg += `<line x1="${cx}" y1="${netY + ssl}" x2="${cx}" y2="${PAD + CH}" stroke="${lcd}" stroke-width="${lw * 0.6}"/>`;
+  svg += `<line x1="${cx}" y1="${netY - ssl}" x2="${cx}" y2="${PAD}" stroke="${lcd}" stroke-width="${lw * 0.6}" filter="url(#cyanGlow)"/>`;
+  svg += `<line x1="${cx}" y1="${netY + ssl}" x2="${cx}" y2="${PAD + CH}" stroke="${lcd}" stroke-width="${lw * 0.6}" filter="url(#cyanGlow)"/>`;
 
   // NET label
-  svg += `<text x="${PAD + CW + 20}" y="${netY}" fill="rgba(255,255,255,.3)" font-size="13" font-family="system-ui" font-weight="700" text-anchor="middle" dominant-baseline="central" letter-spacing="2" transform="rotate(-90,${PAD + CW + 20},${netY})">NET</text>`;
+  svg += `<text x="${PAD + CW + 20}" y="${netY}" fill="var(--court-line-dim)" font-size="13" font-family="system-ui" font-weight="700" text-anchor="middle" dominant-baseline="central" letter-spacing="2" transform="rotate(-90,${PAD + CW + 20},${netY})" filter="url(#cyanGlow)">NET</text>`;
 
   return svg;
 }
@@ -101,22 +103,22 @@ function playerSVG(id, x, y, opacity, interactive, frameNum) {
   const isFilled = team === 'A';
   if (interactive) {
     if (isFilled) {
-      svg += `<circle cx="${x}" cy="${y}" r="${PR}" fill="${color}" opacity="${op}" class="player-circle" data-player="${id}" style="${shadowFilter};cursor:grab;pointer-events:none"/>`;
+      svg += `<circle cx="${x}" cy="${y}" r="${PR}" fill="${color}" opacity="${op}" class="player-circle" data-player="${id}" style="cursor:grab;pointer-events:none" filter="url(#glow)"/>`;
       svg += `<circle cx="${x}" cy="${y - 4}" r="${PR - 10}" fill="rgba(255,255,255,.15)" opacity="${op}" style="pointer-events:none"/>`;
     } else {
-      svg += `<circle cx="${x}" cy="${y}" r="${PR}" fill="rgba(0,0,0,.4)" stroke="${color}" stroke-width="4" opacity="${op}" class="player-circle" data-player="${id}" style="${shadowFilter};cursor:grab;pointer-events:none"/>`;
+      svg += `<circle cx="${x}" cy="${y}" r="${PR}" fill="rgba(0,10,20,.8)" stroke="${color}" stroke-width="4" opacity="${op}" class="player-circle" data-player="${id}" style="cursor:grab;pointer-events:none" filter="url(#glow)"/>`;
       // Diagonal stripe pattern for colorblind distinction
-      svg += `<line x1="${x - PR*0.5}" y1="${y - PR*0.5}" x2="${x + PR*0.5}" y2="${y + PR*0.5}" stroke="${color}" stroke-width="1.5" opacity="${op * 0.2}" style="pointer-events:none"/>`;
-      svg += `<line x1="${x - PR*0.5}" y1="${y + PR*0.2}" x2="${x + PR*0.2}" y2="${y - PR*0.5}" stroke="${color}" stroke-width="1.5" opacity="${op * 0.2}" style="pointer-events:none"/>`;
+      svg += `<line x1="${x - PR*0.5}" y1="${y - PR*0.5}" x2="${x + PR*0.5}" y2="${y + PR*0.5}" stroke="${color}" stroke-width="1.5" opacity="${op * 0.3}" style="pointer-events:none"/>`;
+      svg += `<line x1="${x - PR*0.5}" y1="${y + PR*0.2}" x2="${x + PR*0.2}" y2="${y - PR*0.5}" stroke="${color}" stroke-width="1.5" opacity="${op * 0.3}" style="pointer-events:none"/>`;
     }
   } else {
     if (isFilled) {
-      svg += `<circle cx="${x}" cy="${y}" r="${PR}" fill="${color}" opacity="${op}" style="${shadowFilter}"/>`;
+      svg += `<circle cx="${x}" cy="${y}" r="${PR}" fill="${color}" opacity="${op}" filter="url(#glow)"/>`;
       svg += `<circle cx="${x}" cy="${y - 4}" r="${PR - 10}" fill="rgba(255,255,255,.15)" opacity="${op}"/>`;
     } else {
-      svg += `<circle cx="${x}" cy="${y}" r="${PR}" fill="rgba(0,0,0,.4)" stroke="${color}" stroke-width="4" opacity="${op}" style="${shadowFilter}"/>`;
-      svg += `<line x1="${x - PR*0.5}" y1="${y - PR*0.5}" x2="${x + PR*0.5}" y2="${y + PR*0.5}" stroke="${color}" stroke-width="1.5" opacity="${op * 0.2}"/>`;
-      svg += `<line x1="${x - PR*0.5}" y1="${y + PR*0.2}" x2="${x + PR*0.2}" y2="${y - PR*0.5}" stroke="${color}" stroke-width="1.5" opacity="${op * 0.2}"/>`;
+      svg += `<circle cx="${x}" cy="${y}" r="${PR}" fill="rgba(0,10,20,.8)" stroke="${color}" stroke-width="4" opacity="${op}" filter="url(#glow)"/>`;
+      svg += `<line x1="${x - PR*0.5}" y1="${y - PR*0.5}" x2="${x + PR*0.5}" y2="${y + PR*0.5}" stroke="${color}" stroke-width="1.5" opacity="${op * 0.3}"/>`;
+      svg += `<line x1="${x - PR*0.5}" y1="${y + PR*0.2}" x2="${x + PR*0.2}" y2="${y - PR*0.5}" stroke="${color}" stroke-width="1.5" opacity="${op * 0.3}"/>`;
     }
   }
 
@@ -135,7 +137,7 @@ function shotSVG(shot, opacity, interactive) {
 
   if (shot.type === 'drop') {
     const mx = (shot.x1 + shot.x2) / 2, my = (shot.y1 + shot.y2) / 2 - 40;
-    svg += `<path d="M${shot.x1},${shot.y1} Q${mx},${my} ${shot.x2},${shot.y2}" fill="none" stroke="${c}" stroke-width="4" stroke-dasharray="8,5" opacity="${op}" marker-end="url(#${arrowId})"/>`;
+    svg += `<path d="M${shot.x1},${shot.y1} Q${mx},${my} ${shot.x2},${shot.y2}" fill="none" stroke="${c}" stroke-width="4" stroke-dasharray="8,5" opacity="${op}" marker-end="url(#${arrowId})" filter="url(#glow)"/>`;
   } else if (shot.type === 'drive') {
     // Flat drive — very subtle curve perpendicular to shot direction
     const ddx = shot.x2 - shot.x1, ddy = shot.y2 - shot.y1;
@@ -144,40 +146,40 @@ function shotSVG(shot, opacity, interactive) {
     const dOff = dLen * 0.06; // very subtle
     const dmx = (shot.x1 + shot.x2) / 2 + perpX * dOff;
     const dmy = (shot.y1 + shot.y2) / 2 + perpY * dOff;
-    svg += `<path d="M${shot.x1},${shot.y1} Q${dmx},${dmy} ${shot.x2},${shot.y2}" fill="none" stroke="${c}" stroke-width="4.5" opacity="${op}" marker-end="url(#${arrowId})"/>`;
+    svg += `<path d="M${shot.x1},${shot.y1} Q${dmx},${dmy} ${shot.x2},${shot.y2}" fill="none" stroke="${c}" stroke-width="4.5" opacity="${op}" marker-end="url(#${arrowId})" filter="url(#glow)"/>`;
   } else if (shot.type === 'smash') {
     // Smash — steep downward arc (control point biased toward origin, above)
     const smDist = Math.hypot(shot.x2 - shot.x1, shot.y2 - shot.y1) || 1;
     const smOff = Math.min(smDist * 0.25, 120);
     const smMx = shot.x1 * 0.65 + shot.x2 * 0.35;
     const smMy = Math.min(shot.y1, shot.y2) - smOff;
-    svg += `<path d="M${shot.x1},${shot.y1} Q${smMx},${smMy} ${shot.x2},${shot.y2}" fill="none" stroke="${c}" stroke-width="6.5" opacity="${op}" marker-end="url(#${arrowId})"/>`;
-    svg += `<circle cx="${shot.x2}" cy="${shot.y2}" r="10" fill="none" stroke="${c}" stroke-width="2.5" opacity="${op * 0.5}"/>`;
+    svg += `<path d="M${shot.x1},${shot.y1} Q${smMx},${smMy} ${shot.x2},${shot.y2}" fill="none" stroke="${c}" stroke-width="6.5" opacity="${op}" marker-end="url(#${arrowId})" filter="url(#glow)"/>`;
+    svg += `<circle cx="${shot.x2}" cy="${shot.y2}" r="10" fill="none" stroke="${c}" stroke-width="2.5" opacity="${op * 0.5}" filter="url(#glow)"/>`;
     svg += `<circle cx="${shot.x2}" cy="${shot.y2}" r="20" fill="none" stroke="${c}" stroke-width="1.5" opacity="${op * 0.25}"/>`;
   } else if (shot.type === 'clear') {
     const mx = (shot.x1 + shot.x2) / 2, my = (shot.y1 + shot.y2) / 2 - 80;
-    svg += `<path d="M${shot.x1},${shot.y1} Q${mx},${my} ${shot.x2},${shot.y2}" fill="none" stroke="${c}" stroke-width="4" opacity="${op}" marker-end="url(#${arrowId})"/>`;
+    svg += `<path d="M${shot.x1},${shot.y1} Q${mx},${my} ${shot.x2},${shot.y2}" fill="none" stroke="${c}" stroke-width="4" opacity="${op}" marker-end="url(#${arrowId})" filter="url(#glow)"/>`;
   } else if (shot.type === 'lift') {
     const mx = (shot.x1 + shot.x2) / 2, my = (shot.y1 + shot.y2) / 2 - 100;
-    svg += `<path d="M${shot.x1},${shot.y1} Q${mx},${my} ${shot.x2},${shot.y2}" fill="none" stroke="${c}" stroke-width="4" stroke-dasharray="12,4" opacity="${op}" marker-end="url(#${arrowId})"/>`;
+    svg += `<path d="M${shot.x1},${shot.y1} Q${mx},${my} ${shot.x2},${shot.y2}" fill="none" stroke="${c}" stroke-width="4" stroke-dasharray="12,4" opacity="${op}" marker-end="url(#${arrowId})" filter="url(#glow)"/>`;
   } else if (shot.type === 'serve') {
     // Serve — gentle upward arc
     const svDist = Math.hypot(shot.x2 - shot.x1, shot.y2 - shot.y1) || 1;
     const svOff = Math.min(svDist * 0.15, 60);
     const svMx = (shot.x1 + shot.x2) / 2;
     const svMy = (shot.y1 + shot.y2) / 2 - svOff;
-    svg += `<path d="M${shot.x1},${shot.y1} Q${svMx},${svMy} ${shot.x2},${shot.y2}" fill="none" stroke="${c}" stroke-width="3.5" stroke-dasharray="3,3" opacity="${op}" marker-end="url(#${arrowId})"/>`;
-    svg += `<circle cx="${shot.x1}" cy="${shot.y1}" r="8" fill="none" stroke="${c}" stroke-width="2" opacity="${op * 0.6}"/>`;
+    svg += `<path d="M${shot.x1},${shot.y1} Q${svMx},${svMy} ${shot.x2},${shot.y2}" fill="none" stroke="${c}" stroke-width="3.5" stroke-dasharray="3,3" opacity="${op}" marker-end="url(#${arrowId})" filter="url(#glow)"/>`;
+    svg += `<circle cx="${shot.x1}" cy="${shot.y1}" r="8" fill="none" stroke="${c}" stroke-width="2" opacity="${op * 0.6}" filter="url(#glow)"/>`;
   }
 
   // Label with dark pill
   const lx = (shot.x1 + shot.x2) / 2, ly = (shot.y1 + shot.y2) / 2 - 14;
   const tw = SHOT_LABELS[shot.type].length * 6.5 + 12;
-  svg += `<rect x="${lx - tw/2}" y="${ly - 9}" width="${tw}" height="18" rx="4" fill="rgba(0,0,0,.65)" opacity="${op}"/>`;
+  svg += `<rect x="${lx - tw/2}" y="${ly - 9}" width="${tw}" height="18" rx="4" fill="rgba(0,0,0,.7)" opacity="${op}"/>`;
   svg += `<text x="${lx}" y="${ly + 1}" fill="${c}" font-size="11" font-family="system-ui" font-weight="700" text-anchor="middle" dominant-baseline="central" opacity="${op}">${SHOT_LABELS[shot.type]}</text>`;
   // Interactive origin drag handle (desktop)
   if (interactive) {
-    svg += `<circle cx="${shot.x1}" cy="${shot.y1}" r="8" fill="${c}" opacity="0.4" stroke="${c}" stroke-width="1.5"/>`;
+    svg += `<circle cx="${shot.x1}" cy="${shot.y1}" r="8" fill="${c}" opacity="0.4" stroke="${c}" stroke-width="1.5" filter="url(#glow)"/>`;
     svg += `<circle cx="${shot.x1}" cy="${shot.y1}" r="${HIT_R}" fill="transparent" style="cursor:grab;" onmousedown="startShotOriginDrag(event)"/>`;
   }
   return svg;
@@ -190,7 +192,7 @@ function movementSVG(playerId, fromX, fromY, toX, toY, opacity) {
   const arrowId = 'm_' + Math.random().toString(36).substr(2, 6);
   let svg = '';
   svg += `<defs><marker id="${arrowId}" markerWidth="12" markerHeight="8" refX="10" refY="4" orient="auto"><polygon points="0 0, 12 4, 0 8" fill="${c}" opacity="${op * 0.7}"/></marker></defs>`;
-  svg += `<line x1="${fromX}" y1="${fromY}" x2="${toX}" y2="${toY}" stroke="${c}" stroke-width="3.5" stroke-dasharray="7,4" opacity="${op * 0.7}" marker-end="url(#${arrowId})"/>`;
+  svg += `<line x1="${fromX}" y1="${fromY}" x2="${toX}" y2="${toY}" stroke="${c}" stroke-width="3.5" stroke-dasharray="7,4" opacity="${op * 0.7}" marker-end="url(#${arrowId})" filter="url(#glow)"/>`;
   return svg;
 }
 

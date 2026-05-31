@@ -2,16 +2,17 @@
 
 /* === THEME === */
 :root {
-  --bg:#111318;--surface:#1a1d24;--surface2:#22262e;--text:#e8eaed;--muted:#8b919a;
-  --accent:#4a9eff;--accent-dim:rgba(74,158,255,.12);--accent-glow:rgba(74,158,255,.25);
-  --border:#2d3139;--border-light:#383d47;--radius:8px;
+  --bg:#0a0a14;--surface:#12121f;--surface2:#1a1a2e;--text:#e8f4ff;--muted:#7a8ca5;
+  --accent:#00d4ff;--accent-dim:rgba(0,212,255,.15);--accent-glow:rgba(0,212,255,.35);
+  --border:#2a2a40;--border-light:#3a3a55;--radius:8px;
   --font:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
-  --teamA:#4a9eff;--teamB:#ff6b6b;
-  --drop:#ff9f43;--drive:#feca57;--smash:#ee5a24;--clear:#2ed573;--lift:#a29bfe;--serve:#fd79a8;
-  --court-dark:#1a5c2e;--court-light:#237a3c;--court-line:rgba(255,255,255,.85);
-  --court-line-dim:rgba(255,255,255,.45);--net-glow:rgba(255,255,255,.6);
-  --success:#2ed573;--danger:#ee5a24;
-  --shadow:0 2px 8px rgba(0,0,0,.3);--shadow-lg:0 4px 24px rgba(0,0,0,.4);
+  --teamA:#00d4ff;--teamB:#ff6b9d;
+  --drop:#ffb347;--drive:#00e676;--smash:#ff5252;--clear:#00bfff;--lift:#b967ff;--serve:#ff79c6;
+  --court-dark:#0f1624;--court-light:#162033;--court-line:rgba(0,212,255,.9);
+  --court-line-dim:rgba(0,212,255,.5);--net-glow:rgba(0,212,255,.8);
+  --success:#00e676;--danger:#ff5252;
+  --shadow:0 2px 12px rgba(0,0,0,.5);--shadow-lg:0 4px 32px rgba(0,0,0,.6);
+  --glow-cyan:0 0 20px rgba(0,212,255,.6),0 0 40px rgba(0,212,255,.3);
 }
 
 /* === RESET === */
