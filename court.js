@@ -24,7 +24,7 @@ function courtLines() {
   let svg = '';
   const lw = 2;
   const lc = '#00d4ff';
-  const lcd = '#00ff00'; // Increased opacity from .6 to .85
+  const lcd = '#00d4ff'; // Increased opacity from .6 to .85
 
   // Court fill with gradient
   svg += `<rect x="${PAD}" y="${PAD}" width="${CW}" height="${CH}" rx="3" fill="url(#courtGrad)"/>`;
@@ -41,7 +41,7 @@ function courtLines() {
 
   // Net with glow
   const netY = PAD + CH / 2;
-  svg += `<line x1="${PAD - 4}" y1="${netY}" x2="${PAD + CW + 4}" y2="${netY}" stroke="#00ff00" stroke-width="14" filter="url(#netGlow)" opacity="1"/>`;
+  svg += `<line x1="${PAD - 4}" y1="${netY}" x2="${PAD + CW + 4}" y2="${netY}" stroke="#00d4ff" stroke-width="14" filter="url(#netGlow)" opacity="1"/>`;
   svg += `<line x1="${PAD}" y1="${netY}" x2="${PAD + CW}" y2="${netY}" stroke="${lc}" stroke-width="5" />`;
   // Net posts with glow
   svg += `<circle cx="${PAD - 2}" cy="${netY}" r="6" fill="${lc}" />`;
@@ -63,7 +63,7 @@ function courtLines() {
   svg += `<line x1="${cx}" y1="${netY + ssl}" x2="${cx}" y2="${PAD + CH}" stroke="${lcd}" stroke-width="${lw * 0.8}" />`;
 
   // NET label
-  svg += `<text x="${PAD + CW + 20}" y="${netY}" fill="#00ff00" font-size="13" font-family="system-ui" font-weight="700" text-anchor="middle" dominant-baseline="central" letter-spacing="2" transform="rotate(-90,${PAD + CW + 20},${netY})" >NET</text>`;
+  svg += `<text x="${PAD + CW + 20}" y="${netY}" fill="#00d4ff" font-size="13" font-family="system-ui" font-weight="700" text-anchor="middle" dominant-baseline="central" letter-spacing="2" transform="rotate(-90,${PAD + CW + 20},${netY})" >NET</text>`;
 
   return svg;
 }
