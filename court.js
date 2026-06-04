@@ -24,7 +24,7 @@ function courtLines() {
   let svg = '';
   const lw = 2;
   const lc = '#00d4ff';
-  const lcd = 'rgba(0,212,255,.85)'; // Increased opacity from .6 to .85
+  const lcd = '#00ff00'; // Increased opacity from .6 to .85
 
   // Court fill with gradient
   svg += `<rect x="${PAD}" y="${PAD}" width="${CW}" height="${CH}" rx="3" fill="url(#courtGrad)"/>`;
@@ -32,38 +32,38 @@ function courtLines() {
   svg += `<rect x="${PAD}" y="${PAD}" width="${CW}" height="${CH}" rx="3" fill="none" stroke="rgba(0,0,0,.5)" stroke-width="1"/>`;
 
   // Boundary (brightest) with glow
-  svg += `<rect x="${PAD}" y="${PAD}" width="${CW}" height="${CH}" fill="none" stroke="${lc}" stroke-width="${lw + 0.5}" filter="url(#cyanGlow)"/>`;
+  svg += `<rect x="${PAD}" y="${PAD}" width="${CW}" height="${CH}" fill="none" stroke="${lc}" stroke-width="${lw + 0.5}" />`;
 
   // Side tramlines - increased stroke width
   const ss = 46;
-  svg += `<line x1="${PAD + ss}" y1="${PAD}" x2="${PAD + ss}" y2="${PAD + CH}" stroke="${lcd}" stroke-width="${lw * 0.8}" filter="url(#cyanGlow)"/>`;
-  svg += `<line x1="${PAD + CW - ss}" y1="${PAD}" x2="${PAD + CW - ss}" y2="${PAD + CH}" stroke="${lcd}" stroke-width="${lw * 0.8}" filter="url(#cyanGlow)"/>`;
+  svg += `<line x1="${PAD + ss}" y1="${PAD}" x2="${PAD + ss}" y2="${PAD + CH}" stroke="${lcd}" stroke-width="${lw * 0.8}" />`;
+  svg += `<line x1="${PAD + CW - ss}" y1="${PAD}" x2="${PAD + CW - ss}" y2="${PAD + CH}" stroke="${lcd}" stroke-width="${lw * 0.8}" />`;
 
   // Net with glow
   const netY = PAD + CH / 2;
-  svg += `<line x1="${PAD - 4}" y1="${netY}" x2="${PAD + CW + 4}" y2="${netY}" stroke="rgba(0,212,255,0.9)" stroke-width="14" filter="url(#netGlow)" opacity="1"/>`;
-  svg += `<line x1="${PAD}" y1="${netY}" x2="${PAD + CW}" y2="${netY}" stroke="${lc}" stroke-width="5" filter="url(#cyanGlow)"/>`;
+  svg += `<line x1="${PAD - 4}" y1="${netY}" x2="${PAD + CW + 4}" y2="${netY}" stroke="#00ff00" stroke-width="14" filter="url(#netGlow)" opacity="1"/>`;
+  svg += `<line x1="${PAD}" y1="${netY}" x2="${PAD + CW}" y2="${netY}" stroke="${lc}" stroke-width="5" />`;
   // Net posts with glow
-  svg += `<circle cx="${PAD - 2}" cy="${netY}" r="6" fill="${lc}" filter="url(#cyanGlow)"/>`;
-  svg += `<circle cx="${PAD + CW + 2}" cy="${netY}" r="6" fill="${lc}" filter="url(#cyanGlow)"/>`;
+  svg += `<circle cx="${PAD - 2}" cy="${netY}" r="6" fill="${lc}" />`;
+  svg += `<circle cx="${PAD + CW + 2}" cy="${netY}" r="6" fill="${lc}" />`;
 
   // Short service lines - increased stroke width
   const ssl = 198;
-  svg += `<line x1="${PAD}" y1="${netY - ssl}" x2="${PAD + CW}" y2="${netY - ssl}" stroke="${lcd}" stroke-width="${lw * 0.8}" filter="url(#cyanGlow)"/>`;
-  svg += `<line x1="${PAD}" y1="${netY + ssl}" x2="${PAD + CW}" y2="${netY + ssl}" stroke="${lcd}" stroke-width="${lw * 0.8}" filter="url(#cyanGlow)"/>`;
+  svg += `<line x1="${PAD}" y1="${netY - ssl}" x2="${PAD + CW}" y2="${netY - ssl}" stroke="${lcd}" stroke-width="${lw * 0.8}" />`;
+  svg += `<line x1="${PAD}" y1="${netY + ssl}" x2="${PAD + CW}" y2="${netY + ssl}" stroke="${lcd}" stroke-width="${lw * 0.8}" />`;
 
   // Long service lines - increased stroke width
   const lsl = 76;
-  svg += `<line x1="${PAD}" y1="${PAD + lsl}" x2="${PAD + CW}" y2="${PAD + lsl}" stroke="${lcd}" stroke-width="${lw * 0.6}" stroke-dasharray="5,5" filter="url(#cyanGlow)"/>`;
-  svg += `<line x1="${PAD}" y1="${PAD + CH - lsl}" x2="${PAD + CW}" y2="${PAD + CH - lsl}" stroke="${lcd}" stroke-width="${lw * 0.6}" stroke-dasharray="5,5" filter="url(#cyanGlow)"/>`;
+  svg += `<line x1="${PAD}" y1="${PAD + lsl}" x2="${PAD + CW}" y2="${PAD + lsl}" stroke="${lcd}" stroke-width="${lw * 0.6}" stroke-dasharray="5,5" />`;
+  svg += `<line x1="${PAD}" y1="${PAD + CH - lsl}" x2="${PAD + CW}" y2="${PAD + CH - lsl}" stroke="${lcd}" stroke-width="${lw * 0.6}" stroke-dasharray="5,5" />`;
 
   // Center lines - increased stroke width
   const cx = PAD + CW / 2;
-  svg += `<line x1="${cx}" y1="${netY - ssl}" x2="${cx}" y2="${PAD}" stroke="${lcd}" stroke-width="${lw * 0.8}" filter="url(#cyanGlow)"/>`;
-  svg += `<line x1="${cx}" y1="${netY + ssl}" x2="${cx}" y2="${PAD + CH}" stroke="${lcd}" stroke-width="${lw * 0.8}" filter="url(#cyanGlow)"/>`;
+  svg += `<line x1="${cx}" y1="${netY - ssl}" x2="${cx}" y2="${PAD}" stroke="${lcd}" stroke-width="${lw * 0.8}" />`;
+  svg += `<line x1="${cx}" y1="${netY + ssl}" x2="${cx}" y2="${PAD + CH}" stroke="${lcd}" stroke-width="${lw * 0.8}" />`;
 
   // NET label
-  svg += `<text x="${PAD + CW + 20}" y="${netY}" fill="rgba(0,212,255,0.9)" font-size="13" font-family="system-ui" font-weight="700" text-anchor="middle" dominant-baseline="central" letter-spacing="2" transform="rotate(-90,${PAD + CW + 20},${netY})" filter="url(#cyanGlow)">NET</text>`;
+  svg += `<text x="${PAD + CW + 20}" y="${netY}" fill="#00ff00" font-size="13" font-family="system-ui" font-weight="700" text-anchor="middle" dominant-baseline="central" letter-spacing="2" transform="rotate(-90,${PAD + CW + 20},${netY})" >NET</text>`;
 
   return svg;
 }
