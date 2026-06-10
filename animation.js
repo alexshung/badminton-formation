@@ -149,15 +149,17 @@ function renderAnimFrame() {
     if (shot.type === 'drop' || shot.type === 'clear' || shot.type === 'lift') {
       const ch = shot.type === 'clear' ? -80 : shot.type === 'lift' ? -100 : -40;
       const mx = (shot.x1 + shot.x2) / 2, my = (shot.y1 + shot.y2) / 2 + ch;
-      svg += `<path d="M${shot.x1},${shot.y1} Q${mx},${my} ${shot.x2},${shot.y2}" fill="none" stroke="${c}" stroke-width="2.5" opacity=".2" ${shot.type === 'drop' ? 'stroke-dasharray="8,5"' : shot.type === 'lift' ? 'stroke-dasharray="12,4"' : ''}/>`;
+      svg += `<path d="M${shot.x1},${shot.y1} Q${mx},${my} ${shot.x2},${shot.y2}" fill="none" stroke="${c}" stroke-width="4" opacity=".28" ${shot.type === 'drop' ? 'stroke-dasharray="8,5"' : shot.type === 'lift' ? 'stroke-dasharray="12,4"' : ''}/>`;
       const sx = (1 - dp) * (1 - dp) * shot.x1 + 2 * (1 - dp) * dp * mx + dp * dp * shot.x2;
       const sy = (1 - dp) * (1 - dp) * shot.y1 + 2 * (1 - dp) * dp * my + dp * dp * shot.y2;
-      svg += `<circle cx="${sx}" cy="${sy}" r="9" fill="${c}" stroke="#fff" stroke-width="2" style="filter:drop-shadow(0 2px 6px rgba(0,0,0,.4))"/>`;
+      svg += shuttlecockSVG(sx, sy, 1, false);
     } else {
       const ex = lerp(shot.x1, shot.x2, dp), ey = lerp(shot.y1, shot.y2, dp);
-      svg += `<line x1="${shot.x1}" y1="${shot.y1}" x2="${shot.x2}" y2="${shot.y2}" stroke="${c}" stroke-width="2.5" opacity=".2" ${shot.type === 'serve' ? 'stroke-dasharray="3,3"' : ''}/>`;
-      svg += `<line x1="${shot.x1}" y1="${shot.y1}" x2="${ex}" y2="${ey}" stroke="${c}" stroke-width="${shot.type === 'smash' ? 6 : shot.type === 'serve' ? 3.5 : 4.5}" opacity=".85" ${shot.type === 'serve' ? 'stroke-dasharray="3,3"' : ''}/>`;
-      svg += `<circle cx="${ex}" cy="${ey}" r="9" fill="${c}" stroke="#fff" stroke-width="2" style="filter:drop-shadow(0 2px 6px rgba(0,0,0,.4))"/>`;
+      const trailW = shot.type === 'smash' ? 8 : shot.type === 'serve' ? 5 : 6;
+      const fullDash = shot.type === 'serve' ? 'stroke-dasharray="3,3"' : '';
+      svg += `<line x1="${shot.x1}" y1="${shot.y1}" x2="${shot.x2}" y2="${shot.y2}" stroke="${c}" stroke-width="4" opacity=".22" ${fullDash}/>`;
+      svg += `<line x1="${shot.x1}" y1="${shot.y1}" x2="${ex}" y2="${ey}" stroke="${c}" stroke-width="${trailW}" opacity=".9" ${fullDash}/>`;
+      svg += shuttlecockSVG(ex, ey, 1, false);
       if (shot.type === 'smash' && dp > 0.85) {
         const is = (dp - 0.85) / 0.15;
         svg += `<circle cx="${ex}" cy="${ey}" r="${12 + is * 28}" fill="none" stroke="${c}" stroke-width="2.5" opacity="${1 - is}"/>`;
@@ -346,14 +348,16 @@ function renderPresAnimFrame() {
     if (shot.type === 'drop' || shot.type === 'clear' || shot.type === 'lift') {
       const ch = shot.type === 'clear' ? -80 : shot.type === 'lift' ? -100 : -40;
       const mx = (shot.x1 + shot.x2) / 2, my = (shot.y1 + shot.y2) / 2 + ch;
-      svg += '<path d="M' + shot.x1 + ',' + shot.y1 + ' Q' + mx + ',' + my + ' ' + shot.x2 + ',' + shot.y2 + '" fill="none" stroke="' + c + '" stroke-width="2.5" opacity=".2"/>';
+      svg += '<path d="M' + shot.x1 + ',' + shot.y1 + ' Q' + mx + ',' + my + ' ' + shot.x2 + ',' + shot.y2 + '" fill="none" stroke="' + c + '" stroke-width="4" opacity=".28"/>';
       const sx = (1-t)*(1-t)*shot.x1 + 2*(1-t)*t*mx + t*t*shot.x2;
       const sy = (1-t)*(1-t)*shot.y1 + 2*(1-t)*t*my + t*t*shot.y2;
-      svg += '<circle cx="' + sx + '" cy="' + sy + '" r="9" fill="' + c + '" stroke="#fff" stroke-width="2"/>';
+      svg += shuttlecockSVG(sx, sy, 1, false);
     } else {
       const ex = lerp(shot.x1, shot.x2, t), ey = lerp(shot.y1, shot.y2, t);
-      svg += '<line x1="' + shot.x1 + '" y1="' + shot.y1 + '" x2="' + ex + '" y2="' + ey + '" stroke="' + c + '" stroke-width="' + (shot.type === 'smash' ? 6 : 4.5) + '" opacity=".85"/>';
-      svg += '<circle cx="' + ex + '" cy="' + ey + '" r="9" fill="' + c + '" stroke="#fff" stroke-width="2"/>';
+      const tw = shot.type === 'smash' ? 8 : shot.type === 'serve' ? 5 : 6;
+      svg += '<line x1="' + shot.x1 + '" y1="' + shot.y1 + '" x2="' + shot.x2 + '" y2="' + shot.y2 + '" stroke="' + c + '" stroke-width="4" opacity=".22"/>';
+      svg += '<line x1="' + shot.x1 + '" y1="' + shot.y1 + '" x2="' + ex + '" y2="' + ey + '" stroke="' + c + '" stroke-width="' + tw + '" opacity=".9"/>';
+      svg += shuttlecockSVG(ex, ey, 1, false);
     }
   } else if (fr.shot) {
     svg += shotSVG(fr.shot, 0.35);
