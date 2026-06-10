@@ -36,6 +36,13 @@ document.addEventListener('keydown', function(e) {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
   const keyMap = { '1': 'A1', '2': 'A2', '3': 'B1', '4': 'B2' };
   if (keyMap[e.key]) { selectPlayer(keyMap[e.key]); e.preventDefault(); }
+  // UX UPGRADE: Shot type hotkeys — q,w,e,r,t,y
+  const shotKeyMap = { 'q': 'drop', 'w': 'drive', 'e': 'smash', 'r': 'clear', 't': 'lift', 'y': 'serve' };
+  if (shotKeyMap[e.key.toLowerCase()]) {
+    setShotTypeQuick(shotKeyMap[e.key.toLowerCase()]);
+    e.preventDefault();
+    return;
+  }
   if (e.key === ' ') { e.preventDefault(); toggleAnimation(); }
   if (e.key === 'Escape') {
     shotStart = null; shotPreviewLine = null; moveDragPlayer = null;
@@ -47,15 +54,27 @@ document.addEventListener('keydown', function(e) {
   if ((e.key === 'z' || e.key === 'Z') && (e.ctrlKey || e.metaKey)) { e.preventDefault(); undo(); }
   if (e.key === '?') { toggleHelp(); }
   if (e.key === 'd' || e.key === 'D') { if (!e.ctrlKey && !e.metaKey) duplicateFrame(); }
+  // UX UPGRADE: C = clear shot
+  if (e.key === 'c' || e.key === 'C') { if (!e.ctrlKey && !e.metaKey) { clearShot(); e.preventDefault(); } }
 });
 
 function setShotType(t) {
   shotType = t;
   shotStart = null;
   document.querySelectorAll('.shot-btn').forEach(b => b.classList.toggle('active', b.dataset.shot === t));
+  // Sync shot tray
+  document.querySelectorAll('.shot-tray-btn').forEach(b => b.classList.toggle('active', b.dataset.shot === t));
   updateStatus();
   updateMobileToolBtns();
   if (window.innerWidth <= 1024) closeSidebar();
+}
+
+// UX UPGRADE: Quick shot type from tray — auto-switches to shot tool
+function setShotTypeQuick(t) {
+  setShotType(t);
+  if (tool !== 'shot') setTool('shot');
+  // Haptic feedback on mobile
+  if (navigator.vibrate) navigator.vibrate(10);
 }
 
 // Mobile topbar tool toggle
@@ -229,17 +248,18 @@ function courtClick(evt) {
       originY = mv ? mv.y : sp.y;
       originLabel = selectedPlayer;
     } else {
-      // Fallback: nearest player within range
+      // Fallback: nearest player — ALWAYS snap, no error (UX UPGRADE)
       let closest = null, minD = Infinity;
       for (const pid in f.players) {
         const pl = f.players[pid];
         const d = Math.hypot(pl.x - p.x, pl.y - p.y);
         if (d < minD) { minD = d; closest = pid; }
       }
-      if (!closest || minD > 300) {
-        showToast(closest ? 'Tap closer to a player' : 'Place players first');
+      if (!closest) {
+        showToast('Place players first');
         return;
       }
+      // Auto-snap to nearest player regardless of distance — much more forgiving
       const pl = f.players[closest];
       const mv = f.movements[closest];
       originX = mv ? mv.x : pl.x;
@@ -571,8 +591,8 @@ function onShotMouseDown(evt) {
       const d = Math.hypot(pl.x - p.x, pl.y - p.y);
       if (d < minD) { minD = d; closest = pid; }
     }
-    if (!closest || minD > 300) {
-      showToast(closest ? 'Tap closer to a player' : 'Place players first');
+    if (!closest) {
+      showToast('Place players first');
       return;
     }
     const pl = f.players[closest];

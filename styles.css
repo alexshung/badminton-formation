@@ -482,46 +482,93 @@ body.presentation .sidebar-backdrop, body.presentation .toast { display: none !i
 .draw-color-btn.active { border-color: var(--accent); }
 .draw-color-btn:hover { border-color: rgba(255,255,255,.5); }
 
-/* Onboarding */
+/* === UX UPGRADE: Shot Tray (always visible) === */
+.shot-tray {
+  position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 4px; z-index: 60;
+  background: rgba(18,18,31,.92); border: 1px solid var(--border);
+  border-radius: 12px; padding: 6px 8px;
+  box-shadow: var(--shadow-lg); backdrop-filter: blur(8px);
+}
+.shot-tray-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 6px 10px; border-radius: 8px; border: 1px solid transparent;
+  background: transparent; color: var(--muted); cursor: pointer;
+  font-size: 10px; font-weight: 600; font-family: var(--font);
+  transition: all .12s; min-width: 48px;
+}
+.shot-tray-btn:hover { background: rgba(255,255,255,.05); color: var(--text); }
+.shot-tray-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+.shot-tray-btn:active { transform: scale(.95); }
+.st-dot { width: 10px; height: 10px; border-radius: 50%; display: block; }
+
+/* === UX UPGRADE: Formation Rail === */
+.formation-rail {
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  display: flex; flex-direction: column; gap: 6px; z-index: 55;
+}
+.formation-pill {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 8px 6px; border-radius: 10px; border: 1px solid var(--border);
+  background: rgba(18,18,31,.9); color: var(--muted); cursor: pointer;
+  font-size: 9px; font-weight: 600; font-family: var(--font);
+  transition: all .12s; min-width: 52px;
+  box-shadow: var(--shadow); backdrop-filter: blur(6px);
+}
+.formation-pill:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,212,255,.08); transform: translateX(2px); }
+.fp-icon { font-size: 16px; }
+.fp-label { font-size: 9px; text-transform: uppercase; letter-spacing: .3px; }
+
+/* === UX UPGRADE: Timeline (bigger, with dup button) === */
+.timeline { padding: 8px 16px; gap: 6px; min-height: 56px; }
+.frame-btn {
+  min-height: 40px; min-width: 56px; padding: 5px 12px;
+  font-size: 12px; border-radius: 10px; position: relative;
+}
+.frame-btn .frame-dup {
+  position: absolute; top: -6px; right: -6px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--muted); font-size: 10px; cursor: pointer;
+  display: none; align-items: center; justify-content: center;
+  transition: all .12s;
+}
+.frame-btn:hover .frame-dup { display: flex; }
+.frame-btn .frame-dup:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+.timeline-action { min-height: 40px; min-width: 40px; font-size: 16px; border-radius: 10px; }
+
+/* === UX UPGRADE: Player hover rings in shot mode === */
+.court-svg.tool-shot .player-circle { cursor: crosshair !important; }
+.shot-hover-ring { pointer-events: none; }
+
+/* === UX UPGRADE: Onboarding Tip (compact) === */
 .onboarding-overlay {
-  display: none; position: fixed; inset: 0; z-index: 9500;
+  display: none; position: fixed; bottom: 68px; left: 0; right: 0; z-index: 9500;
+  pointer-events: none;
 }
-.onboarding-overlay.active { display: block; }
-.onboarding-backdrop {
-  position: absolute; inset: 0; background: rgba(0,0,0,.6);
+.onboarding-overlay.active { display: block; pointer-events: auto; }
+.onboarding-tip {
+  margin: 0 auto; max-width: 560px; width: calc(100% - 24px);
+  background: rgba(18,18,31,.96); border: 1px solid var(--accent);
+  border-radius: 12px; padding: 10px 14px;
+  display: flex; align-items: center; gap: 10px;
+  box-shadow: var(--shadow-lg); backdrop-filter: blur(12px);
+  animation: tipSlideUp .3s ease;
 }
-.onboarding-card {
-  position: absolute; background: rgba(30,32,42,.95);
-  border: 1px solid var(--accent); border-radius: 12px;
-  padding: 12px 16px; max-width: 220px; z-index: 1;
-  color: #e8eaed; font-size: 12px; font-family: system-ui;
-  box-shadow: 0 4px 20px rgba(0,0,0,.5);
+@keyframes tipSlideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.onb-tip-icon { font-size: 18px; flex-shrink: 0; }
+.onb-tip-text { flex: 1; font-size: 12px; color: var(--text); line-height: 1.4; }
+.onb-tip-text kbd {
+  display: inline-block; padding: 1px 5px; border-radius: 3px;
+  background: rgba(255,255,255,.1); border: 1px solid var(--border);
+  font-size: 10px; font-family: monospace;
 }
-.onboarding-card p { margin: 4px 0 0; line-height: 1.4; }
-.onb-icon { font-size: 20px; }
-.onb-arrow { position: absolute; width: 0; height: 0; }
-.onb-arrow-down { bottom: -8px; left: 30px; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 8px solid var(--accent); }
-.onb-arrow-up { top: -8px; left: 30px; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 8px solid var(--accent); }
-.onb-arrow-left { left: -8px; top: 12px; border-top: 8px solid transparent; border-bottom: 8px solid transparent; border-right: 8px solid var(--accent); }
-
-/* Position callouts - responsive */
-.onb-court { top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
-.onb-players { bottom: 80px; left: 20px; }
-.onb-tools { top: 120px; right: 20px; }
-.onb-timeline { bottom: 72px; right: 20px; }
-.onb-dismiss {
-  position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-  z-index: 2; padding: 10px 32px; border-radius: 8px; border: none;
-  background: var(--accent); color: #fff; font-size: 15px; font-weight: 600;
-  cursor: pointer; font-family: system-ui;
+.onb-tip-close {
+  flex-shrink: 0; width: 24px; height: 24px; border-radius: 6px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--muted); cursor: pointer; font-size: 12px;
 }
-.onb-dismiss:hover { background: #3d8ae6; }
-
-@media (max-width: 1024px) {
-  .onb-tools { top: 60px; left: 20px; right: auto; }
-  .onb-players { bottom: 120px; }
-  .onb-timeline { bottom: 55px; left: 20px; right: auto; }
-}
+.onb-tip-close:hover { color: var(--text); border-color: var(--accent); }
 
 /* Timeline dot indicators */
 .frame-dots {
@@ -529,4 +576,16 @@ body.presentation .sidebar-backdrop, body.presentation .toast { display: none !i
 }
 .frame-dot {
   width: 5px; height: 5px; border-radius: 50%; display: inline-block; flex-shrink: 0;
+}
+
+/* === UX UPGRADE: Mobile adjustments === */
+@media (max-width: 1024px) {
+  .formation-rail { display: none; } /* Hide on mobile — too cramped, use sidebar presets */
+  .shot-tray { bottom: 6px; padding: 4px 6px; gap: 2px; }
+  .shot-tray-btn { padding: 4px 6px; min-width: 38px; font-size: 9px; }
+  .st-dot { width: 8px; height: 8px; }
+  .onboarding-tip { bottom: 0; border-radius: 12px 12px 0 0; }
+  .timeline { padding: 6px 10px; min-height: 48px; }
+  .frame-btn { min-height: 36px; min-width: 48px; }
+  .frame-btn .frame-dup { display: none !important; }
 }

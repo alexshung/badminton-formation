@@ -223,7 +223,7 @@ function addFrame() {
 }
 
 function duplicateFrame() {
-  if (state.frames.length >= 6) { showToast('Max 6 frames'); return; }
+  if (state.frames.length >= 8) { showToast('Max 8 frames'); return; }
   pushUndo();
   const src = state.frames[state.currentFrame];
   const dup = JSON.parse(JSON.stringify(src));
@@ -231,6 +231,19 @@ function duplicateFrame() {
   state.currentFrame++;
   render();
   showToast('Frame duplicated');
+}
+
+// UX UPGRADE: duplicate specific frame (for timeline dup button)
+function duplicateFrameAt(i) {
+  if (state.frames.length >= 8) { showToast('Max 8 frames'); return; }
+  pushUndo();
+  const src = state.frames[i];
+  const dup = JSON.parse(JSON.stringify(src));
+  state.frames.splice(i + 1, 0, dup);
+  state.currentFrame = i + 1;
+  render();
+  showToast('Frame duplicated');
+  if (navigator.vibrate) navigator.vibrate(20);
 }
 
 function removeFrame(evt, i) {
@@ -256,6 +269,17 @@ function clearFrame() {
   pushUndo();
   state.frames[state.currentFrame] = createEmptyFrame();
   render();
+}
+
+// UX UPGRADE: clear shot only (hotkey C)
+function clearShot() {
+  const f = currentFrameData();
+  if (f.shot) {
+    pushUndo();
+    f.shot = null;
+    render(); saveState();
+    showToast('Shot cleared');
+  }
 }
 
 function resetAll() {

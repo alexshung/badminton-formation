@@ -162,15 +162,11 @@ function renderTimeline() {
     if (hasAnnotations) dots += '<span class="frame-dot" style="background:#a29bfe" title="Annotations"></span>';
     dots += '</span>';
     const lbl = f.label ? f.label : '';
-    const displayLabel = lbl ? lbl.substring(0, 8) : 'F' + (i + 1);
-    h += `<button class="frame-btn${active}" onclick="switchFrame(${i})" oncontextmenu="removeFrame(event,${i})">${dots}${escapeXML(displayLabel)}<span class="frame-meta">${pc}P</span></button>`;
+    const displayLabel = lbl ? lbl.substring(0, 10) : (i + 1);
+    h += `<button class="frame-btn${active}" onclick="switchFrame(${i})" oncontextmenu="removeFrame(event,${i})">${dots}${escapeXML('' + displayLabel)}<span class="frame-meta">${pc}P</span><span class="frame-dup" onclick="event.stopPropagation();duplicateFrameAt(${i})" title="Duplicate">⧉</span></button>`;
   });
-  if (state.frames.length < 6) {
-    h += `<button class="timeline-action" onclick="duplicateFrame()" title="Duplicate current frame">⧉</button>`;
-    h += `<button class="timeline-action" onclick="addFrame()" title="Add new frame">+</button>`;
-  }
-  if (state.frames.length > 1) {
-    h += `<button class="timeline-action timeline-remove" onclick="removeLastFrame()" title="Remove last frame">−</button>`;
+  if (state.frames.length < 8) {
+    h += `<button class="timeline-action" onclick="addFrame()" title="Add new frame (D to duplicate)">+</button>`;
   }
   tl.innerHTML = h;
   document.getElementById('frameInfo').textContent = `Frame ${state.currentFrame + 1}/${state.frames.length}`;

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Badminton Formation Tool — Pro Coach</title>
-<link rel="stylesheet" href="styles.css?v=1780616706">
+<link rel="stylesheet" href="styles.css?v=1781065000">
 </head>
 <body>
 <div class="app">
@@ -37,8 +37,10 @@
           <option value="light">Light BG</option>
         </select>
         <button class="btn btn-ghost btn-sm" onclick="shareState()" title="Copy share link">🔗 Share</button>
+        <!-- UX UPGRADE: Quick PNG export button (primary action) -->
+        <button class="btn btn-primary btn-sm" onclick="exportImage()" title="Export PNG (instant)">📷 Export</button>
         <div class="export-dropdown">
-          <button class="btn btn-primary btn-sm" id="exportBtn" onclick="toggleExportMenu()">Export ▾</button>
+          <button class="btn btn-ghost btn-sm" id="exportBtn" onclick="toggleExportMenu()" title="More export options">▾</button>
           <div class="export-menu" id="exportMenu">
             <button class="export-menu-item" onclick="exportImage();hideExportMenu()">📷 Export PNG</button>
             <button class="export-menu-item" onclick="exportVideo();hideExportMenu()">🎬 Export Video</button>
@@ -57,7 +59,50 @@
 
   <!-- Main Area -->
   <div class="main-area">
+    <!-- Quick Formation Rail (desktop) -->
+    <div class="formation-rail" id="formationRail" title="Quick formations">
+      <button class="formation-pill" onclick="applyPreset('front-back-attack')" title="Front-Back Attack">
+        <span class="fp-icon">⚡</span><span class="fp-label">Attack</span>
+      </button>
+      <button class="formation-pill" onclick="applyPreset('side-by-side-defense')" title="Side-by-Side Defense">
+        <span class="fp-icon">🛡️</span><span class="fp-label">Defense</span>
+      </button>
+      <button class="formation-pill" onclick="applyPreset('rotation-ready')" title="Rotation Ready">
+        <span class="fp-icon">🔄</span><span class="fp-label">Rotate</span>
+      </button>
+      <button class="formation-pill" onclick="applyPreset('service-even')" title="Service">
+        <span class="fp-icon">🎯</span><span class="fp-label">Serve</span>
+      </button>
+    </div>
+
     <div class="court-container" id="courtContainer"></div>
+
+    <!-- Shot Tray — always visible, tap to select shot type -->
+    <div class="shot-tray" id="shotTray">
+      <button class="shot-tray-btn" data-shot="drop" onclick="setShotTypeQuick('drop')" title="Drop [Q]">
+        <span class="st-dot" style="background:var(--drop)"></span>Drop
+      </button>
+      <button class="shot-tray-btn" data-shot="drive" onclick="setShotTypeQuick('drive')" title="Drive [W]">
+        <span class="st-dot" style="background:var(--drive)"></span>Drive
+      </button>
+      <button class="shot-tray-btn active" data-shot="smash" onclick="setShotTypeQuick('smash')" title="Smash [E]">
+        <span class="st-dot" style="background:var(--smash)"></span>Smash
+      </button>
+      <button class="shot-tray-btn" data-shot="clear" onclick="setShotTypeQuick('clear')" title="Clear [R]">
+        <span class="st-dot" style="background:var(--clear)"></span>Clear
+      </button>
+      <button class="shot-tray-btn" data-shot="lift" onclick="setShotTypeQuick('lift')" title="Lift [T]">
+        <span class="st-dot" style="background:var(--lift)"></span>Lift
+      </button>
+      <button class="shot-tray-btn" data-shot="serve" onclick="setShotTypeQuick('serve')" title="Serve [Y]">
+        <span class="st-dot" style="background:var(--serve)"></span>Serve
+      </button>
+      <div style="width:1px;background:var(--border);margin:0 2px;align-self:stretch;"></div>
+      <button class="shot-tray-btn" onclick="clearShot(); setTool('player')" title="Clear shot [C]">
+        <span style="font-size:14px">✕</span>
+      </button>
+    </div>
+
     <!-- Floating tool toggles (mobile) — Google Maps style -->
     <div class="floating-tools" id="floatingTools">
       <button class="floating-tool-btn active" id="toolMoveBtn" data-tool="player" onclick="setToolMobile('player')" title="Move players">
@@ -191,12 +236,11 @@
   <div class="modal">
     <h2>Keyboard Shortcuts</h2>
     <div class="shortcut-list">
-      <div class="shortcut-row"><span class="key">1</span><span class="desc">Select Player A1</span></div>
-      <div class="shortcut-row"><span class="key">2</span><span class="desc">Select Player A2</span></div>
-      <div class="shortcut-row"><span class="key">3</span><span class="desc">Select Player B1</span></div>
-      <div class="shortcut-row"><span class="key">4</span><span class="desc">Select Player B2</span></div>
+      <div class="shortcut-row"><span class="key">1</span><span class="key">2</span><span class="key">3</span><span class="key">4</span><span class="desc">Select Player A1/A2/B1/B2</span></div>
+      <div class="shortcut-row"><span class="key">Q</span><span class="key">W</span><span class="key">E</span><span class="key">R</span><span class="key">T</span><span class="key">Y</span><span class="desc">Drop / Drive / Smash / Clear / Lift / Serve</span></div>
       <div class="shortcut-row"><span class="key">Space</span><span class="desc">Play / Stop animation</span></div>
       <div class="shortcut-row"><span class="key">D</span><span class="desc">Duplicate current frame</span></div>
+      <div class="shortcut-row"><span class="key">C</span><span class="desc">Clear shot</span></div>
       <div class="shortcut-row"><span class="key">Ctrl+Z</span><span class="desc">Undo last action</span></div>
       <div class="shortcut-row"><span class="key">Esc</span><span class="desc">Cancel / Close</span></div>
       <div class="shortcut-row"><span class="key">?</span><span class="desc">Toggle this help</span></div>
@@ -204,15 +248,12 @@
     <div class="modal-section">
       <h3>Mouse &amp; Touch</h3>
       <div class="shortcut-list">
-        <div class="shortcut-row"><span class="desc">Click court → place selected player</span></div>
-        <div class="shortcut-row"><span class="desc">Drag player → reposition (Place mode) or set movement (Movement mode)</span></div>
-        <div class="shortcut-row"><span class="desc">Click near player & drag → draw shot from that player to landing spot</span></div>
-        <div class="shortcut-row"><span class="desc">Coverage mode: click to add points, click first point or double-click to close polygon</span></div>
-        <div class="shortcut-row"><span class="desc">Right-click coverage region → delete it</span></div>
-        <div class="shortcut-row"><span class="desc">Right-click → delete element</span></div>
-        <div class="shortcut-row"><span class="desc">Long-press (mobile) → delete element</span></div>
-        <div class="shortcut-row"><span class="desc">Double-click player token → rename player</span></div>
-        <div class="shortcut-row"><span class="desc">Right-click frame → remove frame</span></div>
+        <div class="shortcut-row"><span class="desc">Drag player → move / set movement arrow</span></div>
+        <div class="shortcut-row"><span class="desc">Tap court → shoot from nearest player (auto-snap!)</span></div>
+        <div class="shortcut-row"><span class="desc">Click shot type in tray → instant shot mode</span></div>
+        <div class="shortcut-row"><span class="desc">Use formation pills (left) → quick presets</span></div>
+        <div class="shortcut-row"><span class="desc">Right-click / long-press → delete element</span></div>
+        <div class="shortcut-row"><span class="desc">Double-click player token → rename</span></div>
       </div>
     </div>
     <div style="text-align:center;margin-top:18px;">
@@ -221,29 +262,13 @@
   </div>
 </div>
 
-<!-- Onboarding Overlay -->
+<!-- Onboarding Tip (compact, dismissible) -->
 <div class="onboarding-overlay" id="onboardingOverlay">
-  <div class="onboarding-backdrop" onclick="dismissOnboarding()"></div>
-  <div class="onboarding-card onb-players">
-    <div class="onb-arrow onb-arrow-down"></div>
-    <span class="onb-icon">👆</span>
-    <p>Tap a <strong>player token</strong> to select, then tap the court to place them</p>
+  <div class="onboarding-tip" id="onboardingTip">
+    <span class="onb-tip-icon">💡</span>
+    <span class="onb-tip-text"><strong>Tip:</strong> Drag players to move • Tap court to shoot • Use ←→ to switch frames • Press <kbd>?</kbd> for help</span>
+    <button class="onb-tip-close" onclick="dismissOnboarding()" aria-label="Dismiss">✕</button>
   </div>
-  <div class="onboarding-card onb-tools">
-    <div class="onb-arrow onb-arrow-left"></div>
-    <span class="onb-icon">🔧</span>
-    <p>Switch <strong>tools</strong> here — Player, Shot, Coverage, or Annotate</p>
-  </div>
-  <div class="onboarding-card onb-timeline">
-    <div class="onb-arrow onb-arrow-up"></div>
-    <span class="onb-icon">🎬</span>
-    <p>Add <strong>frames</strong> for animation — click + to add, ▶ to play</p>
-  </div>
-  <div class="onboarding-card onb-court">
-    <span class="onb-icon">🏸</span>
-    <p><strong>Drag players</strong> on the court to reposition. In frames 2+, drags create movement arrows</p>
-  </div>
-  <button class="onb-dismiss" onclick="dismissOnboarding()">Got it!</button>
 </div>
 
 <!-- Presentation Mode Overlay -->
@@ -258,11 +283,11 @@
   </div>
 </div>
 
-<script src="state.js?v=1780616706"></script>
-<script src="court.js?v=1780616706"></script>
-<script src="interactions.js?v=1780616706"></script>
-<script src="animation.js?v=1780616706"></script>
-<script src="export.js?v=1780616706"></script>
-<script src="app.js?v=1780616706"></script>
+<script src="state.js?v=1781065000"></script>
+<script src="court.js?v=1781065000"></script>
+<script src="interactions.js?v=1781065000"></script>
+<script src="animation.js?v=1781065000"></script>
+<script src="export.js?v=1781065000"></script>
+<script src="app.js?v=1781065000"></script>
 </body>
 </html>

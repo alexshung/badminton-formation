@@ -86,6 +86,12 @@ function playerSVG(id, x, y, opacity, interactive, frameNum) {
   const fontSize = label.length > 3 ? 14 : (label.length > 2 ? 16 : 18);
   let svg = '';
 
+  // UX UPGRADE: Shot-mode hover ring — shows this player is a valid shot origin
+  const inShotMode = interactive && tool === 'shot';
+  if (inShotMode) {
+    svg += `<circle cx="${x}" cy="${y}" r="${PR + 14}" fill="none" stroke="${color}" stroke-width="2" stroke-dasharray="4,4" opacity="${op * 0.35}" class="shot-hover-ring"/>`;
+  }
+
   // Selection ring
   if (isSelected) {
     svg += `<circle cx="${x}" cy="${y}" r="${PR + 10}" fill="none" stroke="${color}" stroke-width="2.5" stroke-dasharray="6,5" opacity="${op * 0.6}">`;
