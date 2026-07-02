@@ -213,12 +213,12 @@ function exportVideo() {
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(url);
     showToast('Video exported!');
-    document.getElementById('exportBtn').textContent = 'Export ▾';
+    document.getElementById('exportBtn').textContent = '▾';
     document.getElementById('exportBtn').disabled = false;
   };
 
   showToast('Recording video...');
-  document.getElementById('exportBtn').textContent = 'Recording...';
+  document.getElementById('exportBtn').textContent = '●';
   document.getElementById('exportBtn').disabled = true;
   recorder.start();
 

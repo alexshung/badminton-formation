@@ -10,7 +10,7 @@ function render() {
   updateStatus();
   updateCursor();
   updatePlayerPalette();
-  saveState();
+  scheduleSave();
 }
 
 function renderOverlay(container, interactive) {
@@ -165,7 +165,7 @@ function renderTimeline() {
     const displayLabel = lbl ? lbl.substring(0, 10) : (i + 1);
     h += `<button class="frame-btn${active}" onclick="switchFrame(${i})" oncontextmenu="removeFrame(event,${i})">${dots}${escapeXML('' + displayLabel)}<span class="frame-meta">${pc}P</span><span class="frame-dup" onclick="event.stopPropagation();duplicateFrameAt(${i})" title="Duplicate">⧉</span></button>`;
   });
-  if (state.frames.length < 8) {
+  if (state.frames.length < MAX_FRAMES) {
     h += `<button class="timeline-action" onclick="addFrame()" title="Add new frame (D to duplicate)">+</button>`;
   }
   tl.innerHTML = h;

@@ -9,6 +9,7 @@ const SHOT_LABELS = { drop: 'Drop', drive: 'Drive', smash: 'Smash', clear: 'Clea
 const TEAM_COLORS = { A: '#00d4ff', B: '#ff6b9d' };
 const TEAM_COLORS_DIM = { A: 'rgba(0,212,255,.35)', B: 'rgba(255,107,157,.35)' };
 const MAX_UNDO = 20;
+const MAX_FRAMES = 8;
 
 // ===== PRESET FORMATIONS =====
 const PRESETS = {
@@ -154,12 +155,22 @@ function updateUndoBtn() {
 
 // ===== PERSISTENCE =====
 function saveState() {
+  clearTimeout(saveState._t);
   const titleEl = document.getElementById('titleInput');
   if (titleEl) state.title = titleEl.value;
   const json = JSON.stringify(state);
   try { localStorage.setItem('bf-pro-state', json); } catch(e){}
   try { sessionStorage.setItem('bf-pro-state', json); } catch(e){}
   try { window.name = 'BF:' + json; } catch(e){}
+}
+
+// Debounced persistence. render() runs on every drag/animation frame, so
+// serializing the whole state to three storage backends each time causes jank
+// (especially on mobile). Coalesce those writes; explicit saveState() calls
+// (mouseup handlers, beforeunload/pagehide) still persist immediately.
+function scheduleSave() {
+  clearTimeout(saveState._t);
+  saveState._t = setTimeout(saveState, 400);
 }
 
 function loadState() {
@@ -206,7 +217,7 @@ function switchFrame(i) {
 }
 
 function addFrame() {
-  if (state.frames.length >= 6) return;
+  if (state.frames.length >= MAX_FRAMES) { showToast('Max ' + MAX_FRAMES + ' frames'); return; }
   pushUndo();
   const prev = state.frames[state.frames.length - 1];
   const nf = createEmptyFrame();
@@ -223,7 +234,7 @@ function addFrame() {
 }
 
 function duplicateFrame() {
-  if (state.frames.length >= 8) { showToast('Max 8 frames'); return; }
+  if (state.frames.length >= MAX_FRAMES) { showToast('Max ' + MAX_FRAMES + ' frames'); return; }
   pushUndo();
   const src = state.frames[state.currentFrame];
   const dup = JSON.parse(JSON.stringify(src));
@@ -235,7 +246,7 @@ function duplicateFrame() {
 
 // UX UPGRADE: duplicate specific frame (for timeline dup button)
 function duplicateFrameAt(i) {
-  if (state.frames.length >= 8) { showToast('Max 8 frames'); return; }
+  if (state.frames.length >= MAX_FRAMES) { showToast('Max ' + MAX_FRAMES + ' frames'); return; }
   pushUndo();
   const src = state.frames[i];
   const dup = JSON.parse(JSON.stringify(src));
@@ -288,7 +299,8 @@ function resetAll() {
   state = {
     mode: state.mode, currentFrame: 0,
     frames: [createEmptyFrame(), createEmptyFrame(), createEmptyFrame()],
-    title: 'Doubles Formation', playerNames: {}, exportBg: state.exportBg
+    title: 'Doubles Formation', playerNames: {}, exportBg: state.exportBg,
+    courtOrientation: state.courtOrientation || 'auto'
   };
   document.getElementById('titleInput').value = state.title;
   undoStack = [];
@@ -390,8 +402,7 @@ function toggleCourtOrientation() {
 }
 
 // ===== SHAREABLE URL =====
-// LZString (MIT) — minimal UTF16 compress/decompress
-var LZString=function(){function o(o,r){if(!t[o]){t[o]={};for(var n=0;n<o.length;n++)t[o][o.charAt(n)]=n}return t[o][r]}var r=String.fromCharCode,n="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",e="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$",t={},i={compressToBase64:function(o){if(null==o)return"";var r=i._compress(o,6,function(o){return n.charAt(o)});switch(r.length%4){default:case 0:return r;case 1:return r+"===";case 2:return r+"==";case 3:return r+"="}},decompressFromBase64:function(r){return null==r?"":""==r?null:i._decompress(r.length,32,function(e){return o(n,r.charAt(e))})},compressToEncodedURIComponent:function(o){return null==o?"":i._compress(o,6,function(o){return e.charAt(o)})},decompressFromEncodedURIComponent:function(n){return null==n?"":""==n?null:(n=n.replace(/ /g,"+"),i._decompress(n.length,32,function(r){return o(e,n.charAt(r))}))},_compress:function(o,n,e){if(null==o)return"";var t,i,s,u={},f={},a="",p="",c="",l=2,d=3,g=2,h=[],v=0,m=0;for(s=0;s<o.length;s+=1)if(a=o.charAt(s),Object.prototype.hasOwnProperty.call(u,a)||(u[a]=d++,f[a]=!0),p=c+a,Object.prototype.hasOwnProperty.call(u,p))c=p;else{if(Object.prototype.hasOwnProperty.call(f,c)){if(c.charCodeAt(0)<256){for(t=0;t<g;t++)v<<=1,m==n-1?(m=0,h.push(e(v)),v=0):m++;for(i=c.charCodeAt(0),t=0;t<8;t++)v=v<<1|1&i,m==n-1?(m=0,h.push(e(v)),v=0):m++,i>>=1}else{for(i=1,t=0;t<g;t++)v=v<<1|i,m==n-1?(m=0,h.push(e(v)),v=0):m++,i=0;for(i=c.charCodeAt(0),t=0;t<16;t++)v=v<<1|1&i,m==n-1?(m=0,h.push(e(v)),v=0):m++,i>>=1}0==--l&&(l=Math.pow(2,g),g++),delete f[c]}else for(i=u[c],t=0;t<g;t++)v=v<<1|1&i,m==n-1?(m=0,h.push(e(v)),v=0):m++,i>>=1;0==--l&&(l=Math.pow(2,g),g++),u[p]=d++,c=a}if(""!==c){if(Object.prototype.hasOwnProperty.call(f,c)){if(c.charCodeAt(0)<256){for(t=0;t<g;t++)v<<=1,m==n-1?(m=0,h.push(e(v)),v=0):m++;for(i=c.charCodeAt(0),t=0;t<8;t++)v=v<<1|1&i,m==n-1?(m=0,h.push(e(v)),v=0):m++,i>>=1}else{for(i=1,t=0;t<g;t++)v=v<<1|i,m==n-1?(m=0,h.push(e(v)),v=0):m++,i=0;for(i=c.charCodeAt(0),t=0;t<16;t++)v=v<<1|1&i,m==n-1?(m=0,h.push(e(v)),v=0):m++,i>>=1}0==--l&&(l=Math.pow(2,g),g++),delete f[c]}else for(i=u[c],t=0;t<g;t++)v=v<<1|1&i,m==n-1?(m=0,h.push(e(v)),v=0):m++,i>>=1;0==--l&&(l=Math.pow(2,g),g++)}for(i=2,t=0;t<g;t++)v=v<<1|1&i,m==n-1?(m=0,h.push(e(v)),v=0):m++,i>>=1;for(;;){if(v<<=1,m==n-1){h.push(e(v));break}m++}return h.join("")},_decompress:function(o,n,e){var t,i,s,u,f,a,p,c=[],l=4,d=4,g=3,h="",v=[],m={val:e(0),position:n,index:1};for(t=0;t<3;t+=1)c[t]=t;for(s=0,f=Math.pow(2,2),a=1;a!=f;)u=m.val&m.position,m.position>>=1,0==m.position&&(m.position=n,m.val=e(m.index++)),s|=(u>0?1:0)*a,a<<=1;switch(s){case 0:for(s=0,f=Math.pow(2,8),a=1;a!=f;)u=m.val&m.position,m.position>>=1,0==m.position&&(m.position=n,m.val=e(m.index++)),s|=(u>0?1:0)*a,a<<=1;p=r(s);break;case 1:for(s=0,f=Math.pow(2,16),a=1;a!=f;)u=m.val&m.position,m.position>>=1,0==m.position&&(m.position=n,m.val=e(m.index++)),s|=(u>0?1:0)*a,a<<=1;p=r(s);break;case 2:return""}for(c[3]=p,i=p,v.push(p);;){if(m.index>o)return"";for(s=0,f=Math.pow(2,g),a=1;a!=f;)u=m.val&m.position,m.position>>=1,0==m.position&&(m.position=n,m.val=e(m.index++)),s|=(u>0?1:0)*a,a<<=1;switch(p=s){case 0:for(s=0,f=Math.pow(2,8),a=1;a!=f;)u=m.val&m.position,m.position>>=1,0==m.position&&(m.position=n,m.val=e(m.index++)),s|=(u>0?1:0)*a,a<<=1;c[d++]=r(s),p=d-1,l--;break;case 1:for(s=0,f=Math.pow(2,16),a=1;a!=f;)u=m.val&m.position,m.position>>=1,0==m.position&&(m.position=n,m.val=e(m.index++)),s|=(u>0?1:0)*a,a<<=1;c[d++]=r(s),p=d-1,l--;break;case 2:return v.join("")}if(0==l&&(l=Math.pow(2,g),g++),c[p])h=c[p];else{if(p!==d)return null;h=i+i.charAt(0)}v.push(h),c[d++]=i+h.charAt(0),i=h,0==--l&&(l=Math.pow(2,g),g++)}}};return i}();
+// LZString is loaded from vendor/lz-string.js (see index.html) and exposed as a global.
 
 function shareState() {
   // Build compact representation

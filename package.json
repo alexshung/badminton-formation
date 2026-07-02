@@ -1,0 +1,28 @@
+{
+  "name": "badminton-formation",
+  "version": "2.0.0",
+  "description": "Badminton doubles formation & rally diagramming tool for coaches.",
+  "type": "commonjs",
+  "license": "MIT",
+  "homepage": "https://alexshung.github.io/badminton-formation/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alexshung/badminton-formation.git"
+  },
+  "scripts": {
+    "dev": "serve -l 5050 .",
+    "start": "serve -l 5050 .",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "bump": "node scripts/bump-version.js"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.15.0",
+    "eslint": "^9.15.0",
+    "globals": "^15.12.0",
+    "prettier": "^3.3.3",
+    "serve": "^14.2.4"
+  }
+}

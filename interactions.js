@@ -34,6 +34,19 @@ function selectPlayer(id) {
 // Hotkeys
 document.addEventListener('keydown', function(e) {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  // Presentation mode installs its own key handler (arrows/space step slides).
+  // Skip the editor hotkeys so we don't, e.g., start the editor animation
+  // underneath the presentation when Space is pressed.
+  if (document.body.classList.contains('presentation')) return;
+  // Arrow keys navigate frames in the editor (matches the onboarding tip).
+  if (e.key === 'ArrowLeft') {
+    if (state.currentFrame > 0) switchFrame(state.currentFrame - 1);
+    e.preventDefault(); return;
+  }
+  if (e.key === 'ArrowRight') {
+    if (state.currentFrame < state.frames.length - 1) switchFrame(state.currentFrame + 1);
+    e.preventDefault(); return;
+  }
   const keyMap = { '1': 'A1', '2': 'A2', '3': 'B1', '4': 'B2' };
   if (keyMap[e.key]) { selectPlayer(keyMap[e.key]); e.preventDefault(); }
   // UX UPGRADE: Shot type hotkeys — q,w,e,r,t,y
