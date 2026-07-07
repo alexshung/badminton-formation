@@ -570,6 +570,77 @@ body.presentation .sidebar-backdrop, body.presentation .toast { display: none !i
 }
 .onb-tip-close:hover { color: var(--text); border-color: var(--accent); }
 
+/* === FTUX: Welcome / Intro overlay === */
+.welcome-overlay {
+  display: none; position: fixed; inset: 0; z-index: 9600;
+  background: rgba(0, 0, 0, .62); backdrop-filter: blur(5px);
+  align-items: center; justify-content: center; padding: 16px;
+}
+.welcome-overlay.active { display: flex; }
+.welcome-card {
+  position: relative; background: var(--surface);
+  border: 1px solid var(--border-light); border-radius: 14px;
+  padding: 26px 26px 20px; max-width: 460px; width: 100%;
+  max-height: calc(100vh - 32px); overflow-y: auto;
+  box-shadow: var(--shadow-lg); animation: welcomePop .28s ease;
+}
+@keyframes welcomePop { from { transform: translateY(14px) scale(.98); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+.welcome-x {
+  position: absolute; top: 12px; right: 12px; width: 30px; height: 30px;
+  border-radius: 8px; border: 1px solid var(--border); background: transparent;
+  color: var(--muted); cursor: pointer; font-size: 14px; line-height: 1;
+}
+.welcome-x:hover { color: var(--text); border-color: var(--accent); }
+.welcome-badge {
+  width: 48px; height: 48px; border-radius: 12px; font-size: 26px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--accent-dim); border: 1px solid var(--accent);
+  margin-bottom: 14px;
+}
+.welcome-card h2 { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 8px; line-height: 1.3; }
+.welcome-sub { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 18px; }
+.welcome-steps { list-style: none; display: flex; flex-direction: column; gap: 12px; margin: 0 0 20px; padding: 0; }
+.welcome-steps li { display: flex; gap: 12px; align-items: flex-start; }
+.ws-icon {
+  flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--accent); color: #fff; font-size: 13px; font-weight: 700;
+}
+.ws-text { font-size: 13px; color: var(--text); line-height: 1.5; }
+.ws-text strong { color: var(--accent); font-weight: 600; }
+.welcome-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.welcome-actions .btn { min-height: 40px; padding: 0 18px; }
+
+/* === FTUX: Persistent help / reopen-guide button === */
+.help-fab {
+  position: fixed; z-index: 9400; right: 16px; bottom: 42px;
+  width: 42px; height: 42px; border-radius: 50%;
+  border: 1px solid var(--border-light); background: var(--surface);
+  color: var(--accent); font-size: 20px; font-weight: 700; cursor: pointer;
+  box-shadow: var(--shadow-lg); transition: transform .12s, background .12s, color .12s;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font);
+}
+.help-fab:hover { background: var(--accent); color: #fff; }
+.help-fab:active { transform: scale(.9); }
+
+/* === FTUX: Empty-state hint over the court === */
+.court-empty-hint {
+  display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 40; pointer-events: none;
+  flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; text-align: center; padding: 20px;
+}
+.court-empty-hint.active { display: flex; }
+.ceh-arrow { font-size: 30px; animation: cehBob 1.6s ease-in-out infinite; }
+@keyframes cehBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+.ceh-text {
+  font-size: 14px; font-weight: 600; color: var(--text);
+  background: rgba(18, 18, 31, .92); border: 1px solid var(--accent);
+  border-radius: 10px; padding: 10px 16px; max-width: 320px;
+  box-shadow: var(--shadow-lg); backdrop-filter: blur(6px);
+}
+
 /* Timeline dot indicators */
 .frame-dots {
   display: flex; gap: 2px; justify-content: center; margin-bottom: 2px; min-height: 6px;
@@ -588,4 +659,18 @@ body.presentation .sidebar-backdrop, body.presentation .toast { display: none !i
   .timeline { padding: 6px 10px; min-height: 48px; }
   .frame-btn { min-height: 36px; min-width: 48px; }
   .frame-btn .frame-dup { display: none !important; }
+
+  /* FTUX: keep help button clear of the shot tray, floating tools and sidebar FAB */
+  .help-fab { width: 38px; height: 38px; font-size: 18px; right: 8px; bottom: 90px; opacity: .85; }
+  .welcome-card { padding: 22px 18px 16px; border-radius: 14px 14px 0 0; align-self: flex-end; max-height: 88vh; }
+  .welcome-overlay { align-items: flex-end; padding: 0; }
+  .ceh-text { font-size: 13px; padding: 8px 14px; }
+}
+
+/* Very small phones (~375px and below) */
+@media (max-width: 420px) {
+  .welcome-card h2 { font-size: 16px; }
+  .welcome-sub { font-size: 12px; }
+  .ws-text { font-size: 12px; }
+  .court-empty-hint { padding: 12px; }
 }

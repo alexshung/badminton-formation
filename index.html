@@ -77,6 +77,12 @@
 
     <div class="court-container" id="courtContainer"></div>
 
+    <!-- Empty-state hint (shown over the court when no players placed yet) -->
+    <div class="court-empty-hint" id="courtEmptyHint" aria-hidden="true">
+      <div class="ceh-arrow">👆</div>
+      <p class="ceh-text" id="courtEmptyHintText">Tap the court to place your first player</p>
+    </div>
+
     <!-- Shot Tray — always visible, tap to select shot type -->
     <div class="shot-tray" id="shotTray">
       <button class="shot-tray-btn" data-shot="drop" onclick="setShotTypeQuick('drop')" title="Drop [Q]">
@@ -272,6 +278,41 @@
   </div>
 </div>
 
+<!-- Welcome / Intro overlay (first visit) -->
+<div class="welcome-overlay" id="welcomeOverlay" onclick="if(event.target===this)skipWelcome()">
+  <div class="welcome-card" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+    <button class="welcome-x" onclick="skipWelcome()" aria-label="Skip intro">✕</button>
+    <div class="welcome-badge">🏸</div>
+    <h2 id="welcomeTitle">Welcome to the Badminton Formation Tool</h2>
+    <p class="welcome-sub">Diagram doubles formations and rallies — place players, draw shots, build the rally frame by frame, then export or share. No account, nothing to install.</p>
+    <ul class="welcome-steps" id="welcomeSteps">
+      <li>
+        <span class="ws-icon">1</span>
+        <span class="ws-text"><strong><span data-verb="tap-click">Tap or click</span> the court</strong> to place the selected player. <span data-verb="drag">Drag</span> a player to reposition.</span>
+      </li>
+      <li>
+        <span class="ws-icon">2</span>
+        <span class="ws-text"><strong>Pick a shot</strong> from the shot tray, then <span data-verb="tap-click">tap or click</span> where the shuttle lands — it auto-starts from the nearest player.</span>
+      </li>
+      <li>
+        <span class="ws-icon">3</span>
+        <span class="ws-text"><strong>Add frames</strong> in the timeline to build a rally, then press Play <span data-verb="or-space">(or Space)</span> to animate it.</span>
+      </li>
+      <li>
+        <span class="ws-icon">4</span>
+        <span class="ws-text"><strong><span data-verb="right-long">Right-click</span> to delete</strong> a player or shot. <span data-verb="tools-hint">Open the tools panel</span> for coverage zones, presets and annotations.</span>
+      </li>
+    </ul>
+    <div class="welcome-actions">
+      <button class="btn btn-ghost btn-sm" onclick="skipWelcome()">Skip</button>
+      <button class="btn btn-primary btn-sm" onclick="dismissWelcome()">Get started</button>
+    </div>
+  </div>
+</div>
+
+<!-- Persistent help / reopen-guide button -->
+<button class="help-fab" id="helpFab" onclick="openWelcome()" aria-label="Show intro guide" title="How it works">?</button>
+
 <!-- Presentation Mode Overlay -->
 <div class="presentation-overlay" id="presentationOverlay">
   <div class="presentation-court" id="presentationCourt"></div>
@@ -291,5 +332,6 @@
 <script src="animation.js?v=1781100000"></script>
 <script src="export.js?v=1781100000"></script>
 <script src="app.js?v=1781100000"></script>
+<script src="harness.js?v=1781100000"></script>
 </body>
 </html>

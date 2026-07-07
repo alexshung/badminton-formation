@@ -10,6 +10,7 @@ function render() {
   updateStatus();
   updateCursor();
   updatePlayerPalette();
+  updateEmptyHint();
   scheduleSave();
 }
 
@@ -257,16 +258,122 @@ if (expBgEl) expBgEl.addEventListener('change', function() { state.exportBg = th
 
 updateOrientBtn();
 
-// ===== ONBOARDING =====
+// ===== ONBOARDING / FIRST-TIME USER EXPERIENCE =====
+
+// Touch vs mouse: coarse pointer (or a touch stack) means "tap"; otherwise "click".
+// Lazily computed + memoized so it's safe to call from render() during init,
+// regardless of where this block sits in the load order.
+let _isTouchPrimary = null;
+function deviceIsTouch() {
+  if (_isTouchPrimary === null) {
+    _isTouchPrimary =
+      (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) ||
+      'ontouchstart' in window ||
+      navigator.maxTouchPoints > 0;
+  }
+  return _isTouchPrimary;
+}
+
+function safeGetLS(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch (e) {
+    return null;
+  }
+}
+
+function safeSetLS(key, val) {
+  try {
+    localStorage.setItem(key, val);
+  } catch (e) {
+    /* storage unavailable (private mode / disabled) — degrade gracefully */
+  }
+}
+
+// Fill the welcome overlay with device-appropriate wording so the guidance
+// matches how the user actually interacts (tap vs click, long-press vs right-click).
+function applyDeviceVerbs() {
+  const steps = document.getElementById('welcomeSteps');
+  if (!steps) return;
+  const set = (verb, text) => {
+    steps.querySelectorAll('[data-verb="' + verb + '"]').forEach((el) => {
+      el.textContent = text;
+    });
+  };
+  const touch = deviceIsTouch();
+  set('tap-click', touch ? 'Tap' : 'Click');
+  set('drag', 'Drag'); // same gesture on both, kept for consistent wording
+  set('or-space', touch ? '' : '(or Space)');
+  set('right-long', touch ? 'Long-press' : 'Right-click');
+  set('tools-hint', touch ? 'Open the tools panel (🛠 button)' : 'Open the tools panel');
+}
+
+function openWelcome() {
+  applyDeviceVerbs();
+  const el = document.getElementById('welcomeOverlay');
+  if (el) el.classList.add('active');
+  // Hide the compact tip while the full guide is up so they don't stack.
+  const tip = document.getElementById('onboardingOverlay');
+  if (tip) tip.classList.remove('active');
+}
+
+function closeWelcome() {
+  const el = document.getElementById('welcomeOverlay');
+  if (el) el.classList.remove('active');
+  safeSetLS('bf-welcomed', '1');
+  updateEmptyHint();
+}
+
+// "Get started" — close the guide and leave a lightweight tip up on first run.
+function dismissWelcome() {
+  closeWelcome();
+  showOnboarding();
+}
+
+// "Skip" / backdrop / ✕ — close and don't nag with the tip either.
+function skipWelcome() {
+  closeWelcome();
+  safeSetLS('bf-onboarded', '1');
+}
+
 function showOnboarding() {
-  if (localStorage.getItem('bf-onboarded')) return;
-  document.getElementById('onboardingOverlay').classList.add('active');
+  if (safeGetLS('bf-onboarded')) return;
+  const el = document.getElementById('onboardingOverlay');
+  if (el) el.classList.add('active');
 }
 
 function dismissOnboarding() {
-  document.getElementById('onboardingOverlay').classList.remove('active');
-  localStorage.setItem('bf-onboarded', '1');
+  const el = document.getElementById('onboardingOverlay');
+  if (el) el.classList.remove('active');
+  safeSetLS('bf-onboarded', '1');
 }
 
-// Show onboarding on first visit (after a short delay)
-setTimeout(showOnboarding, 500);
+// Empty-state hint: nudge first-time users to place a player when the current
+// frame has none. Uses the device-appropriate verb and hides once shooting.
+function updateEmptyHint() {
+  const hint = document.getElementById('courtEmptyHint');
+  if (!hint) return;
+  const f = currentFrameData();
+  const hasPlayers = f && f.players && Object.keys(f.players).length > 0;
+  // Only guide on the first frame, only when nothing is placed, and never
+  // while the welcome guide is open.
+  const welcomeOpen = document.getElementById('welcomeOverlay');
+  const isWelcomeOpen = welcomeOpen && welcomeOpen.classList.contains('active');
+  const show = !hasPlayers && state.currentFrame === 0 && !isWelcomeOpen;
+  hint.classList.toggle('active', show);
+  if (show) {
+    const txt = document.getElementById('courtEmptyHintText');
+    if (txt) {
+      const verb = deviceIsTouch() ? 'Tap' : 'Click';
+      const who = getPlayerLabel(selectedPlayer);
+      txt.textContent = `${verb} the court to place ${who} — then add more players and draw shots`;
+    }
+  }
+}
+
+// Show the welcome overlay on first visit (after a short delay so layout settles).
+if (!safeGetLS('bf-welcomed')) {
+  setTimeout(openWelcome, 400);
+} else {
+  setTimeout(showOnboarding, 500);
+}

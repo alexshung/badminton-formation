@@ -62,6 +62,8 @@ document.addEventListener('keydown', function(e) {
     coveragePoints = []; coveragePreview = null;
     const modal = document.getElementById('helpModal');
     if (modal) modal.classList.remove('show');
+    const welcome = document.getElementById('welcomeOverlay');
+    if (welcome && welcome.classList.contains('active') && typeof skipWelcome === 'function') skipWelcome();
     render();
   }
   if ((e.key === 'z' || e.key === 'Z') && (e.ctrlKey || e.metaKey)) { e.preventDefault(); undo(); }
