@@ -12,9 +12,11 @@ document.addEventListener('click', function(e) {
   if (!e.target.closest('.export-dropdown')) hideExportMenu();
 });
 
-function exportImage() {
-  const w = parseInt(document.getElementById('expW').value) || 1200;
-  const h = parseInt(document.getElementById('expH').value) || 630;
+// Build the full export SVG string (title + court + legend + notes) for the
+// current state at the given pixel size. Extracted so both the interactive PNG
+// download (exportImage) and the programmatic API (BF.exportSVG/exportPNG) share
+// one code path instead of duplicating the layout math.
+function buildExportSVG(w, h) {
   const title = document.getElementById('titleInput').value || 'Badminton Formation';
   const isDark = (document.getElementById('exportBg') || {}).value !== 'light';
   const bgColor = isDark ? '#111318' : '#FAFAFA';
@@ -75,31 +77,58 @@ function exportImage() {
     });
   }
   svg += '</svg>';
+  return svg;
+}
 
-  // Render
-  const canvas = document.getElementById('exportCanvas');
-  canvas.width = w; canvas.height = h;
-  const ctx = canvas.getContext('2d');
-  const img = new Image();
-  img.onload = function() {
-    ctx.fillStyle = bgColor;
-    ctx.fillRect(0, 0, w, h);
-    ctx.drawImage(img, 0, 0, w, h);
-    try {
-      const a = document.createElement('a');
-      a.download = title.replace(/[^a-zA-Z0-9]/g, '_') + '.png';
-      a.href = canvas.toDataURL('image/png');
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      showToast('PNG exported');
-    } catch(e) {
-      const url = canvas.toDataURL('image/png');
-      const win = window.open();
-      if (win) { win.document.write('<img src="' + url + '" style="max-width:100%"/>'); win.document.title = 'Right-click to save'; }
-      else showToast('Export failed — allow popups');
-    }
-  };
-  img.onerror = () => showToast('Export failed — try smaller resolution');
-  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+// Rasterize an SVG string onto the shared export canvas at w×h. Returns a
+// Promise that resolves with the canvas once the image has painted (or rejects
+// on decode error). Shared by exportImage (download) and BF.exportPNG (data URL).
+function renderSVGToCanvas(svg, w, h, bgColor) {
+  return new Promise(function (resolve, reject) {
+    const canvas = document.getElementById('exportCanvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    img.onload = function () {
+      ctx.fillStyle = bgColor || '#111318';
+      ctx.fillRect(0, 0, w, h);
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(canvas);
+    };
+    img.onerror = function () {
+      reject(new Error('SVG decode failed'));
+    };
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  });
+}
+
+function exportImage() {
+  const w = parseInt(document.getElementById('expW').value) || 1200;
+  const h = parseInt(document.getElementById('expH').value) || 630;
+  const title = document.getElementById('titleInput').value || 'Badminton Formation';
+  const isDark = (document.getElementById('exportBg') || {}).value !== 'light';
+  const bgColor = isDark ? '#111318' : '#FAFAFA';
+  const svg = buildExportSVG(w, h);
+
+  renderSVGToCanvas(svg, w, h, bgColor)
+    .then(function (canvas) {
+      try {
+        const a = document.createElement('a');
+        a.download = title.replace(/[^a-zA-Z0-9]/g, '_') + '.png';
+        a.href = canvas.toDataURL('image/png');
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        showToast('PNG exported');
+      } catch (e) {
+        const url = canvas.toDataURL('image/png');
+        const win = window.open();
+        if (win) { win.document.write('<img src="' + url + '" style="max-width:100%"/>'); win.document.title = 'Right-click to save'; }
+        else showToast('Export failed — allow popups');
+      }
+    })
+    .catch(function () {
+      showToast('Export failed — try smaller resolution');
+    });
 }
 
 function buildOverlaySVGContent() {
@@ -173,56 +202,50 @@ function buildPanelSVGContent() {
 }
 
 // ===== VIDEO EXPORT =====
-function exportVideo() {
-  const w = parseInt(document.getElementById('expW').value) || 1200;
-  const h = parseInt(document.getElementById('expH').value) || 630;
-  const title = document.getElementById('titleInput').value || 'Badminton Formation';
-  const isDark = (document.getElementById('exportBg') || {}).value !== 'light';
-  const bgColor = isDark ? '#111318' : '#FAFAFA';
-  const speed = parseFloat(document.getElementById('animSpeed').value) || 1;
 
-  const canvas = document.getElementById('exportCanvas');
-  canvas.width = w; canvas.height = h;
-  const ctx = canvas.getContext('2d');
+// Record the rally animation to a WebM Blob using canvas.captureStream +
+// MediaRecorder. Returns a Promise<Blob>. Both the interactive download
+// (exportVideo) and the programmatic API (BF.exportVideo) drive this so the
+// frame-by-frame animation math lives in exactly one place.
+// opts: { w, h, title, bgColor, speed }
+function captureVideoBlob(opts) {
+  return new Promise(function (resolve, reject) {
+    const w = opts.w;
+    const h = opts.h;
+    const title = opts.title;
+    const bgColor = opts.bgColor;
+    const speed = opts.speed || 1;
 
-  // Check for MediaRecorder support
-  if (!('MediaRecorder' in window)) {
-    showToast('Video export not supported in this browser');
-    return;
-  }
+    const canvas = document.getElementById('exportCanvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
 
-  const stream = canvas.captureStream(30);
-  let mimeType = 'video/webm;codecs=vp9';
-  if (!MediaRecorder.isTypeSupported(mimeType)) {
-    mimeType = 'video/webm';
-    if (!MediaRecorder.isTypeSupported(mimeType)) {
-      showToast('WebM recording not supported');
+    // Check for MediaRecorder support
+    if (!('MediaRecorder' in window)) {
+      reject(new Error('MediaRecorder not supported in this environment'));
       return;
     }
-  }
 
-  const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 4000000 });
-  const chunks = [];
-  recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
-  recorder.onstop = () => {
-    const blob = new Blob(chunks, { type: 'video/webm' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = title.replace(/[^a-zA-Z0-9]/g, '_') + '.webm';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    showToast('Video exported!');
-    document.getElementById('exportBtn').textContent = '▾';
-    document.getElementById('exportBtn').disabled = false;
-  };
+    const stream = canvas.captureStream(30);
+    let mimeType = 'video/webm;codecs=vp9';
+    if (!MediaRecorder.isTypeSupported(mimeType)) {
+      mimeType = 'video/webm';
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        reject(new Error('WebM recording not supported'));
+        return;
+      }
+    }
 
-  showToast('Recording video...');
-  document.getElementById('exportBtn').textContent = '●';
-  document.getElementById('exportBtn').disabled = true;
-  recorder.start();
+    const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 4000000 });
+    const chunks = [];
+    recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+    recorder.onstop = () => {
+      resolve(new Blob(chunks, { type: 'video/webm' }));
+    };
 
-  // Build animation frames for each game frame
+    recorder.start();
+
+    // Build animation frames for each game frame
   const ACTION_DUR = 1.0 / speed;
   const PAUSE_DUR = 0.5 / speed;
   const FPS = 30;
@@ -383,5 +406,38 @@ function exportVideo() {
   }
 
   // Start the render loop
-  renderVideoFrame();
+    renderVideoFrame();
+  });
+}
+
+// Interactive "Export Video" button: record the rally and download the WebM.
+function exportVideo() {
+  const w = parseInt(document.getElementById('expW').value) || 1200;
+  const h = parseInt(document.getElementById('expH').value) || 630;
+  const title = document.getElementById('titleInput').value || 'Badminton Formation';
+  const isDark = (document.getElementById('exportBg') || {}).value !== 'light';
+  const bgColor = isDark ? '#111318' : '#FAFAFA';
+  const speed = parseFloat(document.getElementById('animSpeed').value) || 1;
+
+  showToast('Recording video...');
+  document.getElementById('exportBtn').textContent = '●';
+  document.getElementById('exportBtn').disabled = true;
+
+  captureVideoBlob({ w, h, title, bgColor, speed })
+    .then(function (blob) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = title.replace(/[^a-zA-Z0-9]/g, '_') + '.webm';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Video exported!');
+    })
+    .catch(function (err) {
+      showToast(err && err.message ? err.message : 'Video export failed');
+    })
+    .finally(function () {
+      document.getElementById('exportBtn').textContent = '▾';
+      document.getElementById('exportBtn').disabled = false;
+    });
 }

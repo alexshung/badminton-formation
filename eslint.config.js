@@ -37,4 +37,13 @@ module.exports = [
       globals: { ...globals.node },
     },
   },
+  {
+    // ESM Node scripts (headless agent driver). Uses top-level await + import.
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      globals: { ...globals.node },
+    },
+  },
 ];

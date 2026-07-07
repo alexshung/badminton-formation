@@ -16,7 +16,8 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "bump": "node scripts/bump-version.js"
+    "bump": "node scripts/bump-version.js",
+    "agent-driver": "node scripts/agent-driver.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.15.0",
