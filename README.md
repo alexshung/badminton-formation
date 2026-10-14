@@ -58,6 +58,7 @@ npm run dev      # serves at http://localhost:5050
 | `npm run format:check` | Prettier check (CI-friendly) |
 | `npm run bump` | Refresh the `?v=` cache-busting version on all assets before deploy |
 | `npm run dema-render -- <scene.json>` | DEMA batch render (needs Playwright) |
+| `npm run dema-video -- <scene.json> --check` | DEMA deterministic WebM (needs Playwright + ffmpeg with libvpx-vp9) |
 
 ## Project structure
 
@@ -75,6 +76,7 @@ dema.js               DEMA render mode: deterministic per-frame renders + metada
 harness.js            window.BF agent control API (docs/AGENT_API.md)
 scripts/agent-driver.mjs  Headless Playwright demo driver
 scripts/dema-render.mjs   DEMA batch renderer: scene JSON -> PNGs + metadata
+scripts/dema-video.mjs    DEMA video: dense scene JSON -> deterministic WebM + metadata
 scripts/bump-version.js  Deploy helper (cache-bust bump)
 examples/dema/        Example DEMA scene specs
 ```
@@ -165,6 +167,28 @@ The same features are available in the editor state through `window.BF`:
 `setShotArrows`, `setFrameTime`, `setShuttlePath`, `setFrameTrail`,
 `setGameMode`, `loadScene`, `renderDemaSVG`, `exportDemaPNG`, `demaMetadata`
 (see [docs/AGENT_API.md](docs/AGENT_API.md)).
+
+### Deterministic video (WebM)
+
+The editor's WebM export (`export.js`) records a canvas in real time with
+`MediaRecorder`, so its bytes depend on timing and machine load. For DEMA
+video inputs use `scripts/dema-video.mjs` instead:
+
+```bash
+node scripts/dema-video.mjs scene_video.json --fps 25 --out out/dema-video --check
+```
+
+- The scene's `frames[]` must be sampled at exactly `1/fps` spacing (one scene
+  frame per video frame; checked). Set `"timestamps": false` when the solver
+  should time motion from the frames rather than read a label.
+- Every frame is rasterized by `dema-render.mjs --check` (byte-identical PNGs),
+  then encoded with ffmpeg `libvpx-vp9`, single-threaded and bitexact, fixed
+  GOP (2 s), CRF 32, no metadata. `--check` encodes twice and exits 2 unless the
+  two WebMs are byte-identical.
+- Writes `<out>/<name>/video.webm` and a grader-side `metadata.json` (fps,
+  frame count, duration, sha256, ffmpeg build, per-frame times, court→pixel
+  mapping). Same-bytes guarantee holds for the same Chromium and ffmpeg/libvpx
+  builds (both recorded).
 
 ### DEMA policy
 
