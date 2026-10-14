@@ -82,6 +82,29 @@ operate on the **current frame** unless they change it.
 
 A shot is stored as `{ type, x1, y1, x2, y2 }` (origin → landing).
 
+### Render options (v1.1)
+
+| Method | Params | Returns | Notes |
+| --- | --- | --- | --- |
+| `setShotArrows(show)` | boolean | `BF` | `false` hides shot path, arrowhead, landing rings, shot-name pill and shot legend in PNG/SVG/video exports. Default shown |
+| `setFrameTime(t, index?)` | seconds or `null` | `BF` | Frame time, drawn as `t = 0.40 s` (panel header, overlay legend, video HUD, DEMA) |
+| `getFrameTimes()` | — | array | One entry per frame, `null` when unset |
+| `setShuttlePath(samples, opts?)` | `[{x, y, h, t}]`, `{ units: 'court' \| 'm', window }` | `BF` | Fading trail: a timed frame shows samples with `t <= frame.t`. No line, arrow or endpoint marker. `null` clears |
+| `setFrameTrail(samples, index?, opts?)` | as above | `BF` | Per-frame trail overriding the shared path |
+| `setGameMode(mode)` | `'singles'` \| `'doubles'` | `BF` | Singles: singles side lines, A1 vs B1 only (A2/B2 hidden, not deleted) |
+| `metresToCourt(x, y)` / `courtToMetres(x, y)` | — | `{x, y}` | Court is drawn at 100 units per metre (`courtInfo().unitsPerMetre`) |
+
+`exportSVG` / `exportPNG` also take `{ arrows: false }` for a one-off export.
+
+### DEMA render mode (v1.1)
+
+| Method | Params | Returns | Notes |
+| --- | --- | --- | --- |
+| `loadScene(spec)` | scene spec (metres) | `BF` | See README "DEMA render mode". Throws on malformed specs |
+| `renderDemaSVG(index?, opts?)` | frame index, option overrides | `{ svg, width, height }` | Deterministic per-frame SVG |
+| `exportDemaPNG(index?, opts?)` | as above | `Promise<{ dataUrl, width, height }>` | Raw canvas PNG; `scripts/dema-render.mjs` strips metadata chunks |
+| `demaMetadata(opts?)` | — | object | Image size, court-metres -> pixel matrix, strip mapping, per-frame positions |
+
 ### Animation
 
 | Method | Params | Returns | Notes |
@@ -199,6 +222,9 @@ const { dataUrl } = await BF.exportPNG({ width: 1200, height: 630 });
 
 - **Video** depends on the browser's `MediaRecorder` + WebM support; there is no
   MP4 encoder in-browser. Assemble MP4 externally from per-frame PNGs if needed.
+- **DEMA batch rendering:** [`scripts/dema-render.mjs`](../scripts/dema-render.mjs)
+  turns scene JSON into PNGs + metadata, with `--check` for byte-identical
+  re-renders. See the README.
 - **Fixed roster:** exactly four player slots (`A1`, `A2`, `B1`, `B2`), matching
   doubles. `addPlayer` throws if a team's two slots are full.
 - **`reset()` clears the undo stack** (like the app's Reset All) so it starts
