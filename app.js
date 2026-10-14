@@ -263,10 +263,13 @@ updateOrientBtn();
 
 // Touch vs mouse: coarse pointer (or a touch stack) means "tap"; otherwise "click".
 // Lazily computed + memoized so it's safe to call from render() during init,
-// regardless of where this block sits in the load order.
-let _isTouchPrimary = null;
+// regardless of where this block sits in the load order. `var` (not `let`):
+// the init render() above runs before this line, and a `let` would still be in
+// its temporal dead zone there — throwing and aborting the rest of app.js on a
+// fresh visit with an empty court.
+var _isTouchPrimary = null;
 function deviceIsTouch() {
-  if (_isTouchPrimary === null) {
+  if (_isTouchPrimary == null) {
     _isTouchPrimary =
       (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) ||
       'ontouchstart' in window ||
