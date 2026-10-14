@@ -354,6 +354,20 @@
       return courtToMetres(x, y);
     },
 
+    /** 'singles' draws singles side lines and shows only A1 vs B1 (A2/B2
+     *  hidden, not deleted); 'doubles' (default) restores the full roster. */
+    setGameMode: function (mode) {
+      requireGlobals();
+      if (mode !== 'singles' && mode !== 'doubles') {
+        throw new Error("setGameMode expects 'singles' or 'doubles'");
+      }
+      if (mode === 'singles') state.gameMode = 'singles';
+      else delete state.gameMode;
+      render();
+      saveState();
+      return this;
+    },
+
     /** Set the diagram title (baked into exports). */
     setTitle: function (title) {
       requireGlobals();

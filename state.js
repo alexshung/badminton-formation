@@ -136,6 +136,9 @@ function currentFrameData() { return state.frames[state.currentFrame]; }
 //                         samples with t <= frame.t as a fading trail.
 //   state.trailWindow     seconds of history the trail keeps (default: all).
 //   frame.trail           per-frame sample list; overrides shuttlePath for that frame.
+//   state.gameMode        'singles' draws singles sidelines and shows only A1 vs B1
+//                         (A2/B2 hidden). Default 'doubles'. Placing just one player
+//                         per side in doubles mode keeps working as before.
 
 // Monotonic id source for SVG <marker> ids. Replaces Math.random() so the same
 // state always serializes to the same SVG string (deterministic exports).
@@ -147,6 +150,10 @@ function svgUid(prefix) {
 function resetSvgUid() { svgUidCounter = 0; }
 
 function shotArrowsShown() { return state.showShotArrows !== false; }
+
+const SINGLES_PLAYERS = ['A1', 'B1'];
+function isSinglesMode() { return state.gameMode === 'singles'; }
+function isPlayerShown(pid) { return !isSinglesMode() || SINGLES_PLAYERS.indexOf(pid) !== -1; }
 
 function hasFrameTime(f) { return !!f && typeof f.t === 'number' && isFinite(f.t); }
 function formatFrameTime(t) { return 't = ' + t.toFixed(2) + ' s'; }
@@ -495,7 +502,8 @@ function shareState() {
     pn: Object.keys(state.playerNames).length ? state.playerNames : undefined,
     sa: state.showShotArrows === false ? 0 : undefined,
     sp: Array.isArray(state.shuttlePath) && state.shuttlePath.length ? state.shuttlePath : undefined,
-    tw: typeof state.trailWindow === 'number' ? state.trailWindow : undefined
+    tw: typeof state.trailWindow === 'number' ? state.trailWindow : undefined,
+    gm: isSinglesMode() ? 's' : undefined
   };
   const json = JSON.stringify(compact);
   const compressed = LZString.compressToEncodedURIComponent(json);
@@ -532,6 +540,8 @@ function loadFromHash() {
     else delete state.shuttlePath;
     if (typeof compact.tw === 'number') state.trailWindow = compact.tw;
     else delete state.trailWindow;
+    if (compact.gm === 's') state.gameMode = 'singles';
+    else delete state.gameMode;
     state.frames = compact.f.map(cf => {
       const f = {
         players: cf.p || {},

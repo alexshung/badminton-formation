@@ -37,7 +37,7 @@ function renderOverlay(container, interactive) {
     if (f.annotations) svg += annotationSVG(f.annotations, baseOp);
 
     for (const pid in f.movements) {
-      if (f.players[pid]) svg += movementSVG(pid, f.players[pid].x, f.players[pid].y, f.movements[pid].x, f.movements[pid].y, baseOp);
+      if (f.players[pid] && isPlayerShown(pid)) svg += movementSVG(pid, f.players[pid].x, f.players[pid].y, f.movements[pid].x, f.movements[pid].y, baseOp);
     }
     if (f.shot) {
       svg += shotSVG(f.shot, baseOp, interactive && isActive);
@@ -59,6 +59,7 @@ function renderOverlay(container, interactive) {
       svg += coveragePreviewSVG(coveragePoints, coveragePreview, selectedPlayer);
     }
     for (const pid in f.players) {
+      if (!isPlayerShown(pid)) continue;
       const p = f.players[pid];
       svg += playerSVG(pid, p.x, p.y, baseOp, interactive && isActive, i);
       if (f.movements[pid]) {
@@ -113,7 +114,7 @@ function renderPanel(container, interactive) {
     // Annotations
     if (f.annotations) svg += annotationSVG(f.annotations, 1);
     for (const pid in f.movements) {
-      if (f.players[pid]) svg += movementSVG(pid, f.players[pid].x, f.players[pid].y, f.movements[pid].x, f.movements[pid].y, 1);
+      if (f.players[pid] && isPlayerShown(pid)) svg += movementSVG(pid, f.players[pid].x, f.players[pid].y, f.movements[pid].x, f.movements[pid].y, 1);
     }
     svg += shotSVG(f.shot, 1, interactive && isActive);
     // Shot preview line (active frame only)
@@ -125,6 +126,7 @@ function renderPanel(container, interactive) {
       svg += coveragePreviewSVG(coveragePoints, coveragePreview, selectedPlayer);
     }
     for (const pid in f.players) {
+      if (!isPlayerShown(pid)) continue;
       const p = f.players[pid];
       svg += playerSVG(pid, p.x, p.y, 1, interactive && isActive);
       if (f.movements[pid]) {

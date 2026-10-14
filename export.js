@@ -145,13 +145,14 @@ function buildOverlaySVGContent() {
     if (f.regions) svg += regionSVG(f.regions, op);
     if (f.annotations) svg += annotationSVG(f.annotations, op);
     for (const pid in f.movements) {
-      if (f.players[pid]) svg += movementSVG(pid, f.players[pid].x, f.players[pid].y, f.movements[pid].x, f.movements[pid].y, op);
+      if (f.players[pid] && isPlayerShown(pid)) svg += movementSVG(pid, f.players[pid].x, f.players[pid].y, f.movements[pid].x, f.movements[pid].y, op);
     }
     if (f.shot) {
       if (shotArrowsShown()) svg += shotSVG(f.shot, op);
       svg += frameNumberBadge(i, f.shot.x1, f.shot.y1 - 22);
     }
     for (const pid in f.players) {
+      if (!isPlayerShown(pid)) continue;
       const p = f.players[pid];
       svg += playerSVG(pid, p.x, p.y, op, false, i);
       if (f.movements[pid]) {
@@ -205,10 +206,11 @@ function buildPanelSVGContent() {
     if (f.regions) svg += regionSVG(f.regions, 1);
     if (f.annotations) svg += annotationSVG(f.annotations, 1);
     for (const pid in f.movements) {
-      if (f.players[pid]) svg += movementSVG(pid, f.players[pid].x, f.players[pid].y, f.movements[pid].x, f.movements[pid].y, 1);
+      if (f.players[pid] && isPlayerShown(pid)) svg += movementSVG(pid, f.players[pid].x, f.players[pid].y, f.movements[pid].x, f.movements[pid].y, 1);
     }
     if (shotArrowsShown()) svg += shotSVG(f.shot, 1);
     for (const pid in f.players) {
+      if (!isPlayerShown(pid)) continue;
       const p = f.players[pid];
       svg += playerSVG(pid, p.x, p.y, 1, false);
       if (f.movements[pid]) {
@@ -324,6 +326,7 @@ function captureVideoBlob(opts) {
     // Players
     const pids = new Set([...Object.keys(playerPos), ...Object.keys(fr.players)]);
     for (const pid of pids) {
+      if (!isPlayerShown(pid)) continue;
       let pos = playerPos[pid] || fr.players[pid];
       if (!pos) continue;
       let dx = pos.x, dy = pos.y;

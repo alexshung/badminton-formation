@@ -20,7 +20,11 @@ function courtGradientDefs() {
   </defs>`;
 }
 
-function courtLines() {
+// opts (all optional): { singles: bool (defaults to state.gameMode),
+//   netLabel: bool (default true; false omits the font-dependent "NET" text) }
+function courtLines(opts) {
+  opts = opts || {};
+  const singles = opts.singles == null ? isSinglesMode() : !!opts.singles;
   let svg = '';
   const lw = 2;
   const lc = '#00d4ff';
@@ -52,17 +56,30 @@ function courtLines() {
   svg += `<line x1="${PAD}" y1="${netY - ssl}" x2="${PAD + CW}" y2="${netY - ssl}" stroke="${lcd}" stroke-width="${lw * 0.8}" />`;
   svg += `<line x1="${PAD}" y1="${netY + ssl}" x2="${PAD + CW}" y2="${netY + ssl}" stroke="${lcd}" stroke-width="${lw * 0.8}" />`;
 
-  // Long service lines - increased stroke width
+  // Long service lines (doubles only — in singles the back boundary line is
+  // the long service line) - increased stroke width
   const lsl = 76;
-  svg += `<line x1="${PAD}" y1="${PAD + lsl}" x2="${PAD + CW}" y2="${PAD + lsl}" stroke="${lcd}" stroke-width="${lw * 0.6}" stroke-dasharray="5,5" />`;
-  svg += `<line x1="${PAD}" y1="${PAD + CH - lsl}" x2="${PAD + CW}" y2="${PAD + CH - lsl}" stroke="${lcd}" stroke-width="${lw * 0.6}" stroke-dasharray="5,5" />`;
+  if (!singles) {
+    svg += `<line x1="${PAD}" y1="${PAD + lsl}" x2="${PAD + CW}" y2="${PAD + lsl}" stroke="${lcd}" stroke-width="${lw * 0.6}" stroke-dasharray="5,5" />`;
+    svg += `<line x1="${PAD}" y1="${PAD + CH - lsl}" x2="${PAD + CW}" y2="${PAD + CH - lsl}" stroke="${lcd}" stroke-width="${lw * 0.6}" stroke-dasharray="5,5" />`;
+  }
 
   // Center lines - increased stroke width
   const cx = PAD + CW / 2;
   svg += `<line x1="${cx}" y1="${netY - ssl}" x2="${cx}" y2="${PAD}" stroke="${lcd}" stroke-width="${lw * 0.8}" />`;
   svg += `<line x1="${cx}" y1="${netY + ssl}" x2="${cx}" y2="${PAD + CH}" stroke="${lcd}" stroke-width="${lw * 0.8}" />`;
 
+  // Singles: shade the out-of-play side alleys and draw the singles side lines
+  // (0.46 m inside the doubles side lines) as the boundary.
+  if (singles) {
+    svg += `<rect x="${PAD}" y="${PAD}" width="${ss}" height="${CH}" fill="rgba(0,0,0,.55)"/>`;
+    svg += `<rect x="${PAD + CW - ss}" y="${PAD}" width="${ss}" height="${CH}" fill="rgba(0,0,0,.55)"/>`;
+    svg += `<line x1="${PAD + ss}" y1="${PAD}" x2="${PAD + ss}" y2="${PAD + CH}" stroke="${lc}" stroke-width="${lw + 0.5}" />`;
+    svg += `<line x1="${PAD + CW - ss}" y1="${PAD}" x2="${PAD + CW - ss}" y2="${PAD + CH}" stroke="${lc}" stroke-width="${lw + 0.5}" />`;
+  }
+
   // NET label
+  if (opts.netLabel === false) return svg;
   svg += `<text x="${PAD + CW + 20}" y="${netY}" fill="#00d4ff" font-size="13" font-family="system-ui" font-weight="700" text-anchor="middle" dominant-baseline="central" letter-spacing="2" transform="rotate(-90,${PAD + CW + 20},${netY})" >NET</text>`;
 
   return svg;

@@ -110,6 +110,7 @@ function renderAnimFrame() {
   // Players
   const pids = new Set([...Object.keys(animState.playerPositions), ...Object.keys(fr.players)]);
   for (const pid of pids) {
+    if (!isPlayerShown(pid)) continue;
     let pos = animState.playerPositions[pid] || fr.players[pid];
     if (!pos) continue;
     let dx = pos.x, dy = pos.y;
@@ -323,6 +324,7 @@ function renderPresAnimFrame() {
 
   const pids = new Set([...Object.keys(presPlayerPos), ...Object.keys(fr.players)]);
   for (const pid of pids) {
+    if (!isPlayerShown(pid)) continue;
     let pos = presPlayerPos[pid] || fr.players[pid];
     if (!pos) continue;
     let dx = pos.x, dy = pos.y;
@@ -392,10 +394,11 @@ function renderPresFrame() {
   svg += courtLines();
   if (fr.regions) svg += regionSVG(fr.regions, 0.8);
   for (const pid in fr.movements) {
-    if (fr.players[pid]) svg += movementSVG(pid, fr.players[pid].x, fr.players[pid].y, fr.movements[pid].x, fr.movements[pid].y, 0.7);
+    if (fr.players[pid] && isPlayerShown(pid)) svg += movementSVG(pid, fr.players[pid].x, fr.players[pid].y, fr.movements[pid].x, fr.movements[pid].y, 0.7);
   }
   if (fr.shot) svg += shotSVG(fr.shot, 1);
   for (const pid in fr.players) {
+    if (!isPlayerShown(pid)) continue;
     const p = fr.players[pid];
     svg += playerSVG(pid, p.x, p.y, 1, false);
     if (fr.movements[pid]) {
