@@ -121,6 +121,22 @@ function createEmptyFrame() {
 
 function currentFrameData() { return state.frames[state.currentFrame]; }
 
+// ===== RENDER OPTIONS =====
+// Optional state fields; when absent the legacy behaviour applies.
+//   state.showShotArrows  false hides shot arrows (path, arrowhead, landing rings,
+//                         shot-name pill) in exports. Default: shown.
+
+// Monotonic id source for SVG <marker> ids. Replaces Math.random() so the same
+// state always serializes to the same SVG string (deterministic exports).
+let svgUidCounter = 0;
+function svgUid(prefix) {
+  svgUidCounter++;
+  return prefix + svgUidCounter.toString(36);
+}
+function resetSvgUid() { svgUidCounter = 0; }
+
+function shotArrowsShown() { return state.showShotArrows !== false; }
+
 function getPlayerLabel(id) {
   return state.playerNames[id] || id;
 }
@@ -419,7 +435,8 @@ function shareState() {
       if (f.annotations && f.annotations.length) cf.a = f.annotations;
       return cf;
     }),
-    pn: Object.keys(state.playerNames).length ? state.playerNames : undefined
+    pn: Object.keys(state.playerNames).length ? state.playerNames : undefined,
+    sa: state.showShotArrows === false ? 0 : undefined
   };
   const json = JSON.stringify(compact);
   const compressed = LZString.compressToEncodedURIComponent(json);
@@ -450,6 +467,8 @@ function loadFromHash() {
     const compact = JSON.parse(json);
     state.title = compact.t || 'Doubles Formation';
     state.playerNames = compact.pn || {};
+    if (compact.sa === 0) state.showShotArrows = false;
+    else delete state.showShotArrows;
     state.frames = compact.f.map(cf => ({
       players: cf.p || {},
       shot: cf.s || null,

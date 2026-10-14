@@ -48,6 +48,20 @@
     return mv ? { x: mv.x, y: mv.y } : { x: f.players[id].x, y: f.players[id].y };
   }
 
+  // Run fn() with state.showShotArrows temporarily overridden when `arrows`
+  // is a boolean (export option); restores the previous value afterwards.
+  function withArrows(arrows, fn) {
+    if (typeof arrows !== 'boolean') return fn();
+    const prev = state.showShotArrows;
+    state.showShotArrows = arrows;
+    try {
+      return fn();
+    } finally {
+      if (prev === undefined) delete state.showShotArrows;
+      else state.showShotArrows = prev;
+    }
+  }
+
   const BF = {
     /** Constants describing the coordinate space (see file header). */
     courtInfo: function () {
@@ -261,6 +275,16 @@
       return this;
     },
 
+    /** Show (true, default) or hide (false) shot arrows in exports: the
+     *  start→landing path, arrowhead, landing rings and shot-name pill. */
+    setShotArrows: function (show) {
+      requireGlobals();
+      state.showShotArrows = show !== false;
+      render();
+      saveState();
+      return this;
+    },
+
     /** Set the diagram title (baked into exports). */
     setTitle: function (title) {
       requireGlobals();
@@ -279,21 +303,24 @@
     },
 
     /** Build the export SVG string for the current state.
-     *  opts: { width?, height? }  (defaults 1200x630)
+     *  opts: { width?, height?, arrows? }  (defaults 1200x630; `arrows`
+     *  overrides setShotArrows() for this export only)
      *  Returns { svg, dataUrl } where dataUrl is an image/svg+xml data URL. */
     exportSVG: function (opts) {
       requireGlobals();
       opts = opts || {};
       const w = opts.width || parseInt((document.getElementById('expW') || {}).value, 10) || 1200;
       const h = opts.height || parseInt((document.getElementById('expH') || {}).value, 10) || 630;
-      const svg = buildExportSVG(w, h);
+      const svg = withArrows(opts.arrows, function () {
+        return buildExportSVG(w, h);
+      });
       return {
         svg: svg,
         dataUrl: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg),
       };
     },
 
-    /** Rasterize the current state to PNG. Returns a Promise resolving to
+    /** Rasterize the current state to PNG (opts as exportSVG). Returns a Promise resolving to
      *  { dataUrl, width, height, blob }. `blob` may be null if the browser
      *  can't produce one synchronously. */
     exportPNG: function (opts) {
@@ -303,7 +330,9 @@
       const h = opts.height || parseInt((document.getElementById('expH') || {}).value, 10) || 630;
       const isDark = (document.getElementById('exportBg') || {}).value !== 'light';
       const bgColor = isDark ? '#111318' : '#FAFAFA';
-      const svg = buildExportSVG(w, h);
+      const svg = withArrows(opts.arrows, function () {
+        return buildExportSVG(w, h);
+      });
       return renderSVGToCanvas(svg, w, h, bgColor).then(function (canvas) {
         const dataUrl = canvas.toDataURL('image/png');
         return new Promise(function (resolve) {

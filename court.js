@@ -138,7 +138,7 @@ function shotSVG(shot, opacity, interactive) {
   const c = SHOT_COLORS[shot.type];
   const op = opacity || 1;
   let svg = '';
-  const arrowId = 'a_' + Math.random().toString(36).substr(2, 6);
+  const arrowId = svgUid('a_');
   svg += `<defs><marker id="${arrowId}" markerWidth="14" markerHeight="10" refX="12" refY="5" orient="auto"><polygon points="0 0, 14 5, 0 10" fill="${c}" opacity="${op}"/></marker></defs>`;
 
   if (shot.type === 'drop') {
@@ -195,7 +195,7 @@ function movementSVG(playerId, fromX, fromY, toX, toY, opacity) {
   const team = playerId[0];
   const c = TEAM_COLORS[team];
   const op = opacity || 1;
-  const arrowId = 'm_' + Math.random().toString(36).substr(2, 6);
+  const arrowId = svgUid('m_');
   let svg = '';
   svg += `<defs><marker id="${arrowId}" markerWidth="12" markerHeight="8" refX="10" refY="4" orient="auto"><polygon points="0 0, 12 4, 0 8" fill="${c}" opacity="${op * 0.7}"/></marker></defs>`;
   svg += `<line x1="${fromX}" y1="${fromY}" x2="${toX}" y2="${toY}" stroke="${c}" stroke-width="3.5" stroke-dasharray="7,4" opacity="${op * 0.7}" marker-end="url(#${arrowId})" filter="url(#glow)"/>`;

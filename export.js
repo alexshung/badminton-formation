@@ -145,7 +145,10 @@ function buildOverlaySVGContent() {
     for (const pid in f.movements) {
       if (f.players[pid]) svg += movementSVG(pid, f.players[pid].x, f.players[pid].y, f.movements[pid].x, f.movements[pid].y, op);
     }
-    if (f.shot) { svg += shotSVG(f.shot, op); svg += frameNumberBadge(i, f.shot.x1, f.shot.y1 - 22); }
+    if (f.shot) {
+      if (shotArrowsShown()) svg += shotSVG(f.shot, op);
+      svg += frameNumberBadge(i, f.shot.x1, f.shot.y1 - 22);
+    }
     for (const pid in f.players) {
       const p = f.players[pid];
       svg += playerSVG(pid, p.x, p.y, op, false, i);
@@ -180,7 +183,7 @@ function buildPanelSVGContent() {
     for (const pid in f.movements) {
       if (f.players[pid]) svg += movementSVG(pid, f.players[pid].x, f.players[pid].y, f.movements[pid].x, f.movements[pid].y, 1);
     }
-    svg += shotSVG(f.shot, 1);
+    if (shotArrowsShown()) svg += shotSVG(f.shot, 1);
     for (const pid in f.players) {
       const p = f.players[pid];
       svg += playerSVG(pid, p.x, p.y, 1, false);
@@ -315,8 +318,10 @@ function captureVideoBlob(opts) {
       }
     }
 
-    // Shot animation
-    if (fr.shot && phase === 'action') {
+    // Shot animation (skipped entirely when shot arrows are hidden: the
+    // travelling dot and the shot-name pill would reveal the landing spot)
+    const drawShot = shotArrowsShown();
+    if (drawShot && fr.shot && phase === 'action') {
       const shot = fr.shot;
       const c = SHOT_COLORS[shot.type];
       if (shot.type === 'drop' || shot.type === 'clear' || shot.type === 'lift') {
@@ -336,7 +341,7 @@ function captureVideoBlob(opts) {
       const tw = SHOT_LABELS[shot.type].length * 6.5 + 12;
       svg += `<rect x="${lx - tw/2}" y="${ly - 9}" width="${tw}" height="18" rx="4" fill="rgba(0,0,0,.65)"/>`;
       svg += `<text x="${lx}" y="${ly + 1}" fill="${c}" font-size="11" font-family="system-ui" font-weight="700" text-anchor="middle" dominant-baseline="central">${SHOT_LABELS[shot.type]}</text>`;
-    } else if (fr.shot) {
+    } else if (drawShot && fr.shot) {
       svg += shotSVG(fr.shot, 0.35);
     }
 
