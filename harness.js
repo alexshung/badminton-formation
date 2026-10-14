@@ -70,6 +70,7 @@
         padding: PAD,
         court: { width: CW, height: CH, x: PAD, y: PAD },
         playingArea: { minX: PAD, minY: PAD, maxX: PAD + CW, maxY: PAD + CH },
+        unitsPerMetre: UNITS_PER_M,
         playerIds: PLAYER_IDS.slice(),
         shotTypes: SHOT_TYPES.slice(),
       };
@@ -455,8 +456,46 @@
       );
     },
 
+    // ── DEMA render mode (dema.js) ─────────────────────────────────────────
+
+    /** Replace the formation with a DEMA scene spec (metres; see README
+     *  "DEMA render mode"). Throws on malformed specs. */
+    loadScene: function (spec) {
+      requireGlobals();
+      return this.loadState(demaSceneToState(spec));
+    },
+
+    /** DEMA SVG for one frame of the current state.
+     *  opts override the scene's: { arrows, timestamps, heightStrip,
+     *  pxPerMetre, playerRadius, colors, timeDecimals }.
+     *  Returns { svg, width, height }. */
+    renderDemaSVG: function (index, opts) {
+      requireGlobals();
+      const r = buildDemaFrameSVG(index == null ? state.currentFrame : index | 0, opts);
+      return { svg: r.svg, width: r.width, height: r.height };
+    },
+
+    /** Rasterize one DEMA frame. Returns Promise<{ dataUrl, width, height }>.
+     *  (The batch driver strips PNG ancillary chunks after decoding.) */
+    exportDemaPNG: function (index, opts) {
+      requireGlobals();
+      const r = this.renderDemaSVG(index, opts);
+      const o = demaOptions(opts);
+      return renderSVGToCanvas(r.svg, r.width, r.height, o.bg).then(function (canvas) {
+        return { dataUrl: canvas.toDataURL('image/png'), width: r.width, height: r.height };
+      });
+    },
+
+    /** Grader-side metadata: image size, court-metres -> pixel matrix,
+     *  height-strip mapping, net heights (BWF Laws 1.4/1.10), per-frame
+     *  player/shuttle positions. Deterministic (no clock, no randomness). */
+    demaMetadata: function (opts) {
+      requireGlobals();
+      return demaMetadata(opts);
+    },
+
     /** Version tag so a driver can assert the API it expects is present. */
-    version: '1.0.0',
+    version: '1.1.0',
   };
 
   window.BF = BF;
