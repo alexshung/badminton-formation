@@ -244,6 +244,9 @@ function captureVideoBlob(opts) {
     const h = opts.h;
     const title = opts.title;
     const bgColor = opts.bgColor;
+    // The title colour below keys off the background; callers pass the light
+    // export background as '#FAFAFA'.
+    const isDark = String(bgColor).toUpperCase() !== '#FAFAFA';
     const speed = opts.speed || 1;
 
     const canvas = document.getElementById('exportCanvas');
