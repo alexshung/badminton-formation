@@ -10,6 +10,10 @@ const TEAM_COLORS = { A: '#00d4ff', B: '#ff6b9d' };
 const TEAM_COLORS_DIM = { A: 'rgba(0,212,255,.35)', B: 'rgba(255,107,157,.35)' };
 const MAX_UNDO = 20;
 const MAX_FRAMES = 8;
+// Court geometry in metres (BWF Laws, Diagram A). The court is drawn at exactly
+// 100 court units per metre: CW = 6.10 m, CH = 13.40 m.
+const COURT_M = { length: 13.4, width: 6.1, singlesInset: 0.46, singlesWidth: 5.18 };
+const UNITS_PER_M = CW / COURT_M.width;
 
 // ===== PRESET FORMATIONS =====
 const PRESETS = {
@@ -127,6 +131,11 @@ function currentFrameData() { return state.frames[state.currentFrame]; }
 //                         shot-name pill) in exports. Default: shown.
 //   frame.t               time of the frame in seconds (finite number) or absent;
 //                         drawn as a small "t = 0.40 s" label in exports.
+//   state.shuttlePath     shuttle samples [{x, y, h, t}] — x/y court coords, h metres
+//                         above the floor, t seconds. Each timed frame shows the
+//                         samples with t <= frame.t as a fading trail.
+//   state.trailWindow     seconds of history the trail keeps (default: all).
+//   frame.trail           per-frame sample list; overrides shuttlePath for that frame.
 
 // Monotonic id source for SVG <marker> ids. Replaces Math.random() so the same
 // state always serializes to the same SVG string (deterministic exports).
@@ -141,6 +150,47 @@ function shotArrowsShown() { return state.showShotArrows !== false; }
 
 function hasFrameTime(f) { return !!f && typeof f.t === 'number' && isFinite(f.t); }
 function formatFrameTime(t) { return 't = ' + t.toFixed(2) + ' s'; }
+
+// Court metres <-> court coordinates. Metre frame: x from the left doubles
+// sideline (as drawn), y from Team A's back boundary line (bottom) toward Team B.
+function metresToCourt(xm, ym) {
+  return { x: PAD + xm * UNITS_PER_M, y: PAD + CH - ym * UNITS_PER_M };
+}
+function courtToMetres(x, y) {
+  return { x: (x - PAD) / UNITS_PER_M, y: (PAD + CH - y) / UNITS_PER_M };
+}
+
+// Validate shuttle samples and convert them to court coordinates.
+// units: 'court' (default, like every other BF coordinate) or 'm'.
+function normalizeShuttleSamples(samples, units) {
+  if (!Array.isArray(samples)) throw new Error('shuttle samples must be an array');
+  return samples.map((p, i) => {
+    const x = Number(p.x), y = Number(p.y), h = p.h == null ? 0 : Number(p.h);
+    if (!isFinite(x) || !isFinite(y) || !isFinite(h)) throw new Error('shuttle sample ' + i + ' needs finite x, y (and h)');
+    const q = units === 'm' ? metresToCourt(x, y) : { x, y };
+    const out = { x: svgNum(q.x), y: svgNum(q.y), h };
+    if (p.t != null) {
+      const t = Number(p.t);
+      if (!isFinite(t)) throw new Error('shuttle sample ' + i + ' has a non-finite t');
+      out.t = t;
+    }
+    return out;
+  });
+}
+
+// Shuttle samples visible on frame i: its own `trail` if set, otherwise the
+// shared shuttlePath cut at the frame time (never any sample after it, so the
+// trail can't reveal where the shuttle is going).
+function frameTrail(i) {
+  const f = state.frames[i];
+  if (!f) return [];
+  if (Array.isArray(f.trail)) return f.trail;
+  const path = state.shuttlePath;
+  if (!Array.isArray(path) || path.length === 0 || !hasFrameTime(f)) return [];
+  const win = typeof state.trailWindow === 'number' && state.trailWindow >= 0 ? state.trailWindow : Infinity;
+  const eps = 1e-9;
+  return path.filter(p => typeof p.t === 'number' && p.t <= f.t + eps && p.t >= f.t - win - eps);
+}
 
 function getPlayerLabel(id) {
   return state.playerNames[id] || id;
@@ -439,10 +489,13 @@ function shareState() {
       if (f.regions && Object.keys(f.regions).length) cf.r = f.regions;
       if (f.annotations && f.annotations.length) cf.a = f.annotations;
       if (hasFrameTime(f)) cf.tm = f.t;
+      if (Array.isArray(f.trail)) cf.tr = f.trail;
       return cf;
     }),
     pn: Object.keys(state.playerNames).length ? state.playerNames : undefined,
-    sa: state.showShotArrows === false ? 0 : undefined
+    sa: state.showShotArrows === false ? 0 : undefined,
+    sp: Array.isArray(state.shuttlePath) && state.shuttlePath.length ? state.shuttlePath : undefined,
+    tw: typeof state.trailWindow === 'number' ? state.trailWindow : undefined
   };
   const json = JSON.stringify(compact);
   const compressed = LZString.compressToEncodedURIComponent(json);
@@ -475,6 +528,10 @@ function loadFromHash() {
     state.playerNames = compact.pn || {};
     if (compact.sa === 0) state.showShotArrows = false;
     else delete state.showShotArrows;
+    if (Array.isArray(compact.sp)) state.shuttlePath = compact.sp;
+    else delete state.shuttlePath;
+    if (typeof compact.tw === 'number') state.trailWindow = compact.tw;
+    else delete state.trailWindow;
     state.frames = compact.f.map(cf => {
       const f = {
         players: cf.p || {},
@@ -486,6 +543,7 @@ function loadFromHash() {
         annotations: cf.a || []
       };
       if (typeof cf.tm === 'number') f.t = cf.tm;
+      if (Array.isArray(cf.tr)) f.trail = cf.tr;
       return f;
     });
     state.currentFrame = 0;

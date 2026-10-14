@@ -50,7 +50,9 @@ function buildExportSVG(w, h) {
 
   // Legend
   const ly = h - legendH - notesH + 18;
-  const shotTypes = ['drop', 'drive', 'smash', 'clear'];
+  // With shot arrows hidden the shot-type legend has nothing to explain, and
+  // shot names must not appear at all (answer-leak-free exports).
+  const shotTypes = shotArrowsShown() ? ['drop', 'drive', 'smash', 'clear'] : [];
   const legendTotalW = shotTypes.length * 100 + 170;
   let lx = (w - legendTotalW) / 2;
   for (const st of shotTypes) {
@@ -158,6 +160,11 @@ function buildOverlaySVGContent() {
       }
     }
   }
+  // One trail on the stacked court: the latest frame that has one.
+  for (let i = state.frames.length - 1; i >= 0; i--) {
+    const tr = frameTrail(i);
+    if (tr.length) { svg += trailSVG(tr, 1); break; }
+  }
   svg += frameTimeLegendSVG();
   if (isLand) svg += '</g>';
   return svg;
@@ -209,6 +216,7 @@ function buildPanelSVGContent() {
         svg += `<circle cx="${d.x}" cy="${d.y}" r="${PR - 5}" fill="none" stroke="${TEAM_COLORS[pid[0]]}" stroke-width="2" stroke-dasharray="4,3" opacity="0.4"/>`;
       }
     }
+    svg += trailSVG(frameTrail(i), 1);
     if (isLand) svg += '</g>';
     // Frame note (outside rotation so it reads correctly)
     if (f.note) {

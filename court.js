@@ -238,6 +238,46 @@ function shuttlecockSVG(x, y, opacity, interactive) {
   return svg;
 }
 
+// ===== SHUTTLE TRAIL =====
+const TRAIL_COLOR = '#fff3a8';
+
+// Round to 2 decimals so SVG strings stay short and stable.
+function svgNum(v) { return Math.round(v * 100) / 100; }
+
+// Fading shuttle trail: one dot per sample, oldest faintest, the newest sample
+// drawn as the shuttle itself. Deliberately draws no connecting line, arrow or
+// landing/endpoint marker — only the samples passed in (already cut at the
+// frame time by frameTrail) appear.
+// opts: { color, radius, headRadius, minAlpha, project(p) -> {x, y} }
+function trailSVG(points, opacity, opts) {
+  if (!points || points.length === 0) return '';
+  opts = opts || {};
+  const op = opacity || 1;
+  const color = opts.color || TRAIL_COLOR;
+  const r = opts.radius || 7;
+  const headR = opts.headRadius || 11;
+  const minA = opts.minAlpha == null ? 0.15 : opts.minAlpha;
+  const project = opts.project || (p => p);
+  const n = points.length;
+  // Fade by age when every sample is timed, else by index.
+  const timed = points.every(p => typeof p.t === 'number');
+  const t0 = timed ? points[0].t : 0;
+  const t1 = timed ? points[n - 1].t : 0;
+  let svg = '';
+  for (let i = 0; i < n; i++) {
+    const q = project(points[i]);
+    let k = n === 1 ? 1 : i / (n - 1);
+    if (timed && t1 > t0) k = (points[i].t - t0) / (t1 - t0);
+    const a = svgNum((minA + (1 - minA) * k) * op);
+    if (i === n - 1) {
+      svg += `<circle cx="${svgNum(q.x)}" cy="${svgNum(q.y)}" r="${headR}" fill="${color}" stroke="#111318" stroke-width="2.5" opacity="${svgNum(op)}"/>`;
+    } else {
+      svg += `<circle cx="${svgNum(q.x)}" cy="${svgNum(q.y)}" r="${r}" fill="${color}" opacity="${a}"/>`;
+    }
+  }
+  return svg;
+}
+
 // ===== COVERAGE REGION RENDERING =====
 
 function regionSVG(regions, opacity) {

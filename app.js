@@ -71,6 +71,7 @@ function renderOverlay(container, interactive) {
     if (!f.shot && Object.keys(f.players).length > 0) {
       svg += frameNumberBadge(i, PAD + 22, PAD + 22 + i * 28);
     }
+    if (isActive) svg += trailSVG(frameTrail(i), 1);
     // Shuttle position for current frame — one icon only
     if (isActive) {
       if (f.shot) {
@@ -133,6 +134,7 @@ function renderPanel(container, interactive) {
         svg += `<text x="${d.x}" y="${d.y}" fill="${TEAM_COLORS[pid[0]]}" font-size="9" font-weight="600" font-family="system-ui" text-anchor="middle" dominant-baseline="central" opacity="0.4">${escapeXML(lbl)}</text>`;
       }
     }
+    svg += trailSVG(frameTrail(i), 1);
     // Shuttle position — one per frame
     if (f.shot) {
       svg += shuttlecockSVG(f.shot.x2, f.shot.y2, 0.7, interactive && isActive);

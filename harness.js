@@ -310,6 +310,50 @@
       return state.frames.map((f) => (hasFrameTime(f) ? f.t : null));
     },
 
+    /** Set the shuttle path: samples [{x, y, h, t}] (h metres above the floor,
+     *  t seconds). Each timed frame then shows the samples with t <= frame.t
+     *  as a fading trail (no line, arrow or endpoint marker).
+     *  opts: { units?: 'court' (default) | 'm', window?: seconds of history }.
+     *  Pass null to clear. */
+    setShuttlePath: function (samples, opts) {
+      requireGlobals();
+      opts = opts || {};
+      if (samples == null) {
+        delete state.shuttlePath;
+        delete state.trailWindow;
+      } else {
+        state.shuttlePath = normalizeShuttleSamples(samples, opts.units);
+        if (typeof opts.window === 'number') state.trailWindow = opts.window;
+        else delete state.trailWindow;
+      }
+      render();
+      saveState();
+      return this;
+    },
+
+    /** Give one frame its own trail samples (same shape/opts as
+     *  setShuttlePath), overriding the shared path. null clears. */
+    setFrameTrail: function (samples, index, opts) {
+      requireGlobals();
+      const i = index == null ? state.currentFrame : index | 0;
+      const f = state.frames[i];
+      if (!f) throw new Error('No frame ' + i);
+      if (samples == null) delete f.trail;
+      else f.trail = normalizeShuttleSamples(samples, (opts || {}).units);
+      render();
+      saveState();
+      return this;
+    },
+
+    /** Convert court metres (x from the left doubles sideline, y from Team A's
+     *  back line toward Team B) to court coordinates, and back. */
+    metresToCourt: function (xm, ym) {
+      return metresToCourt(xm, ym);
+    },
+    courtToMetres: function (x, y) {
+      return courtToMetres(x, y);
+    },
+
     /** Set the diagram title (baked into exports). */
     setTitle: function (title) {
       requireGlobals();
