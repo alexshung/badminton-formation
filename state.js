@@ -125,6 +125,8 @@ function currentFrameData() { return state.frames[state.currentFrame]; }
 // Optional state fields; when absent the legacy behaviour applies.
 //   state.showShotArrows  false hides shot arrows (path, arrowhead, landing rings,
 //                         shot-name pill) in exports. Default: shown.
+//   frame.t               time of the frame in seconds (finite number) or absent;
+//                         drawn as a small "t = 0.40 s" label in exports.
 
 // Monotonic id source for SVG <marker> ids. Replaces Math.random() so the same
 // state always serializes to the same SVG string (deterministic exports).
@@ -136,6 +138,9 @@ function svgUid(prefix) {
 function resetSvgUid() { svgUidCounter = 0; }
 
 function shotArrowsShown() { return state.showShotArrows !== false; }
+
+function hasFrameTime(f) { return !!f && typeof f.t === 'number' && isFinite(f.t); }
+function formatFrameTime(t) { return 't = ' + t.toFixed(2) + ' s'; }
 
 function getPlayerLabel(id) {
   return state.playerNames[id] || id;
@@ -433,6 +438,7 @@ function shareState() {
       if (f.note) cf.n = f.note;
       if (f.regions && Object.keys(f.regions).length) cf.r = f.regions;
       if (f.annotations && f.annotations.length) cf.a = f.annotations;
+      if (hasFrameTime(f)) cf.tm = f.t;
       return cf;
     }),
     pn: Object.keys(state.playerNames).length ? state.playerNames : undefined,
@@ -469,15 +475,19 @@ function loadFromHash() {
     state.playerNames = compact.pn || {};
     if (compact.sa === 0) state.showShotArrows = false;
     else delete state.showShotArrows;
-    state.frames = compact.f.map(cf => ({
-      players: cf.p || {},
-      shot: cf.s || null,
-      movements: cf.m || {},
-      label: cf.l || '',
-      note: cf.n || '',
-      regions: cf.r || {},
-      annotations: cf.a || []
-    }));
+    state.frames = compact.f.map(cf => {
+      const f = {
+        players: cf.p || {},
+        shot: cf.s || null,
+        movements: cf.m || {},
+        label: cf.l || '',
+        note: cf.n || '',
+        regions: cf.r || {},
+        annotations: cf.a || []
+      };
+      if (typeof cf.tm === 'number') f.t = cf.tm;
+      return f;
+    });
     state.currentFrame = 0;
     const titleEl = document.getElementById('titleInput');
     if (titleEl) titleEl.value = state.title;

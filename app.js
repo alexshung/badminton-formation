@@ -102,7 +102,8 @@ function renderPanel(container, interactive) {
     const f = state.frames[i];
     const isActive = i === state.currentFrame;
     svg += `<g transform="translate(${ox}, 30)">`;
-    svg += `<text x="${courtW/2}" y="-8" fill="${isActive ? '#4a9eff' : '#8b919a'}" font-size="13" font-weight="700" font-family="system-ui" text-anchor="middle">Frame ${i + 1}</text>`;
+    const head = 'Frame ' + (i + 1) + (hasFrameTime(f) ? ' · ' + formatFrameTime(f.t) : '');
+    svg += `<text x="${courtW/2}" y="-8" fill="${isActive ? '#4a9eff' : '#8b919a'}" font-size="13" font-weight="700" font-family="system-ui" text-anchor="middle">${head}</text>`;
     svg += `<rect x="0" y="0" width="${courtW}" height="${courtH}" fill="none" stroke="${isActive ? '#4a9eff' : '#383d47'}" stroke-width="${isActive ? 2 : 1}" rx="4"/>`;
     if (isLand) svg += `<g transform="translate(${SH}, 0) rotate(90)">`;
     svg += courtLines();

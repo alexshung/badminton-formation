@@ -285,6 +285,31 @@
       return this;
     },
 
+    /** Set the time (seconds) carried by a frame; drawn as "t = 0.40 s" in
+     *  exports. index defaults to the current frame; t = null clears it. */
+    setFrameTime: function (t, index) {
+      requireGlobals();
+      const i = index == null ? state.currentFrame : index | 0;
+      const f = state.frames[i];
+      if (!f) throw new Error('No frame ' + i);
+      if (t == null) {
+        delete f.t;
+      } else {
+        const n = Number(t);
+        if (!isFinite(n)) throw new Error('setFrameTime requires a finite number of seconds');
+        f.t = n;
+      }
+      render();
+      saveState();
+      return this;
+    },
+
+    /** Per-frame times (seconds or null), one entry per frame. */
+    getFrameTimes: function () {
+      requireGlobals();
+      return state.frames.map((f) => (hasFrameTime(f) ? f.t : null));
+    },
+
     /** Set the diagram title (baked into exports). */
     setTitle: function (title) {
       requireGlobals();

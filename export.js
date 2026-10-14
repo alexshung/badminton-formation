@@ -158,7 +158,23 @@ function buildOverlaySVGContent() {
       }
     }
   }
+  svg += frameTimeLegendSVG();
   if (isLand) svg += '</g>';
+  return svg;
+}
+
+// Overlay mode stacks every frame on one court, so per-frame times are listed
+// as a small legend (frame badge + "t = …") in the top-left corner.
+function frameTimeLegendSVG() {
+  let svg = '';
+  let row = 0;
+  state.frames.forEach((f, i) => {
+    if (!hasFrameTime(f)) return;
+    const y = PAD + 22 + row * 28;
+    svg += frameNumberBadge(i, PAD + 22, y);
+    svg += `<text x="${PAD + 42}" y="${y + 1}" fill="#e8eaed" font-size="13" font-weight="600" font-family="system-ui" dominant-baseline="central">${formatFrameTime(f.t)}</text>`;
+    row++;
+  });
   return svg;
 }
 
@@ -173,7 +189,8 @@ function buildPanelSVGContent() {
     const ox = i * (courtW + gap);
     const f = state.frames[i];
     svg += `<g transform="translate(${ox}, 30)">`;
-    svg += `<text x="${courtW/2}" y="-8" fill="#8b919a" font-size="13" font-weight="700" font-family="system-ui" text-anchor="middle">Frame ${i + 1}</text>`;
+    const head = 'Frame ' + (i + 1) + (hasFrameTime(f) ? ' · ' + formatFrameTime(f.t) : '');
+    svg += `<text x="${courtW/2}" y="-8" fill="#8b919a" font-size="13" font-weight="700" font-family="system-ui" text-anchor="middle">${head}</text>`;
     svg += `<rect x="0" y="0" width="${courtW}" height="${courtH}" fill="none" stroke="#383d47" stroke-width="1" rx="4"/>`;
     if (isLand) svg += `<g transform="translate(${SH}, 0) rotate(90)">`;
     svg += courtLines();
@@ -348,8 +365,10 @@ function captureVideoBlob(opts) {
     if (isLand) svg += '</g>';
 
     // Frame HUD (outside rotation, inside scale group — uses viewBox coordinates)
-    svg += `<rect x="8" y="8" width="110" height="26" rx="5" fill="rgba(0,0,0,.65)"/>`;
-    svg += `<text x="63" y="22" fill="#fff" font-size="13" font-weight="600" font-family="system-ui" text-anchor="middle" dominant-baseline="central">Frame ${currentGameFrame + 1} / ${state.frames.length}</text>`;
+    const hudTime = hasFrameTime(fr) ? ' · ' + formatFrameTime(fr.t) : '';
+    const hudW = hudTime ? 200 : 110;
+    svg += `<rect x="8" y="8" width="${hudW}" height="26" rx="5" fill="rgba(0,0,0,.65)"/>`;
+    svg += `<text x="${8 + hudW / 2}" y="22" fill="#fff" font-size="13" font-weight="600" font-family="system-ui" text-anchor="middle" dominant-baseline="central">Frame ${currentGameFrame + 1} / ${state.frames.length}${hudTime}</text>`;
 
     // Frame note
     if (fr.note) {
