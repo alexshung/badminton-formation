@@ -38,12 +38,14 @@ module.exports = [
     },
   },
   {
-    // ESM Node scripts (headless agent driver). Uses top-level await + import.
+    // ESM Node scripts (headless drivers). Uses top-level await + import.
+    // Browser globals too: page.evaluate()/addInitScript() callbacks run in
+    // the page, where window/localStorage exist.
     files: ['scripts/**/*.mjs'],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',
-      globals: { ...globals.node },
+      globals: { ...globals.node, ...globals.browser },
     },
   },
 ];

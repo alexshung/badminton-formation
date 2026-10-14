@@ -15,50 +15,14 @@
 // Everything is local: a tiny built-in static file server serves the repo root,
 // so there is no external hosting or CDN involved.
 
-import { createServer } from 'node:http';
-import { readFile, mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { dirname, join, extname, normalize } from 'node:path';
+import { dirname, join } from 'node:path';
+import { startStaticServer } from './lib/static-server.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
 const OUT_DIR = join(__dirname, 'out');
-
-const MIME = {
-  '.html': 'text/html; charset=utf-8',
-  '.js': 'text/javascript; charset=utf-8',
-  '.mjs': 'text/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.svg': 'image/svg+xml',
-  '.png': 'image/png',
-  '.json': 'application/json',
-};
-
-// ── Tiny local static server (no external deps) ─────────────────────────────
-function startStaticServer(rootDir) {
-  return new Promise((resolve) => {
-    const server = createServer(async (req, res) => {
-      try {
-        const urlPath = decodeURIComponent((req.url || '/').split('?')[0]);
-        const rel = normalize(urlPath === '/' ? '/index.html' : urlPath).replace(/^(\.\.[/\\])+/, '');
-        const filePath = join(rootDir, rel);
-        if (!filePath.startsWith(rootDir)) {
-          res.writeHead(403).end('Forbidden');
-          return;
-        }
-        const body = await readFile(filePath);
-        res.writeHead(200, { 'Content-Type': MIME[extname(filePath)] || 'application/octet-stream' });
-        res.end(body);
-      } catch {
-        res.writeHead(404).end('Not found');
-      }
-    });
-    server.listen(0, '127.0.0.1', () => {
-      const { port } = server.address();
-      resolve({ server, port });
-    });
-  });
-}
 
 async function dataUrlToFile(dataUrl, outPath) {
   const base64 = dataUrl.slice(dataUrl.indexOf(',') + 1);
